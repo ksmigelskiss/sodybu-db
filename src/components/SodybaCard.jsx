@@ -13,7 +13,7 @@ export default function SodybaCard({ sodyba, onClick, selected }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontWeight: 600, fontSize: 14 }}>
-          {s.adresas || s.savivaldybe || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
+          {s.pavadinimas || s.adresas || s.savivaldybe || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
         </div>
         <ScoreBadge score={s.score} />
       </div>

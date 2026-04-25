@@ -9,6 +9,59 @@ async function fetchPolygon(gyv_kodas) {
   return coords?.length ? coords : null;
 }
 
+const OVERPASS = 'https://overpass-api.de/api/interpreter';
+
+async function fetchFeatures(bbox) {
+  const [s, w, n, e] = bbox;
+  const q = `[out:json][timeout:25];
+(
+  way["building"](${s},${w},${n},${e});
+  node["building"](${s},${w},${n},${e});
+  way["natural"="water"](${s},${w},${n},${e});
+  way["waterway"~"river|stream|canal|ditch"](${s},${w},${n},${e});
+);
+out geom;`;
+  const res = await fetch(OVERPASS, {
+    method: 'POST',
+    body: `data=${encodeURIComponent(q)}`,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.elements ?? [];
+}
+
+function renderFeatures(map, elements) {
+  const layers = [];
+  for (const el of elements) {
+    const isBuilding = el.tags?.building;
+    const isWater = el.tags?.natural === 'water';
+    const isWaterway = !!el.tags?.waterway;
+
+    if (el.type === 'node' && isBuilding) {
+      layers.push(L.circleMarker([el.lat, el.lon], {
+        radius: 3, color: '#374151', fillColor: '#9ca3af', fillOpacity: 0.8, weight: 1,
+      }).addTo(map));
+    } else if (el.type === 'way' && el.geometry?.length) {
+      const latlngs = el.geometry.map(p => [p.lat, p.lon]);
+      if (isWater) {
+        layers.push(L.polygon(latlngs, {
+          color: '#1d4ed8', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.35,
+        }).addTo(map));
+      } else if (isWaterway) {
+        layers.push(L.polyline(latlngs, {
+          color: '#3b82f6', weight: 2, opacity: 0.8,
+        }).addTo(map));
+      } else if (isBuilding) {
+        layers.push(L.polygon(latlngs, {
+          color: '#374151', weight: 1, fillColor: '#9ca3af', fillOpacity: 0.6,
+        }).addTo(map));
+      }
+    }
+  }
+  return layers;
+}
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -46,6 +99,8 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   const markersRef = useRef({});
   const userMarkerRef = useRef(null);
   const polygonRef = useRef(null);
+  const featureLayersRef = useRef([]);
+  const featureCacheRef = useRef(new Map()); // gyv_kodas → elements[]
   const [isSatellite, setIsSatellite] = useState(false);
 
   useEffect(() => {
@@ -80,21 +135,44 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   }, [items]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Išvalom ankstesnius sluoksnius
     polygonRef.current?.remove();
     polygonRef.current = null;
+    featureLayersRef.current.forEach(l => l.remove());
+    featureLayersRef.current = [];
+
     if (!selected) return;
 
-    mapRef.current.setView([selected.lat, selected.lng], 13);
+    map.setView([selected.lat, selected.lng], 13);
 
-    if (selected.gyv_kodas) {
-      fetchPolygon(selected.gyv_kodas).then(coords => {
-        if (!coords || !mapRef.current) return;
-        polygonRef.current = L.polygon(coords, {
-          color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.1,
-        }).addTo(mapRef.current);
-      });
-    }
+    if (!selected.gyv_kodas) return;
+
+    fetchPolygon(selected.gyv_kodas).then(coords => {
+      if (!coords || !mapRef.current) return;
+
+      polygonRef.current = L.polygon(coords, {
+        color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.08,
+      }).addTo(mapRef.current);
+
+      // Bbox iš polygon koordinačių
+      const lats = coords.map(c => c[0]);
+      const lngs = coords.map(c => c[1]);
+      const bbox = [Math.min(...lats), Math.min(...lngs), Math.max(...lats), Math.max(...lngs)];
+
+      const gk = selected.gyv_kodas;
+      if (featureCacheRef.current.has(gk)) {
+        featureLayersRef.current = renderFeatures(mapRef.current, featureCacheRef.current.get(gk));
+      } else {
+        fetchFeatures(bbox).then(elements => {
+          if (!mapRef.current) return;
+          featureCacheRef.current.set(gk, elements);
+          featureLayersRef.current = renderFeatures(mapRef.current, elements);
+        });
+      }
+    });
   }, [selected?.id]);
 
   useEffect(() => {

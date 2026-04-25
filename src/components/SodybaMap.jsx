@@ -169,10 +169,14 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
         color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.08,
       }).addTo(mapRef.current);
 
-      // Bbox iš polygon koordinačių
+      // Bbox iš polygon koordinačių su minimaliu 1km buferiu
       const lats = coords.map(c => c[0]);
       const lngs = coords.map(c => c[1]);
-      const bbox = [Math.min(...lats), Math.min(...lngs), Math.max(...lats), Math.max(...lngs)];
+      const cLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+      const cLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+      const padLat = Math.max((Math.max(...lats) - Math.min(...lats)) / 2, 0.009); // ~1km
+      const padLng = Math.max((Math.max(...lngs) - Math.min(...lngs)) / 2, 0.014);
+      const bbox = [cLat - padLat, cLng - padLng, cLat + padLat, cLng + padLng];
 
       const gk = selected.gyv_kodas;
       if (featureCacheRef.current.has(gk)) {

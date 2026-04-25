@@ -7,10 +7,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "scan:osm": "tsx scripts/osm-import.ts",
-    "scan:check": "tsx scripts/geo-checker.ts"
+    "scan:check": "tsx scripts/geo-checker.ts",
+    "import:rc": "tsx scripts/rc-import.ts"
   },
   "dependencies": {
     "firebase": "^12.12.1",
+    "firebase-admin": "^13.8.0",
     "leaflet": "^1.9.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

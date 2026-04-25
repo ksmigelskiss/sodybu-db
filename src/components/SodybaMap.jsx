@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+async function fetchPolygon(gyv_kodas) {
+  const res = await fetch(`/api/polygon-proxy?gyv_kodas=${gyv_kodas}`);
+  if (!res.ok) return null;
+  const { coords } = await res.json();
+  return coords?.length ? coords : null;
+}
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -38,6 +45,7 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   const mapRef = useRef(null);
   const markersRef = useRef({});
   const userMarkerRef = useRef(null);
+  const polygonRef = useRef(null);
   const [isSatellite, setIsSatellite] = useState(false);
 
   useEffect(() => {
@@ -72,8 +80,21 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   }, [items]);
 
   useEffect(() => {
-    if (!selected || !mapRef.current) return;
+    if (!mapRef.current) return;
+    polygonRef.current?.remove();
+    polygonRef.current = null;
+    if (!selected) return;
+
     mapRef.current.setView([selected.lat, selected.lng], 13);
+
+    if (selected.gyv_kodas) {
+      fetchPolygon(selected.gyv_kodas).then(coords => {
+        if (!coords || !mapRef.current) return;
+        polygonRef.current = L.polygon(coords, {
+          color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.1,
+        }).addTo(mapRef.current);
+      });
+    }
   }, [selected?.id]);
 
   useEffect(() => {

@@ -87,12 +87,15 @@ function DetailPanel({ sodyba: s, onClose }) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
         <span style={{ fontWeight: 700, fontSize: 15 }}>
-          {s.adresas || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
+          {s.pavadinimas || s.adresas || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
         </span>
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
       </div>
 
       <Row label="Balas" value={`${s.score ?? '—'} / 100`} bold />
+      <Row label="Tipas" value={s.tipas ?? '—'} />
+      <Row label="Pastatai (RC)" value={s.adresas_sk != null ? s.adresas_sk : '—'} />
+      <Row label="Plotas" value={s.plotas_ha != null ? `${s.plotas_ha} ha` : '—'} />
       <Row label="Miškas" value={s.miskas_m === 0 ? '✓ sklype' : s.miskas_m != null ? `${s.miskas_m} m` : '—'} />
       <Row label="Upė/ežeras" value={s.upelis_m === 0 ? '✓ šalia' : s.upelis_m != null ? `${s.upelis_m} m` : '—'} />
       <Row label="Kaimynai 200m" value={s.kaimynai_200m != null ? s.kaimynai_200m : '—'} />

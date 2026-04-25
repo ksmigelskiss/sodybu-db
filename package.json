@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "scan:osm": "tsx scripts/osm-import.ts",
     "scan:check": "tsx scripts/geo-checker.ts",
-    "import:rc": "tsx scripts/rc-import.ts"
+    "import:rc": "tsx scripts/rc-import.ts",
+    "import:adresas": "tsx scripts/adresas-count.ts"
   },
   "dependencies": {
     "firebase": "^12.12.1",

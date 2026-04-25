@@ -96,7 +96,7 @@ const CadastreLayer = L.TileLayer.extend({
     const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
     const sz = this.getTileSize();
     return `https://www.geoportal.lt/mapproxy/rc_kadastro_zemelapis/MapServer/export` +
-      `?bbox=${bbox}&bboxSR=4326&layers=show:33&size=${sz.x},${sz.y}` +
+      `?bbox=${bbox}&bboxSR=4326&size=${sz.x},${sz.y}` +
       `&format=png32&transparent=true&f=image&dpi=96`;
   },
   createTile(coords, done) {
@@ -141,6 +141,7 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   const [isSatellite, setIsSatellite] = useState(false);
   const [isCadastre, setIsCadastre] = useState(false);
   const [featuresLoading, setFeaturesLoading] = useState(false);
+  const [featuresCount, setFeaturesCount] = useState(null);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -185,11 +186,11 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
     const map = mapRef.current;
     if (!map) return;
 
-    // Išvalom ankstesnius sluoksnius
     polygonRef.current?.remove();
     polygonRef.current = null;
     featureLayersRef.current.forEach(l => l.remove());
     featureLayersRef.current = [];
+    setFeaturesCount(null);
 
     if (!selected) return;
 
@@ -218,10 +219,12 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
         featureLayersRef.current = renderFeatures(mapRef.current, featureCacheRef.current.get(gk));
       } else {
         setFeaturesLoading(true);
+        setFeaturesCount(null);
         fetchFeatures(bbox).then(elements => {
           if (!mapRef.current) return;
           featureCacheRef.current.set(gk, elements);
           featureLayersRef.current = renderFeatures(mapRef.current, elements);
+          setFeaturesCount(elements.length);
         }).finally(() => setFeaturesLoading(false));
       }
     });
@@ -265,13 +268,17 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
           📐 Sklypai
         </button>
       </div>
-      {featuresLoading && (
+      {(featuresLoading || featuresCount !== null) && (
         <div style={{
           position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
           zIndex: 1000, background: 'white', borderRadius: 8, padding: '6px 14px',
           fontSize: 12, color: '#6b7280', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
         }}>
-          Kraunami pastatai ir vandens telkiniai…
+          {featuresLoading
+            ? 'Kraunami OSM objektai…'
+            : featuresCount === 0
+              ? 'OSM: pastatų / vandens nerasta šioje zonoje'
+              : `OSM: ${featuresCount} objektai rasti`}
         </div>
       )}
     </div>

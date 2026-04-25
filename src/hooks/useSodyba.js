@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  collection, query, where, orderBy, limit, getDocs,
-  doc, getDoc, setDoc, serverTimestamp
-} from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase.js';
 
 const COL = 'sodyba';
@@ -16,17 +13,21 @@ export function useSodybaList(filters = {}) {
     setLoading(true);
     setError(null);
     try {
-      let q = query(collection(db, COL), orderBy('score', 'desc'), limit(200));
+      // Firestore query — filtruojame kas galima serverio pusėje
+      let constraints = [orderBy('tipas'), limit(500)];
 
-      if (filters.minScore) q = query(q, where('score', '>=', filters.minScore));
-      if (filters.miskas) q = query(q, where('miskas_m', '!=', null));
-      if (filters.upelis) q = query(q, where('upelis_m', '!=', null));
-      if (filters.vienkiemis) q = query(q, where('kaimynai_200m', '==', 0));
+      if (filters.tipas) {
+        constraints = [where('tipas', '==', filters.tipas), orderBy('tipas'), limit(500)];
+      }
 
-      const snap = await getDocs(q);
+      const snap = await getDocs(query(collection(db, COL), ...constraints));
       let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      // Filtruojame pagal atstumą kliento pusėje (paprastas bbox)
+      // Kliento pusės filtrai
+      if (filters.miskas)  docs = docs.filter(s => s.miskas_m != null);
+      if (filters.upelis)  docs = docs.filter(s => s.upelis_m != null);
+      if (filters.maxAdresas) docs = docs.filter(s => s.adresas_sk != null && s.adresas_sk <= Number(filters.maxAdresas));
+
       if (filters.lat && filters.lng && filters.radiusKm) {
         const deg = filters.radiusKm / 111;
         docs = docs.filter(s =>
@@ -35,7 +36,15 @@ export function useSodybaList(filters = {}) {
         );
       }
 
-      setItems(docs);
+      // Rūšiuojame: score DESC, tada pavadinimas
+      docs.sort((a, b) => {
+        if (a.score != null && b.score != null) return b.score - a.score;
+        if (a.score != null) return -1;
+        if (b.score != null) return 1;
+        return (a.pavadinimas || '').localeCompare(b.pavadinimas || '');
+      });
+
+      setItems(docs.slice(0, 200));
     } catch (e) {
       setError(e.message);
     } finally {

@@ -9,11 +9,14 @@ async function fetchPolygon(gyv_kodas) {
   return coords?.length ? coords : null;
 }
 
-const OVERPASS = 'https://overpass-api.de/api/interpreter';
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+];
 
 async function fetchFeatures(bbox) {
   const [s, w, n, e] = bbox;
-  const q = `[out:json][timeout:25];
+  const q = `[out:json][timeout:30];
 (
   way["building"](${s},${w},${n},${e});
   node["building"](${s},${w},${n},${e});
@@ -21,14 +24,22 @@ async function fetchFeatures(bbox) {
   way["waterway"~"river|stream|canal|ditch"](${s},${w},${n},${e});
 );
 out geom;`;
-  const res = await fetch(OVERPASS, {
-    method: 'POST',
-    body: `data=${encodeURIComponent(q)}`,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.elements ?? [];
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        body: `data=${encodeURIComponent(q)}`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      return data.elements ?? [];
+    } catch {
+      continue;
+    }
+  }
+  return [];
 }
 
 function renderFeatures(map, elements) {
@@ -102,6 +113,7 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   const featureLayersRef = useRef([]);
   const featureCacheRef = useRef(new Map()); // gyv_kodas → elements[]
   const [isSatellite, setIsSatellite] = useState(false);
+  const [featuresLoading, setFeaturesLoading] = useState(false);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -166,11 +178,12 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
       if (featureCacheRef.current.has(gk)) {
         featureLayersRef.current = renderFeatures(mapRef.current, featureCacheRef.current.get(gk));
       } else {
+        setFeaturesLoading(true);
         fetchFeatures(bbox).then(elements => {
           if (!mapRef.current) return;
           featureCacheRef.current.set(gk, elements);
           featureLayersRef.current = renderFeatures(mapRef.current, elements);
-        });
+        }).finally(() => setFeaturesLoading(false));
       }
     });
   }, [selected?.id]);
@@ -199,6 +212,15 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
       >
         {isSatellite ? '🗺 Žemėlapis' : '🛰 Palydovas'}
       </button>
+      {featuresLoading && (
+        <div style={{
+          position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 1000, background: 'white', borderRadius: 8, padding: '6px 14px',
+          fontSize: 12, color: '#6b7280', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        }}>
+          Kraunami pastatai ir vandens telkiniai…
+        </div>
+      )}
     </div>
   );
 }

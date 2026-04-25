@@ -89,6 +89,32 @@ const LAYERS = {
   }),
 };
 
+// Geoportal.lt kadastro sklypų overlay (ArcGIS export endpoint → rasterio plytelės)
+const CadastreLayer = L.TileLayer.extend({
+  getTileUrl(coords) {
+    const b = this._tileCoordsToBounds(coords);
+    const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
+    const sz = this.getTileSize();
+    return `https://www.geoportal.lt/mapproxy/rc_kadastro_zemelapis/MapServer/export` +
+      `?bbox=${bbox}&bboxSR=4326&layers=show:33&size=${sz.x},${sz.y}` +
+      `&format=png32&transparent=true&f=image&dpi=96`;
+  },
+  createTile(coords, done) {
+    const img = document.createElement('img');
+    img.crossOrigin = '';
+    img.onload = () => done(null, img);
+    img.onerror = (e) => done(e, img);
+    img.src = this.getTileUrl(coords);
+    return img;
+  },
+});
+
+let cadastreLayerInstance = null;
+function getCadastreLayer() {
+  if (!cadastreLayerInstance) cadastreLayerInstance = new CadastreLayer('', { opacity: 0.8, minZoom: 13, maxZoom: 19, tileSize: 256 });
+  return cadastreLayerInstance;
+}
+
 const scoreColor = (score) => {
   if (score >= 70) return '#16a34a';
   if (score >= 40) return '#d97706';
@@ -113,6 +139,7 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   const featureLayersRef = useRef([]);
   const featureCacheRef = useRef(new Map()); // gyv_kodas → elements[]
   const [isSatellite, setIsSatellite] = useState(false);
+  const [isCadastre, setIsCadastre] = useState(false);
   const [featuresLoading, setFeaturesLoading] = useState(false);
 
   useEffect(() => {
@@ -129,6 +156,14 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
     map.removeLayer(LAYERS[prev]);
     LAYERS[next].addTo(map);
   }, [isSatellite]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const layer = getCadastreLayer();
+    if (isCadastre) layer.addTo(map);
+    else map.removeLayer(layer);
+  }, [isCadastre]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -204,18 +239,32 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
       <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
-      <button
-        onClick={() => setIsSatellite(s => !s)}
-        style={{
-          position: 'absolute', bottom: 24, left: 12, zIndex: 1000,
-          background: 'white', border: '2px solid rgba(0,0,0,0.2)',
-          borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-          fontSize: 13, fontWeight: 600, boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-          display: 'flex', alignItems: 'center', gap: 6,
-        }}
-      >
-        {isSatellite ? '🗺 Žemėlapis' : '🛰 Palydovas'}
-      </button>
+      <div style={{ position: 'absolute', bottom: 24, left: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <button
+          onClick={() => setIsSatellite(s => !s)}
+          style={{
+            background: 'white', border: '2px solid rgba(0,0,0,0.2)',
+            borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+            fontSize: 13, fontWeight: 600, boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          {isSatellite ? '🗺 Žemėlapis' : '🛰 Palydovas'}
+        </button>
+        <button
+          onClick={() => setIsCadastre(s => !s)}
+          style={{
+            background: isCadastre ? '#2563eb' : 'white',
+            color: isCadastre ? 'white' : '#374151',
+            border: '2px solid rgba(0,0,0,0.2)',
+            borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+            fontSize: 13, fontWeight: 600, boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          📐 Sklypai
+        </button>
+      </div>
       {featuresLoading && (
         <div style={{
           position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',

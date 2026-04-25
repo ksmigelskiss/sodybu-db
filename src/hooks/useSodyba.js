@@ -14,10 +14,10 @@ export function useSodybaList(filters = {}) {
     setError(null);
     try {
       // Firestore query — filtruojame kas galima serverio pusėje
-      let constraints = [orderBy('tipas'), limit(500)];
+      let constraints = [orderBy('tipas'), limit(10000)];
 
       if (filters.tipas) {
-        constraints = [where('tipas', '==', filters.tipas), orderBy('tipas'), limit(500)];
+        constraints = [where('tipas', '==', filters.tipas), orderBy('tipas'), limit(10000)];
       }
 
       const snap = await getDocs(query(collection(db, COL), ...constraints));
@@ -44,7 +44,7 @@ export function useSodybaList(filters = {}) {
         return (a.pavadinimas || '').localeCompare(b.pavadinimas || '');
       });
 
-      setItems(docs.slice(0, 200));
+      setItems(docs);
     } catch (e) {
       setError(e.message);
     } finally {

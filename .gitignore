@@ -3,3 +3,4 @@ node_modules/
 bun.lockb
 dist/
 node_modules/
+.vercel

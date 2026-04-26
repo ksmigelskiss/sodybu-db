@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { VIETA_THEME, VIETA_KEYS, VIETA_ATTRS } from '../lib/theme.js';
+import { geoportalUrl } from '../lib/coords.js';
 
 export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel }) {
   const [statusas, setStatusas] = useState('nauja');
@@ -31,8 +32,18 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel 
       {zonaPavadinimas && (
         <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Zona: {zonaPavadinimas}</div>
       )}
-      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 12 }}>
+      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>
         {lat.toFixed(5)}, {lng.toFixed(5)}
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        <a href={geoportalUrl(lat, lng)} target="_blank" rel="noreferrer" style={{
+          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
+          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
+        }}>🗺 Geoportal</a>
+        <a href={`https://maps.google.com/?q=${lat},${lng}`} target="_blank" rel="noreferrer" style={{
+          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
+          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
+        }}>📍 Google Maps</a>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>

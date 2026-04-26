@@ -263,9 +263,15 @@ function SearchBox({ onSelect }) {
 
   const label = (r) => {
     const a = r.address ?? {};
-    const name = r.name || a.village || a.town || a.city || a.hamlet || r.display_name.split(',')[0];
-    const parts = [a.municipality || a.county, a.state].filter(Boolean).join(', ');
-    return { name, parts };
+    let name;
+    if (a.house_number) {
+      name = [a.road, a.house_number].filter(Boolean).join(' ');
+    } else {
+      name = r.name || a.road || a.village || a.hamlet || a.town || a.city || r.display_name.split(',')[0];
+    }
+    const city = a.city || a.town || a.village || a.municipality;
+    const parts = [city, a.county || a.state].filter(Boolean).join(', ');
+    return { name: name || r.display_name.split(',')[0], parts };
   };
 
   return (

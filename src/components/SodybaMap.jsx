@@ -42,6 +42,7 @@ export default function SodybaMap({
   const apskritisPolyRef     = useRef([]);
   const selectedCountyRef    = useRef(null);
   const userMarkerRef        = useRef(null);
+  const searchMarkerRef      = useRef(null);
   const newVietaMarkerRef    = useRef(null);
   const polygonRef           = useRef(null);
   const featureLayersRef     = useRef([]);
@@ -225,10 +226,15 @@ const [featuresLoading, setFeaturesLoading]   = useState(false);
     mapRef.current.setView([selectedVieta.lat, selectedVieta.lng], 15);
   }, [selectedVieta?.id]);
 
-  // Search position — pan without marker
+  // Search position — pan + drop pin
   useEffect(() => {
+    searchMarkerRef.current?.remove();
+    searchMarkerRef.current = null;
     if (!searchPos || !mapRef.current) return;
     mapRef.current.setView([searchPos.lat, searchPos.lng], 15);
+    searchMarkerRef.current = L.circleMarker([searchPos.lat, searchPos.lng], {
+      radius: 7, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.9, weight: 2,
+    }).addTo(mapRef.current).bindTooltip('Paieškos rezultatas', { permanent: false });
   }, [searchPos]);
 
   // Atrinktos tab — fit map to all saved vietos

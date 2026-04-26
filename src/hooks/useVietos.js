@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, orderBy, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase.js';
 
 const COL = 'vietos';
@@ -11,7 +11,7 @@ export function useVietos() {
   useEffect(() => {
     (async () => {
       try {
-        const snap = await getDocs(query(collection(db, COL), orderBy('created_at', 'desc')));
+        const snap = await getDocs(collection(db, COL));
         setVietos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       } finally {
         setLoading(false);
@@ -19,12 +19,13 @@ export function useVietos() {
     })();
   }, []);
 
-  const addVieta = useCallback(async ({ lat, lng, statusas, komentaras, gyv_kodas, zonaPavadinimas }) => {
+  const addVieta = useCallback(async ({ lat, lng, statusas, komentaras, gyv_kodas, zonaPavadinimas, ...rest }) => {
     const data = {
       lat, lng, statusas,
       komentaras: komentaras || null,
       gyv_kodas: gyv_kodas || null,
       zonaPavadinimas: zonaPavadinimas || null,
+      ...rest,
       created_at: serverTimestamp(),
     };
     const ref = await addDoc(collection(db, COL), data);

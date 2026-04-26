@@ -11,8 +11,14 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel 
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave({ lat, lng, statusas, komentaras, ...attrs });
-    setSaving(false);
+    try {
+      await onSave({ lat, lng, statusas, komentaras, ...attrs });
+    } catch (e) {
+      console.error('Klaida išsaugant:', e);
+      alert('Klaida išsaugant: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

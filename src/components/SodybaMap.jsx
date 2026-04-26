@@ -9,37 +9,12 @@ async function fetchPolygon(gyv_kodas) {
   return coords?.length ? coords : null;
 }
 
-const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-];
-
 async function fetchFeatures(bbox) {
   const [s, w, n, e] = bbox;
-  const q = `[out:json][timeout:30];
-(
-  way["building"](${s},${w},${n},${e});
-  node["building"](${s},${w},${n},${e});
-  way["natural"="water"](${s},${w},${n},${e});
-  way["waterway"~"river|stream|canal|ditch"](${s},${w},${n},${e});
-);
-out geom;`;
-
-  for (const endpoint of OVERPASS_ENDPOINTS) {
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        body: `data=${encodeURIComponent(q)}`,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      return data.elements ?? [];
-    } catch {
-      continue;
-    }
-  }
-  return [];
+  const res = await fetch(`/api/overpass-proxy?s=${s}&w=${w}&n=${n}&e=${e}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.elements ?? [];
 }
 
 function renderFeatures(map, elements) {

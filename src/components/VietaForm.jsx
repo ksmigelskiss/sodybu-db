@@ -1,19 +1,29 @@
 import { useState } from 'react';
-import { VIETA_THEME, VIETA_KEYS, VIETA_ATTRS } from '../lib/theme.js';
+import { VIETA_ATTRS } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
 
 export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel }) {
-  const [statusas, setStatusas] = useState('nauja');
+  const [saltinis, setSaltinis]     = useState('zona');
+  const [url, setUrl]               = useState('');
+  const [kaina, setKaina]           = useState('');
   const [komentaras, setKomentaras] = useState('');
-  const [attrs, setAttrs] = useState({});
-  const [saving, setSaving] = useState(false);
+  const [attrs, setAttrs]           = useState({});
+  const [saving, setSaving]         = useState(false);
 
   const toggleAttr = (key) => setAttrs(a => ({ ...a, [key]: !a[key] }));
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave({ lat, lng, statusas, komentaras, ...attrs });
+      await onSave({
+        lat, lng,
+        statusas: null,
+        saltinis,
+        url: url.trim() || null,
+        kaina: kaina ? Number(kaina) : null,
+        komentaras,
+        ...attrs,
+      });
     } catch (e) {
       console.error('Klaida išsaugant:', e);
       alert('Klaida išsaugant: ' + e.message);
@@ -26,48 +36,53 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel 
     <div style={{
       position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
       background: 'white', borderRadius: 12, boxShadow: '0 4px 32px rgba(0,0,0,0.25)',
-      padding: 20, width: 290, zIndex: 2000,
+      padding: 20, width: 300, zIndex: 2000,
     }}>
       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>📍 Nauja sodyba</div>
       {zonaPavadinimas && (
         <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Zona: {zonaPavadinimas}</div>
       )}
-      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>
+      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 10 }}>
         {lat.toFixed(5)}, {lng.toFixed(5)}
       </div>
+
+      {/* Saltinis toggle */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        <a href={geoportalUrl(lat, lng)} target="_blank" rel="noreferrer" style={{
-          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
-          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
-        }}>🗺 Geoportal</a>
-        <a href={`https://maps.google.com/?q=${lat},${lng}`} target="_blank" rel="noreferrer" style={{
-          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
-          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
-        }}>📍 Google Maps</a>
-        <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${lat}&x=${lng}`} target="_blank" rel="noreferrer" style={{
-          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
-          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
-        }}>🗾 Etomesto</a>
+        {[['zona', '🗺 Rasta žemėlapyje'], ['skelbimas', '📢 Skelbimas']].map(([key, label]) => (
+          <button key={key} onClick={() => setSaltinis(key)} style={{
+            flex: 1, padding: '6px 4px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+            border: `1.5px solid ${saltinis === key ? '#2563eb' : '#e2e8f0'}`,
+            background: saltinis === key ? '#dbeafe' : '#f8fafc',
+            color: saltinis === key ? '#1d4ed8' : '#6b7280',
+          }}>{label}</button>
+        ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-        {VIETA_KEYS.map(key => {
-          const th = VIETA_THEME[key];
-          const active = statusas === key;
-          return (
-            <button key={key} onClick={() => setStatusas(key)} style={{
-              flex: 1, minWidth: 60, padding: '6px 4px', borderRadius: 8,
-              border: `1.5px solid ${active ? th.color : '#e2e8f0'}`,
-              background: active ? th.bg : '#f8fafc',
-              color: active ? th.color : '#6b7280',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer',
-            }}>
-              {th.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Skelbimas fields */}
+      {saltinis === 'skelbimas' && (
+        <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <input
+            value={url} onChange={e => setUrl(e.target.value)}
+            placeholder="Nuoroda į skelbimą..."
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
+              fontSize: 12, fontFamily: 'inherit', color: '#374151',
+            }}
+          />
+          <input
+            value={kaina} onChange={e => setKaina(e.target.value.replace(/\D/g, ''))}
+            placeholder="Kaina €"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
+              fontSize: 12, fontFamily: 'inherit', color: '#374151',
+            }}
+          />
+        </div>
+      )}
 
+      {/* Attrs */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
         {VIETA_ATTRS.map(({ key, label }) => (
           <button key={key} onClick={() => toggleAttr(key)} style={{
@@ -90,9 +105,24 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel 
         style={{
           width: '100%', boxSizing: 'border-box', resize: 'none',
           border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
-          fontSize: 12, fontFamily: 'inherit', marginBottom: 12, color: '#374151',
+          fontSize: 12, fontFamily: 'inherit', marginBottom: 10, color: '#374151',
         }}
       />
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        <a href={geoportalUrl(lat, lng)} target="_blank" rel="noreferrer" style={{
+          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
+          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
+        }}>🗺 Geoportal</a>
+        <a href={`https://maps.google.com/?q=${lat},${lng}`} target="_blank" rel="noreferrer" style={{
+          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
+          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
+        }}>📍 Google Maps</a>
+        <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${lat}&x=${lng}`} target="_blank" rel="noreferrer" style={{
+          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
+          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
+        }}>🗾 Etomesto</a>
+      </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={onCancel} style={{

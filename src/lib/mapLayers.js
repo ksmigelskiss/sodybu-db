@@ -50,11 +50,14 @@ export function makeMarkerIcon(score, statusas) {
   return L.divIcon({ html: svg, className: '', iconSize: [28, 28], iconAnchor: [14, 14] });
 }
 
-export function makeVietaIcon(statusas) {
-  const th = VIETA_THEME[statusas] ?? VIETA_THEME.nauja;
+export function makeVietaIcon(statusas, saltinis) {
+  const colors = { aplankyta: '#2563eb', atmesta: '#6b7280' };
+  const color = colors[statusas] ?? '#d97706';
+  const isSkelbimas = saltinis === 'skelbimas';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="30" viewBox="0 0 26 30">
-    <path d="M13 2 L24 11 L20 11 L20 27 L6 27 L6 11 L2 11 Z" fill="${th.color}" stroke="white" stroke-width="2"/>
+    <path d="M13 2 L24 11 L20 11 L20 27 L6 27 L6 11 L2 11 Z" fill="${color}" stroke="white" stroke-width="2"/>
     <rect x="10" y="17" width="6" height="10" rx="1" fill="white" opacity="0.85"/>
+    ${isSkelbimas ? `<circle cx="21" cy="6" r="6" fill="#f59e0b" stroke="white" stroke-width="1.5"/><text x="21" y="10" text-anchor="middle" font-size="7" font-weight="bold" fill="white">S</text>` : ''}
   </svg>`;
   return L.divIcon({ html: svg, className: '', iconSize: [26, 30], iconAnchor: [13, 30] });
 }

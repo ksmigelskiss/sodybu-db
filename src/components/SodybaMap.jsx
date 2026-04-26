@@ -160,7 +160,7 @@ const [featuresLoading, setFeaturesLoading]   = useState(false);
     (vietos ?? []).forEach(v => {
       if (!v.lat || !v.lng) return;
       const label = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
-      const m = L.marker([v.lat, v.lng], { icon: makeVietaIcon(v.statusas), zIndexOffset: 100 })
+      const m = L.marker([v.lat, v.lng], { icon: makeVietaIcon(v.statusas, v.saltinis), zIndexOffset: 100 })
         .addTo(map).bindTooltip(label);
       m.on('click', (e) => { L.DomEvent.stopPropagation(e); onVietaSelect?.(v); });
       vietaMarkersRef.current.push(m);
@@ -252,7 +252,7 @@ const [featuresLoading, setFeaturesLoading]   = useState(false);
     newVietaMarkerRef.current = null;
     if (!newVietaPos || !mapRef.current) return;
     newVietaMarkerRef.current = L.marker([newVietaPos.lat, newVietaPos.lng], {
-      icon: makeVietaIcon('nauja'), zIndexOffset: 500,
+      icon: makeVietaIcon(null), zIndexOffset: 500,
     }).addTo(mapRef.current);
   }, [newVietaPos]);
 

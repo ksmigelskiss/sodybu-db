@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import SodybaMap from './components/SodybaMap.jsx';
 import SodybaCard from './components/SodybaCard.jsx';
 import VietaCard from './components/VietaCard.jsx';
@@ -21,14 +21,11 @@ export default function App() {
   const [activeTab, setActiveTab]         = useState('browse');
   const [addMode, setAddMode]             = useState(false);
   const [newVietaPos, setNewVietaPos]     = useState(null);
-  const [searchQuery, setSearchQuery]     = useState('');
   const [searchPos, setSearchPos]         = useState(null);
-  const [searchLoading, setSearchLoading] = useState(false);
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
 
-  // Zone list: only show when county selected, filtered by tab + apskritis
   const displayZones = (() => {
     if (activeTab === 'atrinktos' || !selectedApskritis) return [];
     const byTab = activeTab === 'browse'
@@ -86,22 +83,6 @@ export default function App() {
     await deleteVieta(id); setSelectedVieta(null);
   }, [deleteVieta]);
 
-  const handleSearch = useCallback(async () => {
-    const q = searchQuery.trim();
-    if (!q) return;
-    const coordMatch = q.match(/^(-?\d+[.,]?\d*)[,\s]+(-?\d+[.,]?\d*)$/);
-    if (coordMatch) {
-      setSearchPos({ lat: parseFloat(coordMatch[1].replace(',', '.')), lng: parseFloat(coordMatch[2].replace(',', '.')) });
-      return;
-    }
-    setSearchLoading(true);
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=lt&limit=1`);
-      const data = await res.json();
-      if (data[0]) setSearchPos({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
-    } finally { setSearchLoading(false); }
-  }, [searchQuery]);
-
   const handleApskritisSelect = useCallback((a) => {
     setSelectedApskritis(a);
     setSelected(null);
@@ -120,20 +101,10 @@ export default function App() {
       <header style={{ padding: '8px 14px', background: '#1e293b', color: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 18 }}>🏡</span>
         <span style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap' }}>Sodybų paieška</span>
-        <div style={{ flex: 1, display: 'flex', gap: 6, marginLeft: 8 }}>
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="Adresas arba koordinatės..."
-            style={{ flex: 1, padding: '5px 10px', borderRadius: 7, border: 'none', fontSize: 13, minWidth: 0, background: '#334155', color: 'white', outline: 'none' }}
-          />
-          <button onClick={handleSearch} disabled={searchLoading}
-            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#475569', color: 'white', cursor: 'pointer', fontSize: 13 }}>
-            {searchLoading ? '…' : '🔍'}
-          </button>
+        <div style={{ flex: 1, display: 'flex', gap: 6, marginLeft: 8, position: 'relative' }}>
+          <SearchBox onSelect={setSearchPos} />
           <button onClick={() => setAddMode(true)} title="Žymėti sodybą"
-            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#1d4ed8', color: 'white', cursor: PIN_CURSOR, fontSize: 13 }}>
+            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#1d4ed8', color: 'white', cursor: PIN_CURSOR, fontSize: 13, flexShrink: 0 }}>
             📍
           </button>
         </div>
@@ -152,7 +123,6 @@ export default function App() {
           <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos}
             selectedApskritis={selectedApskritis} onChange={setActiveTab} />
 
-          {/* County header */}
           {activeTab !== 'atrinktos' && (
             <div style={{ padding: '7px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: selectedApskritis ? '#f0f7ff' : '#f8fafc', minHeight: 38 }}>
               {selectedApskritis ? (
@@ -231,6 +201,122 @@ export default function App() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SearchBox({ onSelect }) {
+  const [query, setQuery]       = useState('');
+  const [results, setResults]   = useState([]);
+  const [loading, setLoading]   = useState(false);
+  const [open, setOpen]         = useState(false);
+  const debounceRef             = useRef(null);
+  const wrapRef                 = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => { if (!wrapRef.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const search = useCallback(async (q) => {
+    const coordMatch = q.match(/^(-?\d+[.,]?\d*)[,\s]+(-?\d+[.,]?\d*)$/);
+    if (coordMatch) {
+      onSelect({ lat: parseFloat(coordMatch[1].replace(',', '.')), lng: parseFloat(coordMatch[2].replace(',', '.')) });
+      setOpen(false);
+      return;
+    }
+    if (q.length < 2) { setResults([]); setOpen(false); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=lt&limit=6&addressdetails=1`,
+        { headers: { 'Accept-Language': 'lt' } }
+      );
+      const data = await res.json();
+      setResults(data);
+      setOpen(data.length > 0);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [onSelect]);
+
+  const handleChange = (e) => {
+    const q = e.target.value;
+    setQuery(q);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => search(q), 350);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') { setOpen(false); }
+    if (e.key === 'Enter' && results.length > 0) { pick(results[0]); }
+  };
+
+  const pick = (r) => {
+    onSelect({ lat: parseFloat(r.lat), lng: parseFloat(r.lon) });
+    setQuery(r.display_name.split(',')[0]);
+    setOpen(false);
+    setResults([]);
+  };
+
+  const label = (r) => {
+    const a = r.address ?? {};
+    const name = r.name || a.village || a.town || a.city || a.hamlet || r.display_name.split(',')[0];
+    const parts = [a.municipality || a.county, a.state].filter(Boolean).join(', ');
+    return { name, parts };
+  };
+
+  return (
+    <div ref={wrapRef} style={{ flex: 1, position: 'relative' }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <input
+          value={query}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => results.length > 0 && setOpen(true)}
+          placeholder="Ieškoti vietos, kaimo, adreso..."
+          style={{
+            flex: 1, padding: '5px 10px', borderRadius: 7, border: 'none',
+            fontSize: 13, minWidth: 0, background: '#334155', color: 'white',
+            outline: 'none',
+          }}
+        />
+        <button
+          onClick={() => search(query)}
+          style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#475569', color: 'white', cursor: 'pointer', fontSize: 13 }}>
+          {loading ? '…' : '🔍'}
+        </button>
+      </div>
+
+      {open && results.length > 0 && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 40, marginTop: 4,
+          background: 'white', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          zIndex: 9999, overflow: 'hidden',
+        }}>
+          {results.map((r, i) => {
+            const { name, parts } = label(r);
+            return (
+              <div key={r.place_id ?? i}
+                onMouseDown={() => pick(r)}
+                style={{
+                  padding: '8px 12px', cursor: 'pointer', borderBottom: i < results.length - 1 ? '1px solid #f1f5f9' : 'none',
+                  display: 'flex', flexDirection: 'column', gap: 1,
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                onMouseLeave={e => e.currentTarget.style.background = 'white'}
+              >
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{name}</span>
+                {parts && <span style={{ fontSize: 11, color: '#9ca3af' }}>{parts}</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

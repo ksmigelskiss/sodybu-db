@@ -4,13 +4,7 @@ import SodybaCard from './components/SodybaCard.jsx';
 import DetailPanel from './components/DetailPanel.jsx';
 import Filters from './components/Filters.jsx';
 import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
-
-const TABS = [
-  { id: 'browse',  label: 'Naršyti' },
-  { id: 'idomi',   label: '⭐ Įdomios' },
-  { id: 'nauja',   label: '🆕 Naujos' },
-  { id: 'ziureta', label: '✓ Žiūrėtos' },
-];
+import { TABS } from './lib/theme.js';
 
 export default function App() {
   const [filters, setFilters]   = useState({});

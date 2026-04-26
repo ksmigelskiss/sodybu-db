@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { STATUS_THEME } from './theme.js';
 
 export const LAYERS = {
   map: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -35,11 +36,13 @@ export function getCadastreLayer() {
 
 const scoreColor = (score) => score >= 70 ? '#16a34a' : score >= 40 ? '#d97706' : '#6b7280';
 
-export function makeMarkerIcon(score) {
-  const color = scoreColor(score);
+export function makeMarkerIcon(score, statusas) {
+  const st = STATUS_THEME[statusas]?.marker;
+  const bg   = st?.bg   ?? scoreColor(score);
+  const text = st?.text ?? (score ?? '?');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
-    <circle cx="14" cy="14" r="12" fill="${color}" stroke="white" stroke-width="2"/>
-    <text x="14" y="18" text-anchor="middle" font-size="10" font-weight="bold" fill="white">${score ?? '?'}</text>
+    <circle cx="14" cy="14" r="12" fill="${bg}" stroke="white" stroke-width="2"/>
+    <text x="14" y="18.5" text-anchor="middle" font-size="11" font-weight="bold" fill="white">${text}</text>
   </svg>`;
   return L.divIcon({ html: svg, className: '', iconSize: [28, 28], iconAnchor: [14, 14] });
 }

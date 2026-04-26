@@ -51,7 +51,7 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
     items.forEach(s => {
       if (!s.lat || !s.lng) return;
       const label = s.pavadinimas || s.adresas || `${s.lat.toFixed(3)}, ${s.lng.toFixed(3)}`;
-      const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(s.score) })
+      const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(s.score, s.statusas) })
         .addTo(map).bindTooltip(label);
       m.on('click', () => onSelect(s));
       markersRef.current[s.id] = m;

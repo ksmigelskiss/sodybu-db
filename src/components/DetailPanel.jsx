@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { statusBtnStyle, STATUSES } from '../lib/status.js';
+import { statusBtnStyle } from '../lib/status.js';
+import { STATUS_THEME, STATUS_KEYS } from '../lib/theme.js';
 
 export default function DetailPanel({ sodyba: s, onClose, onStatusChange }) {
   const [comment, setComment] = useState(s.komentaras || '');
@@ -34,12 +35,12 @@ export default function DetailPanel({ sodyba: s, onClose, onStatusChange }) {
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-        {Object.entries(STATUSES).map(([key, st]) => (
+        {STATUS_KEYS.map(key => { const st = STATUS_THEME[key]; return (
           <button key={key} disabled={saving} onClick={() => handleStatus(key)}
             style={{ ...base, ...statusBtnStyle(s.statusas, key) }}>
             {st.label}
           </button>
-        ))}
+        ); })}
       </div>
 
       <textarea

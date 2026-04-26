@@ -129,6 +129,10 @@ export default function App() {
             style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#475569', color: 'white', cursor: 'pointer', fontSize: 13 }}>
             {searchLoading ? '…' : '🔍'}
           </button>
+          <button onClick={() => setAddMode(true)} title="Žymėti sodybą"
+            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#1d4ed8', color: 'white', cursor: 'pointer', fontSize: 13 }}>
+            📍
+          </button>
         </div>
         <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>
           {loading ? 'Kraunama...' : activeTab === 'atrinktos' ? `${vietos.length} sod.` : `${displayZones.length} zon.`}
@@ -150,14 +154,6 @@ export default function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <div style={{ width: 320, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e5e7eb', flexShrink: 0 }}>
           <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos} onChange={setActiveTab} />
-          {activeTab === 'browse' && (
-            <div style={{ padding: '6px 10px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setAddMode(true)}
-                style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid #2563eb', background: '#dbeafe', color: '#1d4ed8', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                📍 Žymėti sodybą
-              </button>
-            </div>
-          )}
 
           <div style={{ overflowY: 'auto', flex: 1 }}>
 

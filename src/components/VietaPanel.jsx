@@ -84,7 +84,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
       />
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-        <a href={`https://www.geoportal.lt/map/?lat=${vieta.lat}&lng=${vieta.lng}&zoom=17`}
+        <a href={`https://www.geoportal.lt/map/#zoom=17&lat=${vieta.lat}&lon=${vieta.lng}`}
           target="_blank" rel="noreferrer"
           style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '8px', fontSize: 12, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
           🗺 Geoportal

@@ -35,45 +35,6 @@ export function polygonBbox(coords) {
   return [cLat - padLat, cLng - padLng, cLat + padLat, cLng + padLng];
 }
 
-export async function fetchWaterways(s, w, n, e) {
-  try {
-    const res = await fetch(`/api/waterways-proxy?s=${s}&w=${w}&n=${n}&e=${e}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.elements ?? [];
-  } catch {
-    return [];
-  }
-}
-
-// Darker = bigger water body
-const WATERWAY_STYLE = {
-  river:  { color: '#1e3a8a', weight: 2.5, opacity: 0.9 },
-  canal:  { color: '#1d4ed8', weight: 2,   opacity: 0.85 },
-  stream: { color: '#60a5fa', weight: 1.5, opacity: 0.8 },
-  ditch:  { color: '#93c5fd', weight: 1,   opacity: 0.7 },
-  drain:  { color: '#bfdbfe', weight: 1,   opacity: 0.65 },
-};
-
-export function renderWaterways(map, elements) {
-  const pane = 'waterways';
-  const layers = [];
-  for (const el of elements) {
-    if (el.type !== 'way' || !el.geometry?.length) continue;
-    const latlngs = el.geometry.map(p => [p.lat, p.lon]);
-    if (el.tags?.natural === 'water') {
-      layers.push(L.polygon(latlngs, {
-        pane, color: '#1e3a8a', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.25,
-      }).addTo(map));
-    } else if (el.tags?.waterway) {
-      const style = { ...(WATERWAY_STYLE[el.tags.waterway] ?? WATERWAY_STYLE.stream), pane };
-      const line = L.polyline(latlngs, style).addTo(map);
-      if (el.tags.name) line.bindTooltip(el.tags.name, { sticky: true });
-      layers.push(line);
-    }
-  }
-  return layers;
-}
 
 export function renderOsmFeatures(map, elements) {
   const layers = [];

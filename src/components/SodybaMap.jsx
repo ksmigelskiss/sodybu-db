@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
-import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures, fetchWaterways, renderWaterways } from '../lib/osmFeatures.js';
+import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 import { APSKRITYS } from '../lib/apskritys.js';
 
 function makeApskritisIcon(label) {
@@ -46,25 +46,17 @@ export default function SodybaMap({
   const polygonRef           = useRef(null);
   const featureLayersRef     = useRef([]);
   const featureCacheRef      = useRef(new Map());
-  const waterwayLayersRef    = useRef([]);
-  const waterwayCacheRef     = useRef(new Map());
 
   const [isSatellite, setIsSatellite]           = useState(false);
   const [isCadastre, setIsCadastre]             = useState(false);
-  const [isWaterways, setIsWaterways]           = useState(true);
-  const [featuresLoading, setFeaturesLoading]   = useState(false);
+const [featuresLoading, setFeaturesLoading]   = useState(false);
   const [featuresCount, setFeaturesCount]       = useState(null);
-  const [waterwaysLoading, setWaterwaysLoading] = useState(false);
 
   // Init map + custom pane for waterways (below overlay, above tiles)
   useEffect(() => {
     if (mapRef.current) return;
-    const map = L.map(containerRef.current).setView([55.3, 23.9], 7);
-    map.createPane('waterways');
-    map.getPane('waterways').style.zIndex = 350;
-    map.getPane('waterways').style.pointerEvents = 'none';
-    LAYERS.map.addTo(map);
-    mapRef.current = map;
+    mapRef.current = L.map(containerRef.current).setView([55.3, 23.9], 7);
+    LAYERS.map.addTo(mapRef.current);
   }, []);
 
   // Base layer toggle
@@ -83,14 +75,6 @@ export default function SodybaMap({
     if (isCadastre) layer.addTo(map);
     else map.removeLayer(layer);
   }, [isCadastre]);
-
-  // Waterways visibility toggle (show/hide pane)
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    const pane = map.getPane('waterways');
-    if (pane) pane.style.display = isWaterways ? '' : 'none';
-  }, [isWaterways]);
 
   // County outlines + label markers (overview mode)
   useEffect(() => {
@@ -137,27 +121,6 @@ export default function SodybaMap({
         style: { color: '#2563eb', weight: 2, fillOpacity: 0, dashArray: '6 4' },
       }).addTo(mapRef.current);
     });
-  }, [selectedApskritis?.id]);
-
-  // Waterways for selected county
-  useEffect(() => {
-    waterwayLayersRef.current.forEach(l => l.remove());
-    waterwayLayersRef.current = [];
-    if (!selectedApskritis || !mapRef.current) return;
-
-    const id = selectedApskritis.id;
-    if (waterwayCacheRef.current.has(id)) {
-      waterwayLayersRef.current = renderWaterways(mapRef.current, waterwayCacheRef.current.get(id));
-      return;
-    }
-
-    const [[s, w], [n, e]] = selectedApskritis.bounds;
-    setWaterwaysLoading(true);
-    fetchWaterways(s, w, n, e).then(elements => {
-      if (!mapRef.current) return;
-      waterwayCacheRef.current.set(id, elements);
-      waterwayLayersRef.current = renderWaterways(mapRef.current, elements);
-    }).finally(() => setWaterwaysLoading(false));
   }, [selectedApskritis?.id]);
 
   // Zoom to selected apskritis or reset to Lithuania overview
@@ -319,11 +282,6 @@ export default function SodybaMap({
         <MapBtn onClick={() => setIsCadastre(s => !s)} active={isCadastre}>
           📐 Sklypai
         </MapBtn>
-        {selectedApskritis && (
-          <MapBtn onClick={() => setIsWaterways(s => !s)} active={isWaterways} loading={waterwaysLoading}>
-            💧 Upės
-          </MapBtn>
-        )}
       </div>
 
       {(featuresLoading || featuresCount !== null) && (
@@ -341,16 +299,15 @@ export default function SodybaMap({
   );
 }
 
-function MapBtn({ onClick, active, loading, children }) {
+function MapBtn({ onClick, active, children }) {
   return (
     <button onClick={onClick} style={{
       background: active ? '#2563eb' : 'white', color: active ? 'white' : '#374151',
       border: '2px solid rgba(0,0,0,0.2)', borderRadius: 8, padding: '6px 12px',
       cursor: 'pointer', fontSize: 13, fontWeight: 600,
       boxShadow: '0 2px 6px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 6,
-      opacity: loading ? 0.7 : 1,
     }}>
-      {children}{loading ? ' …' : ''}
+      {children}
     </button>
   );
 }

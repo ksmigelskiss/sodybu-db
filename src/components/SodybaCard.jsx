@@ -1,5 +1,12 @@
+const STATUS_STYLE = {
+  idomi:   { border: '#f59e0b', bg: '#fffbeb' },
+  netinka: { border: '#9ca3af', bg: '#f9fafb' },
+  ziureta: { border: '#10b981', bg: '#f0fdf4' },
+};
+
 export default function SodybaCard({ sodyba, onClick, selected }) {
   const s = sodyba;
+  const st = STATUS_STYLE[s.statusas];
   return (
     <div
       onClick={onClick}
@@ -7,12 +14,15 @@ export default function SodybaCard({ sodyba, onClick, selected }) {
         padding: '10px 14px',
         borderBottom: '1px solid #eee',
         cursor: 'pointer',
-        background: selected ? '#f0f7ff' : 'white',
-        borderLeft: selected ? '3px solid #2563eb' : '3px solid transparent',
+        background: selected ? '#f0f7ff' : (st?.bg ?? 'white'),
+        borderLeft: `3px solid ${selected ? '#2563eb' : (st?.border ?? 'transparent')}`,
+        opacity: s.statusas === 'netinka' ? 0.5 : 1,
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontWeight: 600, fontSize: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {s.statusas === 'idomi' && '⭐'}
+          {s.statusas === 'ziureta' && '✓'}
           {s.pavadinimas || s.adresas || s.savivaldybe || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
         </div>
         <ScoreBadge score={s.score} />

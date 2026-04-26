@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase.js';
 
 const COL = 'sodyba';
@@ -54,7 +54,11 @@ export function useSodybaList(filters = {}) {
 
   useEffect(() => { load(); }, [load]);
 
-  return { items, loading, error, reload: load };
+  const updateItem = useCallback((id, updates) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  }, []);
+
+  return { items, loading, error, reload: load, updateItem };
 }
 
 export function useSodybaDetail(id) {
@@ -69,6 +73,13 @@ export function useSodybaDetail(id) {
   }, [id]);
 
   return { sodyba, loading };
+}
+
+export async function updateSodybaStatus(id, statusas, komentaras) {
+  await updateDoc(doc(db, COL, id), {
+    statusas: statusas ?? null,
+    komentaras: komentaras ?? null,
+  });
 }
 
 export async function checkPoint(lat, lng) {

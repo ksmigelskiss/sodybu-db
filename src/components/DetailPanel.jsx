@@ -62,6 +62,10 @@ export default function DetailPanel({ sodyba: s, onClose, onStatusChange, onAddV
           style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 12, textDecoration: 'none', color: '#374151' }}>
           📍 Google Maps
         </a>
+        <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${s.lat}&x=${s.lng}`} target="_blank" rel="noreferrer"
+          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 12, textDecoration: 'none', color: '#374151' }}>
+          🗾 Etomesto
+        </a>
       </div>
     </div>
   );

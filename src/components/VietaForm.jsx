@@ -44,6 +44,10 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel 
           flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
           padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
         }}>📍 Google Maps</a>
+        <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${lat}&x=${lng}`} target="_blank" rel="noreferrer" style={{
+          flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 7,
+          padding: '5px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500,
+        }}>🗾 Etomesto</a>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>

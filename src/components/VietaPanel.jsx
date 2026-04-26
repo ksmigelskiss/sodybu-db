@@ -95,6 +95,11 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
           style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '8px', fontSize: 12, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
           📍 Google Maps
         </a>
+        <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`}
+          target="_blank" rel="noreferrer"
+          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '8px', fontSize: 12, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
+          🗾 Etomesto
+        </a>
       </div>
 
       <button

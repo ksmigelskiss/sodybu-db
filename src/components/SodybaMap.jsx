@@ -56,8 +56,8 @@ L.Icon.Default.mergeOptions({
 });
 
 const LAYERS = {
-  map: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap', maxZoom: 19,
+  map: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap, © CARTO', maxZoom: 19, subdomains: 'abcd',
   }),
   satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: '© Esri, Maxar, Earthstar Geographics', maxZoom: 19,

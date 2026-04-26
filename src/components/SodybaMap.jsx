@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon } from '../lib/mapLayers.js';
+import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 import { APSKRITYS } from '../lib/apskritys.js';
-
-const PIN_CURSOR = (() => {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28"><path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 18 10 18S20 17.5 20 10 15.5 0 10 0z" fill="%23ef4444" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="white"/></svg>`;
-  return `url("data:image/svg+xml,${svg}") 10 27, crosshair`;
-})();
 
 function makeApskritisIcon(label) {
   const html = `<div style="display:inline-block;transform:translate(-50%,-50%);background:rgba(30,41,59,0.88);color:white;border-radius:20px;padding:5px 13px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.3);pointer-events:auto;">${label}</div>`;
@@ -37,6 +32,7 @@ export default function SodybaMap({
   vietos, addMode, onMapClick, onVietaSelect, selectedVieta,
   activeTab, searchPos,
   selectedApskritis, onApskritisSelect,
+  newVietaPos,
 }) {
   const containerRef         = useRef(null);
   const mapRef               = useRef(null);
@@ -46,6 +42,7 @@ export default function SodybaMap({
   const apskritisPolyRef     = useRef([]);
   const selectedCountyRef    = useRef(null);
   const userMarkerRef        = useRef(null);
+  const newVietaMarkerRef    = useRef(null);
   const polygonRef           = useRef(null);
   const featureLayersRef     = useRef([]);
   const featureCacheRef      = useRef(new Map());
@@ -244,6 +241,16 @@ export default function SodybaMap({
     const bounds = L.latLngBounds(pts.map(v => [v.lat, v.lng]));
     if (bounds.isValid()) mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
   }, [activeTab]);
+
+  // New vieta pin marker
+  useEffect(() => {
+    newVietaMarkerRef.current?.remove();
+    newVietaMarkerRef.current = null;
+    if (!newVietaPos || !mapRef.current) return;
+    const icon = makeVietaIcon('nauja');
+    newVietaMarkerRef.current = L.marker([newVietaPos.lat, newVietaPos.lng], { icon, zIndexOffset: 500 })
+      .addTo(mapRef.current);
+  }, [newVietaPos]);
 
   // User position
   useEffect(() => {

@@ -8,6 +8,7 @@ import DetailPanel from './components/DetailPanel.jsx';
 import Filters from './components/Filters.jsx';
 import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
+import { PIN_CURSOR } from './lib/mapLayers.js';
 import { getApskritis } from './lib/apskritys.js';
 import { TABS } from './lib/theme.js';
 
@@ -132,7 +133,7 @@ export default function App() {
             {searchLoading ? '…' : '🔍'}
           </button>
           <button onClick={() => setAddMode(true)} title="Žymėti sodybą"
-            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#1d4ed8', color: 'white', cursor: 'pointer', fontSize: 13 }}>
+            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#1d4ed8', color: 'white', cursor: PIN_CURSOR, fontSize: 13 }}>
             📍
           </button>
         </div>
@@ -213,6 +214,7 @@ export default function App() {
             searchPos={searchPos}
             selectedApskritis={selectedApskritis}
             onApskritisSelect={handleApskritisSelect}
+            newVietaPos={newVietaPos}
           />
           {selected && !newVietaPos && (
             <DetailPanel sodyba={selected} onClose={() => setSelected(null)}

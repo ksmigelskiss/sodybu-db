@@ -1,6 +1,9 @@
 import L from 'leaflet';
 import { STATUS_THEME, VIETA_THEME } from './theme.js';
 
+const _pinSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28"><path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 18 10 18S20 17.5 20 10 15.5 0 10 0z" fill="%23ef4444" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="white"/></svg>`;
+export const PIN_CURSOR = `url("data:image/svg+xml,${_pinSvg}") 10 27, crosshair`;
+
 export const LAYERS = {
   map: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap, © CARTO', maxZoom: 19, subdomains: 'abcd',

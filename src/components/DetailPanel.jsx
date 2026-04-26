@@ -43,15 +43,9 @@ export default function DetailPanel({ sodyba: s, onClose, onStatusChange, onAddV
         </button>
       </div>
 
-      <Row label="Balas"          value={`${s.score ?? '—'} / 100`} bold />
       <Row label="Tipas"          value={s.tipas ?? '—'} />
       <Row label="Pastatai (RC)"  value={s.adresas_sk ?? '—'} />
       <Row label="Plotas"         value={s.plotas_ha != null ? `${s.plotas_ha} ha` : '—'} />
-      <Row label="Miškas"         value={s.miskas_m === 0 ? '✓ sklype' : s.miskas_m != null ? `${s.miskas_m} m` : '—'} />
-      <Row label="Upė/ežeras"     value={s.upelis_m === 0 ? '✓ šalia' : s.upelis_m != null ? `${s.upelis_m} m` : '—'} />
-      <Row label="Kaimynai 200m"  value={s.kaimynai_200m ?? '—'} />
-      <Row label="Natura 2000"    value={s.natura2000 ? '⚠️ taip' : 'ne'} />
-      <Row label="Saugoma terit." value={s.saugomos_terit ? '🌿 taip' : 'ne'} />
 
       <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
         <a href={geoportalUrl(s.lat, s.lng)} target="_blank" rel="noreferrer"

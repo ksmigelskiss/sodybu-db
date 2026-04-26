@@ -1,10 +1,20 @@
 import L from 'leaflet';
 
+const polygonCache = new Map();
+
 export async function fetchPolygon(gyv_kodas) {
-  const res = await fetch(`/api/polygon-proxy?gyv_kodas=${gyv_kodas}`);
-  if (!res.ok) return null;
-  const { coords } = await res.json();
-  return coords?.length ? coords : null;
+  if (polygonCache.has(gyv_kodas)) return polygonCache.get(gyv_kodas);
+  try {
+    const res = await fetch(`/api/polygon-proxy?gyv_kodas=${gyv_kodas}`,
+      { signal: AbortSignal.timeout(9000) });
+    if (!res.ok) return null;
+    const { coords } = await res.json();
+    const result = coords?.length ? coords : null;
+    polygonCache.set(gyv_kodas, result);
+    return result;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchOsmFeatures(bbox) {

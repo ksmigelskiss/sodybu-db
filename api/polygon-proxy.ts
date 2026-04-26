@@ -57,8 +57,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const gyv_kodas = Number(req.query.gyv_kodas ?? (req.body as any)?.gyv_kodas);
   if (!gyv_kodas) return res.status(400).json({ error: 'gyv_kodas required' });
 
+  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600');
+
   const url = `https://get.data.gov.lt/datasets/gov/rc/ar/gragyvenamojivietove/GraGyvenamojiVietove?gyv_kodas=${gyv_kodas}&_limit=1`;
-  const r = await fetch(url, { headers: { Accept: 'application/json' } });
+  const r = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(8000),
+  });
   if (!r.ok) return res.status(502).json({ error: `upstream ${r.status}` });
 
   const data = await r.json() as any;

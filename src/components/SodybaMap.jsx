@@ -180,6 +180,8 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
         color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.08,
       }).addTo(mapRef.current);
 
+      mapRef.current.fitBounds(polygonRef.current.getBounds(), { padding: [40, 40], maxZoom: 15 });
+
       // Bbox iš polygon koordinačių su minimaliu 1km buferiu
       const lats = coords.map(c => c[0]);
       const lngs = coords.map(c => c[1]);

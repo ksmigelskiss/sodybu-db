@@ -7,19 +7,19 @@ const ENDPOINTS = [
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { s, w, n, e } = req.query as Record<string, string>;
   if (!s || !w || !n || !e) return res.status(400).json({ error: 'bbox required: s,w,n,e' });
 
-  const q = `[out:json][timeout:55];
+  // Only rivers/streams/canals — skip ditch/drain to stay under Vercel 10s limit
+  const q = `[out:json][timeout:8];
 (
-  way["waterway"~"river|stream|canal|ditch|drain"](${s},${w},${n},${e});
+  way["waterway"~"river|stream|canal"](${s},${w},${n},${e});
   way["natural"="water"](${s},${w},${n},${e});
-  relation["natural"="water"](${s},${w},${n},${e});
 );
-out geom;`;
+out geom qt;`;
 
   for (const endpoint of ENDPOINTS) {
     try {
@@ -27,7 +27,7 @@ out geom;`;
         method: 'POST',
         body: `data=${encodeURIComponent(q)}`,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        signal: AbortSignal.timeout(58000),
+        signal: AbortSignal.timeout(9000),
       });
       if (!r.ok) continue;
       const data = await r.json() as any;

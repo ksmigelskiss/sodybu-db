@@ -46,19 +46,19 @@ const WATERWAY_STYLE = {
 };
 
 export function renderWaterways(map, elements) {
+  const pane = 'waterways';
   const layers = [];
   for (const el of elements) {
     if (el.type !== 'way' || !el.geometry?.length) continue;
     const latlngs = el.geometry.map(p => [p.lat, p.lon]);
     if (el.tags?.natural === 'water') {
       layers.push(L.polygon(latlngs, {
-        color: '#1e3a8a', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.25,
+        pane, color: '#1e3a8a', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.25,
       }).addTo(map));
     } else if (el.tags?.waterway) {
-      const style = WATERWAY_STYLE[el.tags.waterway] ?? WATERWAY_STYLE.ditch;
-      const name = el.tags.name;
+      const style = { ...(WATERWAY_STYLE[el.tags.waterway] ?? WATERWAY_STYLE.stream), pane };
       const line = L.polyline(latlngs, style).addTo(map);
-      if (name) line.bindTooltip(name, { sticky: true, className: '' });
+      if (el.tags.name) line.bindTooltip(el.tags.name, { sticky: true });
       layers.push(line);
     }
   }

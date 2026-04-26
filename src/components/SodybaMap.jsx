@@ -49,17 +49,22 @@ export default function SodybaMap({
   const waterwayLayersRef    = useRef([]);
   const waterwayCacheRef     = useRef(new Map());
 
-  const [isSatellite, setIsSatellite]         = useState(false);
-  const [isCadastre, setIsCadastre]           = useState(false);
-  const [featuresLoading, setFeaturesLoading] = useState(false);
-  const [featuresCount, setFeaturesCount]     = useState(null);
+  const [isSatellite, setIsSatellite]           = useState(false);
+  const [isCadastre, setIsCadastre]             = useState(false);
+  const [isWaterways, setIsWaterways]           = useState(true);
+  const [featuresLoading, setFeaturesLoading]   = useState(false);
+  const [featuresCount, setFeaturesCount]       = useState(null);
   const [waterwaysLoading, setWaterwaysLoading] = useState(false);
 
-  // Init map
+  // Init map + custom pane for waterways (below overlay, above tiles)
   useEffect(() => {
     if (mapRef.current) return;
-    mapRef.current = L.map(containerRef.current).setView([55.3, 23.9], 7);
-    LAYERS.map.addTo(mapRef.current);
+    const map = L.map(containerRef.current).setView([55.3, 23.9], 7);
+    map.createPane('waterways');
+    map.getPane('waterways').style.zIndex = 350;
+    map.getPane('waterways').style.pointerEvents = 'none';
+    LAYERS.map.addTo(map);
+    mapRef.current = map;
   }, []);
 
   // Base layer toggle
@@ -79,6 +84,14 @@ export default function SodybaMap({
     else map.removeLayer(layer);
   }, [isCadastre]);
 
+  // Waterways visibility toggle (show/hide pane)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const pane = map.getPane('waterways');
+    if (pane) pane.style.display = isWaterways ? '' : 'none';
+  }, [isWaterways]);
+
   // County outlines + label markers (overview mode)
   useEffect(() => {
     const map = mapRef.current;
@@ -92,12 +105,10 @@ export default function SodybaMap({
     if (selectedApskritis || activeTab === 'atrinktos') return;
 
     APSKRITYS.forEach((a, i) => {
-      // Label marker
       const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
       m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect?.(a); });
       apskritisMarkersRef.current.push(m);
 
-      // Polygon (staggered fetch to respect Nominatim rate limit)
       setTimeout(() => {
         loadCountyGeo(a).then(geo => {
           if (!geo || !mapRef.current) return;
@@ -114,7 +125,7 @@ export default function SodybaMap({
     });
   }, [selectedApskritis, activeTab]);
 
-  // Selected county border (shown while browsing zones)
+  // Selected county border
   useEffect(() => {
     selectedCountyRef.current?.remove();
     selectedCountyRef.current = null;
@@ -271,9 +282,9 @@ export default function SodybaMap({
     newVietaMarkerRef.current?.remove();
     newVietaMarkerRef.current = null;
     if (!newVietaPos || !mapRef.current) return;
-    const icon = makeVietaIcon('nauja');
-    newVietaMarkerRef.current = L.marker([newVietaPos.lat, newVietaPos.lng], { icon, zIndexOffset: 500 })
-      .addTo(mapRef.current);
+    newVietaMarkerRef.current = L.marker([newVietaPos.lat, newVietaPos.lng], {
+      icon: makeVietaIcon('nauja'), zIndexOffset: 500,
+    }).addTo(mapRef.current);
   }, [newVietaPos]);
 
   // User position
@@ -308,17 +319,12 @@ export default function SodybaMap({
         <MapBtn onClick={() => setIsCadastre(s => !s)} active={isCadastre}>
           📐 Sklypai
         </MapBtn>
+        {selectedApskritis && (
+          <MapBtn onClick={() => setIsWaterways(s => !s)} active={isWaterways} loading={waterwaysLoading}>
+            💧 Upės
+          </MapBtn>
+        )}
       </div>
-
-      {waterwaysLoading && (
-        <div style={{
-          position: 'absolute', top: 12, right: 12, zIndex: 1000,
-          background: 'white', borderRadius: 8, padding: '6px 14px',
-          fontSize: 12, color: '#3b82f6', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-        }}>
-          💧 Kraunami vandens telkiniai…
-        </div>
-      )}
 
       {(featuresLoading || featuresCount !== null) && (
         <div style={{
@@ -335,15 +341,16 @@ export default function SodybaMap({
   );
 }
 
-function MapBtn({ onClick, active, children }) {
+function MapBtn({ onClick, active, loading, children }) {
   return (
     <button onClick={onClick} style={{
       background: active ? '#2563eb' : 'white', color: active ? 'white' : '#374151',
       border: '2px solid rgba(0,0,0,0.2)', borderRadius: 8, padding: '6px 12px',
       cursor: 'pointer', fontSize: 13, fontWeight: 600,
       boxShadow: '0 2px 6px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 6,
+      opacity: loading ? 0.7 : 1,
     }}>
-      {children}
+      {children}{loading ? ' …' : ''}
     </button>
   );
 }

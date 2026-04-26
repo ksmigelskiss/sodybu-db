@@ -154,6 +154,7 @@ export default function App() {
             onVietaSelect={handleSelectVieta}
             addMode={addMode}
             onMapClick={handleMapClick}
+            activeTab={activeTab}
           />
           {selected && !newVietaPos && (
             <DetailPanel

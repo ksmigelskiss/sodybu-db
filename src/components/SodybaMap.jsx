@@ -4,7 +4,12 @@ import 'leaflet/dist/leaflet.css';
 import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon } from '../lib/mapLayers.js';
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 
-export default function SodybaMap({ items, selected, onSelect, userPos, vietos, addMode, onMapClick, onVietaSelect, selectedVieta }) {
+const PIN_CURSOR = (() => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28"><path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 18 10 18S20 17.5 20 10 15.5 0 10 0z" fill="%23ef4444" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="white"/></svg>`;
+  return `url("data:image/svg+xml,${svg}") 10 27, crosshair`;
+})();
+
+export default function SodybaMap({ items, selected, onSelect, userPos, vietos, addMode, onMapClick, onVietaSelect, selectedVieta, activeTab }) {
   const containerRef     = useRef(null);
   const mapRef           = useRef(null);
   const markersRef       = useRef({});
@@ -81,7 +86,7 @@ export default function SodybaMap({ items, selected, onSelect, userPos, vietos, 
     if (!map) return;
     const container = map.getContainer();
     if (!addMode) { container.style.cursor = ''; return; }
-    container.style.cursor = 'crosshair';
+    container.style.cursor = PIN_CURSOR;
     const handler = (e) => onMapClick?.(e.latlng.lat, e.latlng.lng);
     map.on('click', handler);
     return () => { map.off('click', handler); container.style.cursor = ''; };
@@ -133,6 +138,15 @@ export default function SodybaMap({ items, selected, onSelect, userPos, vietos, 
     if (!selectedVieta || !mapRef.current) return;
     mapRef.current.setView([selectedVieta.lat, selectedVieta.lng], 15);
   }, [selectedVieta?.id]);
+
+  // Atrinktos tab — fit map to all saved vietos
+  useEffect(() => {
+    if (activeTab !== 'atrinktos' || !mapRef.current) return;
+    const pts = (vietos ?? []).filter(v => v.lat && v.lng);
+    if (pts.length === 0) return;
+    const bounds = L.latLngBounds(pts.map(v => [v.lat, v.lng]));
+    if (bounds.isValid()) mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+  }, [activeTab]);
 
   // User position
   useEffect(() => {

@@ -22,12 +22,19 @@ export const STATUS_THEME = {
 // Išsaugoti sodybų taškai žemėlapyje su savo statusais.
 
 export const VIETA_THEME = {
-  nauja:     { label: '🆕 Nauja',     color: '#ef4444', bg: '#fee2e2' },
+  nauja:     { label: '🆕 Nauja',     color: '#16a34a', bg: '#dcfce7' },
   sena:      { label: '🏚 Sena',      color: '#d97706', bg: '#fef3c7' },
   aplankyta: { label: '🚶 Aplankyta', color: '#2563eb', bg: '#dbeafe' },
   atmesta:   { label: '✗ Atmesta',   color: '#6b7280', bg: '#f3f4f6' },
 };
 export const VIETA_KEYS = ['nauja', 'sena', 'aplankyta', 'atmesta'];
+
+export const VIETA_ATTRS = [
+  { key: 'upelis',  label: '💧 Upelis' },
+  { key: 'tvenkinys', label: '🏊 Tvenkinys' },
+  { key: 'sodas',   label: '🍎 Sodas' },
+  { key: 'medziai', label: '🌳 Dideli medžiai' },
+];
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 export const TABS = [

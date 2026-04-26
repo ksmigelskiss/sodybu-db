@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { VIETA_THEME, VIETA_KEYS } from '../lib/theme.js';
+import { VIETA_THEME, VIETA_KEYS, VIETA_ATTRS } from '../lib/theme.js';
 
 export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
@@ -11,10 +11,14 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
     setSaving(false);
   };
 
+  const toggleAttr = async (key) => {
+    await onUpdate(vieta.id, { [key]: !vieta[key] });
+  };
+
   const saveComment = () => onUpdate(vieta.id, { komentaras: komentaras || null });
 
   const base = {
-    flex: 1, padding: '7px 4px', borderRadius: 8,
+    flex: 1, padding: '6px 4px', borderRadius: 8,
     cursor: 'pointer', fontSize: 11, fontWeight: 600, border: '1.5px solid',
   };
 
@@ -32,7 +36,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
       </div>
 
       <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 10 }}>
-        📍 {vieta.lat?.toFixed(5)}, {vieta.lng?.toFixed(5)}
+        {vieta.lat?.toFixed(5)}, {vieta.lng?.toFixed(5)}
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -52,6 +56,20 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
         })}
       </div>
 
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+        {VIETA_ATTRS.map(({ key, label }) => (
+          <button key={key} onClick={() => toggleAttr(key)} style={{
+            padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
+            border: `1.5px solid ${vieta[key] ? '#2563eb' : '#e2e8f0'}`,
+            background: vieta[key] ? '#dbeafe' : '#f8fafc',
+            color: vieta[key] ? '#1d4ed8' : '#6b7280',
+            fontWeight: vieta[key] ? 600 : 400,
+          }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       <textarea
         value={komentaras}
         onChange={e => setKomentaras(e.target.value)}
@@ -68,12 +86,12 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <a href={`https://www.geoportal.lt/map/?lat=${vieta.lat}&lng=${vieta.lng}&zoom=17`}
           target="_blank" rel="noreferrer"
-          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 12, textDecoration: 'none', color: '#374151' }}>
+          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '8px', fontSize: 12, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
           🗺 Geoportal
         </a>
         <a href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`}
           target="_blank" rel="noreferrer"
-          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 12, textDecoration: 'none', color: '#374151' }}>
+          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '8px', fontSize: 12, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
           📍 Google Maps
         </a>
       </div>

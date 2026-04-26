@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { VIETA_THEME, VIETA_KEYS } from '../lib/theme.js';
+import { VIETA_THEME, VIETA_KEYS, VIETA_ATTRS } from '../lib/theme.js';
 
 export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel }) {
   const [statusas, setStatusas] = useState('nauja');
   const [komentaras, setKomentaras] = useState('');
+  const [attrs, setAttrs] = useState({});
   const [saving, setSaving] = useState(false);
+
+  const toggleAttr = (key) => setAttrs(a => ({ ...a, [key]: !a[key] }));
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave({ lat, lng, statusas, komentaras });
+    await onSave({ lat, lng, statusas, komentaras, ...attrs });
     setSaving(false);
   };
 
@@ -20,19 +23,19 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel 
     }}>
       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>📍 Nauja sodyba</div>
       {zonaPavadinimas && (
-        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>Zona: {zonaPavadinimas}</div>
+        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Zona: {zonaPavadinimas}</div>
       )}
       <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 12 }}>
         {lat.toFixed(5)}, {lng.toFixed(5)}
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
         {VIETA_KEYS.map(key => {
           const th = VIETA_THEME[key];
           const active = statusas === key;
           return (
             <button key={key} onClick={() => setStatusas(key)} style={{
-              flex: 1, minWidth: 60, padding: '7px 4px', borderRadius: 8,
+              flex: 1, minWidth: 60, padding: '6px 4px', borderRadius: 8,
               border: `1.5px solid ${active ? th.color : '#e2e8f0'}`,
               background: active ? th.bg : '#f8fafc',
               color: active ? th.color : '#6b7280',
@@ -42,6 +45,20 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel 
             </button>
           );
         })}
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+        {VIETA_ATTRS.map(({ key, label }) => (
+          <button key={key} onClick={() => toggleAttr(key)} style={{
+            padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
+            border: `1.5px solid ${attrs[key] ? '#2563eb' : '#e2e8f0'}`,
+            background: attrs[key] ? '#dbeafe' : '#f8fafc',
+            color: attrs[key] ? '#1d4ed8' : '#6b7280',
+            fontWeight: attrs[key] ? 600 : 400,
+          }}>
+            {label}
+          </button>
+        ))}
       </div>
 
       <textarea

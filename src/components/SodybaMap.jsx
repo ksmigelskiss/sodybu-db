@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
-import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
+import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures, fetchWaterways, renderWaterways } from '../lib/osmFeatures.js';
 import { APSKRITYS } from '../lib/apskritys.js';
 
 function makeApskritisIcon(label) {
@@ -46,11 +46,14 @@ export default function SodybaMap({
   const polygonRef           = useRef(null);
   const featureLayersRef     = useRef([]);
   const featureCacheRef      = useRef(new Map());
+  const waterwayLayersRef    = useRef([]);
+  const waterwayCacheRef     = useRef(new Map());
 
   const [isSatellite, setIsSatellite]         = useState(false);
   const [isCadastre, setIsCadastre]           = useState(false);
   const [featuresLoading, setFeaturesLoading] = useState(false);
   const [featuresCount, setFeaturesCount]     = useState(null);
+  const [waterwaysLoading, setWaterwaysLoading] = useState(false);
 
   // Init map
   useEffect(() => {
@@ -123,6 +126,27 @@ export default function SodybaMap({
         style: { color: '#2563eb', weight: 2, fillOpacity: 0, dashArray: '6 4' },
       }).addTo(mapRef.current);
     });
+  }, [selectedApskritis?.id]);
+
+  // Waterways for selected county
+  useEffect(() => {
+    waterwayLayersRef.current.forEach(l => l.remove());
+    waterwayLayersRef.current = [];
+    if (!selectedApskritis || !mapRef.current) return;
+
+    const id = selectedApskritis.id;
+    if (waterwayCacheRef.current.has(id)) {
+      waterwayLayersRef.current = renderWaterways(mapRef.current, waterwayCacheRef.current.get(id));
+      return;
+    }
+
+    const [[s, w], [n, e]] = selectedApskritis.bounds;
+    setWaterwaysLoading(true);
+    fetchWaterways(s, w, n, e).then(elements => {
+      if (!mapRef.current) return;
+      waterwayCacheRef.current.set(id, elements);
+      waterwayLayersRef.current = renderWaterways(mapRef.current, elements);
+    }).finally(() => setWaterwaysLoading(false));
   }, [selectedApskritis?.id]);
 
   // Zoom to selected apskritis or reset to Lithuania overview
@@ -285,6 +309,16 @@ export default function SodybaMap({
           📐 Sklypai
         </MapBtn>
       </div>
+
+      {waterwaysLoading && (
+        <div style={{
+          position: 'absolute', top: 12, right: 12, zIndex: 1000,
+          background: 'white', borderRadius: 8, padding: '6px 14px',
+          fontSize: 12, color: '#3b82f6', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        }}>
+          💧 Kraunami vandens telkiniai…
+        </div>
+      )}
 
       {(featuresLoading || featuresCount !== null) && (
         <div style={{

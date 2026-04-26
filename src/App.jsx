@@ -44,7 +44,7 @@ export default function App() {
 
   const handleStatusChange = useCallback(async (id, statusas, komentaras) => {
     updateItem(id, { statusas, komentaras });
-    setSelected(s => s?.id === id ? { ...s, statusas, komentaras } : s);
+    setSelected(null);
     await updateSodybaStatus(id, statusas, komentaras);
   }, [updateItem]);
 

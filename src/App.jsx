@@ -18,6 +18,9 @@ export default function App() {
   const [activeTab, setActiveTab]   = useState('browse');
   const [addMode, setAddMode]       = useState(false);
   const [newVietaPos, setNewVietaPos] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchPos, setSearchPos]   = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
@@ -86,6 +89,26 @@ export default function App() {
     setSelectedVieta(null);
   }, [deleteVieta]);
 
+  const handleSearch = useCallback(async () => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    const coordMatch = q.match(/^(-?\d+[.,]?\d*)[,\s]+(-?\d+[.,]?\d*)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1].replace(',', '.'));
+      const lng = parseFloat(coordMatch[2].replace(',', '.'));
+      setSearchPos({ lat, lng });
+      return;
+    }
+    setSearchLoading(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=lt&limit=1`);
+      const data = await res.json();
+      if (data[0]) setSearchPos({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+    } finally {
+      setSearchLoading(false);
+    }
+  }, [searchQuery]);
+
   // Map receives single selected zone (perf) or all display zones
   const mapZones = selected ? [selected] : (activeTab !== 'atrinktos' ? displayZones : []);
 
@@ -114,6 +137,27 @@ export default function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <div style={{ width: 320, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e5e7eb', flexShrink: 0 }}>
           <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos} onChange={setActiveTab} />
+
+          {activeTab === 'browse' && (
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 6 }}>
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                placeholder="Adresas arba koordinatės..."
+                style={{ flex: 1, padding: '5px 8px', borderRadius: 7, border: '1px solid #d1d5db', fontSize: 12, minWidth: 0 }}
+              />
+              <button onClick={handleSearch} disabled={searchLoading}
+                style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #d1d5db', background: '#f8fafc', cursor: 'pointer', fontSize: 13 }}>
+                {searchLoading ? '…' : '🔍'}
+              </button>
+              <button onClick={() => setAddMode(true)}
+                style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid #2563eb', background: '#dbeafe', color: '#1d4ed8', cursor: 'pointer', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                📍 Pin
+              </button>
+            </div>
+          )}
+
           <div style={{ overflowY: 'auto', flex: 1 }}>
 
             {activeTab === 'atrinktos' && (
@@ -155,6 +199,7 @@ export default function App() {
             addMode={addMode}
             onMapClick={handleMapClick}
             activeTab={activeTab}
+            searchPos={searchPos}
           />
           {selected && !newVietaPos && (
             <DetailPanel

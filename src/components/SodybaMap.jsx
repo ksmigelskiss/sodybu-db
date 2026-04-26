@@ -9,7 +9,7 @@ const PIN_CURSOR = (() => {
   return `url("data:image/svg+xml,${svg}") 10 27, crosshair`;
 })();
 
-export default function SodybaMap({ items, selected, onSelect, userPos, vietos, addMode, onMapClick, onVietaSelect, selectedVieta, activeTab }) {
+export default function SodybaMap({ items, selected, onSelect, userPos, vietos, addMode, onMapClick, onVietaSelect, selectedVieta, activeTab, searchPos }) {
   const containerRef     = useRef(null);
   const mapRef           = useRef(null);
   const markersRef       = useRef({});
@@ -138,6 +138,12 @@ export default function SodybaMap({ items, selected, onSelect, userPos, vietos, 
     if (!selectedVieta || !mapRef.current) return;
     mapRef.current.setView([selectedVieta.lat, selectedVieta.lng], 15);
   }, [selectedVieta?.id]);
+
+  // Search position — pan without marker
+  useEffect(() => {
+    if (!searchPos || !mapRef.current) return;
+    mapRef.current.setView([searchPos.lat, searchPos.lng], 15);
+  }, [searchPos]);
 
   // Atrinktos tab — fit map to all saved vietos
   useEffect(() => {

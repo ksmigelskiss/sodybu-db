@@ -48,7 +48,7 @@ export function renderOsmFeatures(map, elements) {
         }).addTo(map));
       } else if (isBuilding) {
         layers.push(L.polygon(latlngs, {
-          color: '#374151', weight: 1, fillColor: '#9ca3af', fillOpacity: 0.6,
+          color: '#374151', weight: 1.5, fillOpacity: 0,
         }).addTo(map));
       }
     }

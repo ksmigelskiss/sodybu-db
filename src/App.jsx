@@ -8,6 +8,7 @@ import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 const TABS = [
   { id: 'browse',  label: 'Naršyti' },
   { id: 'idomi',   label: '⭐ Įdomios' },
+  { id: 'nauja',   label: '🆕 Naujos' },
   { id: 'ziureta', label: '✓ Žiūrėtos' },
 ];
 
@@ -21,6 +22,7 @@ export default function App() {
 
   const displayItems = items.filter(s => {
     if (activeTab === 'idomi')   return s.statusas === 'idomi';
+    if (activeTab === 'nauja')   return s.statusas === 'nauja';
     if (activeTab === 'ziureta') return s.statusas === 'ziureta';
     return s.statusas !== 'netinka';
   });

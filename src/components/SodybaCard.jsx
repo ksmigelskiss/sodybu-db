@@ -5,7 +5,8 @@ export default function SodybaCard({ sodyba: s, onClick, selected }) {
     <div onClick={onClick} style={{ padding: '10px 14px', borderBottom: '1px solid #eee', cursor: 'pointer', ...statusCardStyle(s.statusas, selected) }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 5 }}>
-          {s.statusas === 'idomi' && '⭐'}
+          {s.statusas === 'idomi'   && '⭐'}
+          {s.statusas === 'nauja'   && '🆕'}
           {s.statusas === 'ziureta' && '✓'}
           {s.pavadinimas || s.adresas || s.savivaldybe || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
         </div>

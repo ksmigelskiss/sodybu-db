@@ -36,7 +36,7 @@ function renderFeatures(map, elements) {
         }).addTo(map));
       } else if (isWaterway) {
         layers.push(L.polyline(latlngs, {
-          color: '#3b82f6', weight: 2, opacity: 0.8,
+          color: '#3b82f6', weight: 4, opacity: 0.8,
         }).addTo(map));
       } else if (isBuilding) {
         layers.push(L.polygon(latlngs, {

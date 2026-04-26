@@ -5,8 +5,8 @@ const _pinSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" 
 export const PIN_CURSOR = `url("data:image/svg+xml,${_pinSvg}") 10 27, crosshair`;
 
 export const LAYERS = {
-  map: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap, © CARTO', maxZoom: 19, subdomains: 'abcd',
+  map: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors, SRTM | © OpenTopoMap (CC-BY-SA)', maxZoom: 17,
   }),
   satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: '© Esri, Maxar, Earthstar Geographics', maxZoom: 19,

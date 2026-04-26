@@ -235,7 +235,7 @@ export default function SodybaMap({
     fetchPolygon(selected.gyv_kodas).then(coords => {
       if (!coords || !mapRef.current) return;
       polygonRef.current = L.polygon(coords, {
-        color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.08,
+        color: '#eab308', weight: 2.5, fillColor: '#eab308', fillOpacity: 0.08,
       }).addTo(mapRef.current);
       mapRef.current.fitBounds(polygonRef.current.getBounds(), { padding: [40, 40], maxZoom: 15 });
 

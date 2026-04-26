@@ -3,21 +3,33 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon } from '../lib/mapLayers.js';
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
+import { APSKRITYS } from '../lib/apskritys.js';
 
 const PIN_CURSOR = (() => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28"><path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 18 10 18S20 17.5 20 10 15.5 0 10 0z" fill="%23ef4444" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="white"/></svg>`;
   return `url("data:image/svg+xml,${svg}") 10 27, crosshair`;
 })();
 
-export default function SodybaMap({ items, selected, onSelect, userPos, vietos, addMode, onMapClick, onVietaSelect, selectedVieta, activeTab, searchPos }) {
-  const containerRef     = useRef(null);
-  const mapRef           = useRef(null);
-  const markersRef       = useRef({});
-  const vietaMarkersRef  = useRef([]);
-  const userMarkerRef    = useRef(null);
-  const polygonRef       = useRef(null);
-  const featureLayersRef = useRef([]);
-  const featureCacheRef  = useRef(new Map());
+function makeApskritisIcon(label) {
+  const html = `<div style="display:inline-block;transform:translate(-50%,-50%);background:#1e293b;color:white;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.35);cursor:pointer;pointer-events:auto;">${label}</div>`;
+  return L.divIcon({ html, className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
+}
+
+export default function SodybaMap({
+  items, selected, onSelect, userPos,
+  vietos, addMode, onMapClick, onVietaSelect, selectedVieta,
+  activeTab, searchPos,
+  selectedApskritis, onApskritisSelect,
+}) {
+  const containerRef      = useRef(null);
+  const mapRef            = useRef(null);
+  const markersRef        = useRef({});
+  const vietaMarkersRef   = useRef([]);
+  const apskritisRef      = useRef([]);
+  const userMarkerRef     = useRef(null);
+  const polygonRef        = useRef(null);
+  const featureLayersRef  = useRef([]);
+  const featureCacheRef   = useRef(new Map());
 
   const [isSatellite, setIsSatellite]         = useState(false);
   const [isCadastre, setIsCadastre]           = useState(false);
@@ -47,6 +59,31 @@ export default function SodybaMap({ items, selected, onSelect, userPos, vietos, 
     if (isCadastre) layer.addTo(map);
     else map.removeLayer(layer);
   }, [isCadastre]);
+
+  // Apskritis labels (shown when no county selected and not on Atrinktos tab)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    apskritisRef.current.forEach(m => m.remove());
+    apskritisRef.current = [];
+    if (selectedApskritis || activeTab === 'atrinktos') return;
+    APSKRITYS.forEach(a => {
+      const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
+      m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect?.(a); });
+      apskritisRef.current.push(m);
+    });
+  }, [selectedApskritis, activeTab]);
+
+  // Zoom to selected apskritis or reset to Lithuania overview
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!selectedApskritis) {
+      map.setView([55.3, 23.9], 7);
+    } else {
+      map.fitBounds(selectedApskritis.bounds, { padding: [30, 30] });
+    }
+  }, [selectedApskritis?.id]);
 
   // Zone markers
   useEffect(() => {
@@ -194,11 +231,9 @@ export default function SodybaMap({ items, selected, onSelect, userPos, vietos, 
           zIndex: 1000, background: 'white', borderRadius: 8, padding: '6px 14px',
           fontSize: 12, color: '#6b7280', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
         }}>
-          {featuresLoading
-            ? 'Kraunami OSM objektai…'
-            : featuresCount === 0
-              ? 'OSM: pastatų / vandens nerasta'
-              : `OSM: ${featuresCount} objektai`}
+          {featuresLoading ? 'Kraunami OSM objektai…'
+            : featuresCount === 0 ? 'OSM: pastatų / vandens nerasta'
+            : `OSM: ${featuresCount} objektai`}
         </div>
       )}
     </div>
@@ -208,12 +243,10 @@ export default function SodybaMap({ items, selected, onSelect, userPos, vietos, 
 function MapBtn({ onClick, active, children }) {
   return (
     <button onClick={onClick} style={{
-      background: active ? '#2563eb' : 'white',
-      color: active ? 'white' : '#374151',
-      border: '2px solid rgba(0,0,0,0.2)',
-      borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-      fontSize: 13, fontWeight: 600, boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-      display: 'flex', alignItems: 'center', gap: 6,
+      background: active ? '#2563eb' : 'white', color: active ? 'white' : '#374151',
+      border: '2px solid rgba(0,0,0,0.2)', borderRadius: 8, padding: '6px 12px',
+      cursor: 'pointer', fontSize: 13, fontWeight: 600,
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 6,
     }}>
       {children}
     </button>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { APSKRITYS_OPTIONS } from '../lib/apskritys.js';
 
 const TIPAI = [
   { value: '', label: 'Visi' },
@@ -9,7 +8,6 @@ const TIPAI = [
 
 export default function Filters({ onApply }) {
   const [f, setF] = useState({
-    apskritis: '',
     tipas: 'Viensėdis',
     maxAdresas: '',
     miskas: false,
@@ -22,17 +20,6 @@ export default function Filters({ onApply }) {
   return (
     <div style={{ padding: '12px 14px', borderBottom: '1px solid #ddd', background: '#f9fafb' }}>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-
-        <label style={labelStyle}>
-          <span style={{ fontWeight: 600 }}>Apskritis</span>
-          <select
-            value={f.apskritis}
-            onChange={e => set('apskritis', e.target.value)}
-            style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13 }}
-          >
-            {APSKRITYS_OPTIONS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
-          </select>
-        </label>
 
         <label style={labelStyle}>
           <span style={{ fontWeight: 600 }}>Tipas</span>

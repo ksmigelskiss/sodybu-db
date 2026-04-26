@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, query, where, orderBy, limit, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase.js';
-import { getApskritis } from '../lib/apskritys.js';
 
 const COL = 'sodyba';
 
@@ -21,8 +20,6 @@ export function useSodybaList(filters = {}) {
 
       const snap = await getDocs(query(collection(db, COL), ...constraints));
       let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-      if (filters.apskritis) docs = docs.filter(s => s.lat && s.lng && getApskritis(s.lat, s.lng) === filters.apskritis);
 
       if (filters.miskas)    docs = docs.filter(s => s.miskas_m != null);
       if (filters.upelis)    docs = docs.filter(s => s.upelis_m != null);

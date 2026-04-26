@@ -8,28 +8,33 @@ import DetailPanel from './components/DetailPanel.jsx';
 import Filters from './components/Filters.jsx';
 import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
+import { getApskritis } from './lib/apskritys.js';
 import { TABS } from './lib/theme.js';
 
 export default function App() {
-  const [filters, setFilters]       = useState({});
-  const [selected, setSelected]     = useState(null);   // selected zone
+  const [filters, setFilters]             = useState({});
+  const [selected, setSelected]           = useState(null);
   const [selectedVieta, setSelectedVieta] = useState(null);
-  const [userPos, setUserPos]       = useState(null);
-  const [activeTab, setActiveTab]   = useState('browse');
-  const [addMode, setAddMode]       = useState(false);
-  const [newVietaPos, setNewVietaPos] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchPos, setSearchPos]   = useState(null);
+  const [selectedApskritis, setSelectedApskritis] = useState(null);
+  const [userPos, setUserPos]             = useState(null);
+  const [activeTab, setActiveTab]         = useState('browse');
+  const [addMode, setAddMode]             = useState(false);
+  const [newVietaPos, setNewVietaPos]     = useState(null);
+  const [searchQuery, setSearchQuery]     = useState('');
+  const [searchPos, setSearchPos]         = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
 
-  // Zone lists per tab
-  const displayZones =
-    activeTab === 'browse'   ? items.filter(s => s.statusas == null) :
-    activeTab === 'ziuretos' ? items.filter(s => s.statusas != null) :
-    [];
+  // Zone list: only show when county selected, filtered by tab + apskritis
+  const displayZones = (() => {
+    if (activeTab === 'atrinktos' || !selectedApskritis) return [];
+    const byTab = activeTab === 'browse'
+      ? items.filter(s => s.statusas == null)
+      : items.filter(s => s.statusas != null);
+    return byTab.filter(s => s.lat && s.lng && getApskritis(s.lat, s.lng) === selectedApskritis.id);
+  })();
 
   const locateMe = useCallback(() => {
     navigator.geolocation.getCurrentPosition(pos => {
@@ -46,22 +51,15 @@ export default function App() {
   }, [updateItem]);
 
   const handleSelectZone = useCallback((s) => {
-    setSelected(s);
-    setSelectedVieta(null);
-    setNewVietaPos(null);
-    setAddMode(false);
+    setSelected(s); setSelectedVieta(null); setNewVietaPos(null); setAddMode(false);
   }, []);
 
   const handleSelectVieta = useCallback((v) => {
-    setSelectedVieta(v);
-    setSelected(null);
-    setNewVietaPos(null);
-    setAddMode(false);
+    setSelectedVieta(v); setSelected(null); setNewVietaPos(null); setAddMode(false);
   }, []);
 
   const handleMapClick = useCallback((lat, lng) => {
-    setAddMode(false);
-    setNewVietaPos({ lat, lng });
+    setAddMode(false); setNewVietaPos({ lat, lng });
   }, []);
 
   const handleSaveVieta = useCallback(async (data) => {
@@ -70,7 +68,6 @@ export default function App() {
       gyv_kodas: selected?.gyv_kodas ?? null,
       zonaPavadinimas: selected?.pavadinimas || selected?.adresas || null,
     });
-    // Auto-mark zone as žiūrėta
     if (selected && !selected.statusas) {
       handleStatusChange(selected.id, 'ziureta', selected.komentaras ?? null);
     }
@@ -85,8 +82,7 @@ export default function App() {
   }, [updateVieta]);
 
   const handleDeleteVieta = useCallback(async (id) => {
-    await deleteVieta(id);
-    setSelectedVieta(null);
+    await deleteVieta(id); setSelectedVieta(null);
   }, [deleteVieta]);
 
   const handleSearch = useCallback(async () => {
@@ -94,9 +90,7 @@ export default function App() {
     if (!q) return;
     const coordMatch = q.match(/^(-?\d+[.,]?\d*)[,\s]+(-?\d+[.,]?\d*)$/);
     if (coordMatch) {
-      const lat = parseFloat(coordMatch[1].replace(',', '.'));
-      const lng = parseFloat(coordMatch[2].replace(',', '.'));
-      setSearchPos({ lat, lng });
+      setSearchPos({ lat: parseFloat(coordMatch[1].replace(',', '.')), lng: parseFloat(coordMatch[2].replace(',', '.')) });
       return;
     }
     setSearchLoading(true);
@@ -104,12 +98,20 @@ export default function App() {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=lt&limit=1`);
       const data = await res.json();
       if (data[0]) setSearchPos({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
-    } finally {
-      setSearchLoading(false);
-    }
+    } finally { setSearchLoading(false); }
   }, [searchQuery]);
 
-  // Map receives single selected zone (perf) or all display zones
+  const handleApskritisSelect = useCallback((a) => {
+    setSelectedApskritis(a);
+    setSelected(null);
+    setSelectedVieta(null);
+  }, []);
+
+  const clearApskritis = useCallback(() => {
+    setSelectedApskritis(null);
+    setSelected(null);
+  }, []);
+
   const mapZones = selected ? [selected] : (activeTab !== 'atrinktos' ? displayZones : []);
 
   return (
@@ -134,9 +136,6 @@ export default function App() {
             📍
           </button>
         </div>
-        <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>
-          {loading ? 'Kraunama...' : activeTab === 'atrinktos' ? `${vietos.length} sod.` : `${displayZones.length} zon.`}
-        </span>
         <button onClick={locateMe}
           style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' }}>
           📍 Vieta
@@ -145,28 +144,44 @@ export default function App() {
 
       <Filters onApply={setFilters} />
 
-      {error && (
-        <div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>
-          Klaida: {error}
-        </div>
-      )}
+      {error && <div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>Klaida: {error}</div>}
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <div style={{ width: 320, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e5e7eb', flexShrink: 0 }}>
-          <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos} onChange={setActiveTab} />
+          <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos}
+            selectedApskritis={selectedApskritis} onChange={setActiveTab} />
+
+          {/* County header */}
+          {activeTab !== 'atrinktos' && (
+            <div style={{ padding: '7px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: selectedApskritis ? '#f0f7ff' : '#f8fafc', minHeight: 38 }}>
+              {selectedApskritis ? (
+                <>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+                    📍 {selectedApskritis.label} apskritis
+                    <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>({displayZones.length})</span>
+                  </span>
+                  <button onClick={clearApskritis}
+                    style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '2px 8px', cursor: 'pointer' }}>
+                    × Visos
+                  </button>
+                </>
+              ) : (
+                <span style={{ fontSize: 12, color: '#9ca3af' }}>Spustelėkite apskritį žemėlapyje</span>
+              )}
+            </div>
+          )}
 
           <div style={{ overflowY: 'auto', flex: 1 }}>
-
             {activeTab === 'atrinktos' && (
               vietos.length === 0
-                ? <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>Dar nėra išsaugotų sodybų.<br/>Naršyk zonas ir spausk „Pridėti sodybą".</div>
+                ? <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>Dar nėra išsaugotų sodybų.<br/>Naršyk ir spausk 📍 sodybos vietą.</div>
                 : vietos.map(v => (
                     <VietaCard key={v.id} vieta={v} selected={selectedVieta?.id === v.id}
                       onClick={() => handleSelectVieta(v)} />
                   ))
             )}
 
-            {activeTab !== 'atrinktos' && (
+            {activeTab !== 'atrinktos' && selectedApskritis && (
               <>
                 {loading && <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>Kraunama...</div>}
                 {!loading && displayZones.length === 0 && (
@@ -180,7 +195,6 @@ export default function App() {
                 ))}
               </>
             )}
-
           </div>
         </div>
 
@@ -197,31 +211,21 @@ export default function App() {
             onMapClick={handleMapClick}
             activeTab={activeTab}
             searchPos={searchPos}
+            selectedApskritis={selectedApskritis}
+            onApskritisSelect={handleApskritisSelect}
           />
           {selected && !newVietaPos && (
-            <DetailPanel
-              sodyba={selected}
-              onClose={() => setSelected(null)}
-              onStatusChange={handleStatusChange}
-              onAddVieta={() => setAddMode(true)}
-            />
+            <DetailPanel sodyba={selected} onClose={() => setSelected(null)}
+              onStatusChange={handleStatusChange} onAddVieta={() => setAddMode(true)} />
           )}
           {selectedVieta && !newVietaPos && (
-            <VietaPanel
-              vieta={selectedVieta}
-              onClose={() => setSelectedVieta(null)}
-              onUpdate={handleUpdateVieta}
-              onDelete={handleDeleteVieta}
-            />
+            <VietaPanel vieta={selectedVieta} onClose={() => setSelectedVieta(null)}
+              onUpdate={handleUpdateVieta} onDelete={handleDeleteVieta} />
           )}
           {newVietaPos && (
-            <VietaForm
-              lat={newVietaPos.lat}
-              lng={newVietaPos.lng}
+            <VietaForm lat={newVietaPos.lat} lng={newVietaPos.lng}
               zonaPavadinimas={selected?.pavadinimas || selected?.adresas}
-              onSave={handleSaveVieta}
-              onCancel={() => { setNewVietaPos(null); }}
-            />
+              onSave={handleSaveVieta} onCancel={() => setNewVietaPos(null)} />
           )}
         </div>
       </div>
@@ -229,12 +233,13 @@ export default function App() {
   );
 }
 
-function Tabs({ tabs, active, items, vietos, onChange }) {
+function Tabs({ tabs, active, items, vietos, selectedApskritis, onChange }) {
   const count = (tab) => {
     if (tab.id === 'atrinktos') return vietos.length;
-    if (tab.id === 'browse')   return items.filter(s => s.statusas == null).length;
-    if (tab.id === 'ziuretos') return items.filter(s => s.statusas != null).length;
-    return 0;
+    if (!selectedApskritis) return null;
+    if (tab.id === 'browse')   return items.filter(s => s.statusas == null && s.lat && s.lng && getApskritis(s.lat, s.lng) === selectedApskritis.id).length;
+    if (tab.id === 'ziuretos') return items.filter(s => s.statusas != null && s.lat && s.lng && getApskritis(s.lat, s.lng) === selectedApskritis.id).length;
+    return null;
   };
   return (
     <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
@@ -248,7 +253,7 @@ function Tabs({ tabs, active, items, vietos, onChange }) {
             borderBottom: active === tab.id ? '2px solid #2563eb' : '2px solid transparent',
           }}>
             {tab.label}
-            {n > 0 && (
+            {n != null && n > 0 && (
               <span style={{ marginLeft: 4, background: '#e2e8f0', borderRadius: 10, padding: '1px 6px', fontSize: 11 }}>{n}</span>
             )}
           </button>

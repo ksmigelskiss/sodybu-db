@@ -1,5 +1,5 @@
 import L from 'leaflet';
-import { STATUS_THEME } from './theme.js';
+import { STATUS_THEME, VIETA_THEME } from './theme.js';
 
 export const LAYERS = {
   map: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -45,6 +45,15 @@ export function makeMarkerIcon(score, statusas) {
     <text x="14" y="18.5" text-anchor="middle" font-size="11" font-weight="bold" fill="white">${text}</text>
   </svg>`;
   return L.divIcon({ html: svg, className: '', iconSize: [28, 28], iconAnchor: [14, 14] });
+}
+
+export function makeVietaIcon(statusas) {
+  const th = VIETA_THEME[statusas] ?? VIETA_THEME.nauja;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="30" viewBox="0 0 26 30">
+    <path d="M13 2 L24 11 L20 11 L20 27 L6 27 L6 11 L2 11 Z" fill="${th.color}" stroke="white" stroke-width="2"/>
+    <rect x="10" y="17" width="6" height="10" rx="1" fill="white" opacity="0.85"/>
+  </svg>`;
+  return L.divIcon({ html: svg, className: '', iconSize: [26, 30], iconAnchor: [13, 30] });
 }
 
 // Fix default Leaflet icon paths

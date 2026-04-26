@@ -1,25 +1,14 @@
 import { useState } from 'react';
-import { statusBtnStyle } from '../lib/status.js';
-import { STATUS_THEME, STATUS_KEYS } from '../lib/theme.js';
 
-export default function DetailPanel({ sodyba: s, onClose, onStatusChange }) {
-  const [comment, setComment] = useState(s.komentaras || '');
+export default function DetailPanel({ sodyba: s, onClose, onStatusChange, onAddVieta }) {
   const [saving, setSaving] = useState(false);
+  const isZiureta = s.statusas != null;
 
-  const handleStatus = async (target) => {
+  const toggleZiureta = async () => {
     setSaving(true);
-    const next = s.statusas === target ? null : target;
-    await onStatusChange(s.id, next, comment || null);
+    await onStatusChange(s.id, isZiureta ? null : 'ziureta', s.komentaras ?? null);
     setSaving(false);
   };
-
-  const saveComment = async () => {
-    setSaving(true);
-    await onStatusChange(s.id, s.statusas ?? null, comment || null);
-    setSaving(false);
-  };
-
-  const base = { flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, border: '1.5px solid' };
 
   return (
     <div style={{
@@ -34,36 +23,33 @@ export default function DetailPanel({ sodyba: s, onClose, onStatusChange }) {
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-        {STATUS_KEYS.map(key => { const st = STATUS_THEME[key]; return (
-          <button key={key} disabled={saving} onClick={() => handleStatus(key)}
-            style={{ ...base, ...statusBtnStyle(s.statusas, key) }}>
-            {st.label}
-          </button>
-        ); })}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <button disabled={saving} onClick={toggleZiureta} style={{
+          flex: 1, padding: '8px', borderRadius: 8, border: '1.5px solid',
+          borderColor: isZiureta ? '#10b981' : '#e2e8f0',
+          background: isZiureta ? '#d1fae5' : '#f8fafc',
+          color: isZiureta ? '#065f46' : '#374151',
+          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+        }}>
+          {isZiureta ? '✓ Žiūrėta' : 'Pažymėti žiūrėta'}
+        </button>
+        <button onClick={onAddVieta} style={{
+          flex: 1, padding: '8px', borderRadius: 8,
+          border: '1.5px solid #2563eb', background: '#dbeafe',
+          color: '#1d4ed8', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+        }}>
+          📍 Pridėti sodybą
+        </button>
       </div>
 
-      <textarea
-        value={comment}
-        onChange={e => setComment(e.target.value)}
-        onBlur={saveComment}
-        placeholder="Komentaras..."
-        rows={2}
-        style={{
-          width: '100%', boxSizing: 'border-box', resize: 'vertical',
-          border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
-          fontSize: 12, fontFamily: 'inherit', marginBottom: 10, color: '#374151',
-        }}
-      />
-
-      <Row label="Balas"         value={`${s.score ?? '—'} / 100`} bold />
-      <Row label="Tipas"         value={s.tipas ?? '—'} />
-      <Row label="Pastatai (RC)" value={s.adresas_sk ?? '—'} />
-      <Row label="Plotas"        value={s.plotas_ha != null ? `${s.plotas_ha} ha` : '—'} />
-      <Row label="Miškas"        value={s.miskas_m === 0 ? '✓ sklype' : s.miskas_m != null ? `${s.miskas_m} m` : '—'} />
-      <Row label="Upė/ežeras"    value={s.upelis_m === 0 ? '✓ šalia' : s.upelis_m != null ? `${s.upelis_m} m` : '—'} />
-      <Row label="Kaimynai 200m" value={s.kaimynai_200m ?? '—'} />
-      <Row label="Natura 2000"   value={s.natura2000 ? '⚠️ taip' : 'ne'} />
+      <Row label="Balas"          value={`${s.score ?? '—'} / 100`} bold />
+      <Row label="Tipas"          value={s.tipas ?? '—'} />
+      <Row label="Pastatai (RC)"  value={s.adresas_sk ?? '—'} />
+      <Row label="Plotas"         value={s.plotas_ha != null ? `${s.plotas_ha} ha` : '—'} />
+      <Row label="Miškas"         value={s.miskas_m === 0 ? '✓ sklype' : s.miskas_m != null ? `${s.miskas_m} m` : '—'} />
+      <Row label="Upė/ežeras"     value={s.upelis_m === 0 ? '✓ šalia' : s.upelis_m != null ? `${s.upelis_m} m` : '—'} />
+      <Row label="Kaimynai 200m"  value={s.kaimynai_200m ?? '—'} />
+      <Row label="Natura 2000"    value={s.natura2000 ? '⚠️ taip' : 'ne'} />
       <Row label="Saugoma terit." value={s.saugomos_terit ? '🌿 taip' : 'ne'} />
 
       <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>

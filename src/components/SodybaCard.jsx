@@ -1,13 +1,18 @@
-import { statusCardStyle } from '../lib/status.js';
+import { STATUS_THEME } from '../lib/theme.js';
 
 export default function SodybaCard({ sodyba: s, onClick, selected }) {
+  const th = STATUS_THEME[s.statusas];
+  const cardBg   = selected ? '#f0f7ff' : (th?.card?.bg   ?? 'white');
+  const cardBorder = selected ? '#2563eb' : (th?.card?.border ?? 'transparent');
+
   return (
-    <div onClick={onClick} style={{ padding: '10px 14px', borderBottom: '1px solid #eee', cursor: 'pointer', ...statusCardStyle(s.statusas, selected) }}>
+    <div onClick={onClick} style={{
+      padding: '10px 14px', borderBottom: '1px solid #eee', cursor: 'pointer',
+      background: cardBg, borderLeft: `3px solid ${cardBorder}`,
+    }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 5 }}>
-          {s.statusas === 'idomi'   && '⭐'}
-          {s.statusas === 'nauja'   && '🆕'}
-          {s.statusas === 'ziureta' && '✓'}
+          {s.statusas != null && <span style={{ fontSize: 12, color: '#16a34a' }}>✓</span>}
           {s.pavadinimas || s.adresas || s.savivaldybe || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
         </div>
         <ScoreBadge score={s.score} />

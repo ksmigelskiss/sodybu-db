@@ -1,20 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LAYERS, getCadastreLayer, makeMarkerIcon } from '../lib/mapLayers.js';
+import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon } from '../lib/mapLayers.js';
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 
-export default function SodybaMap({ items, selected, onSelect, userPos }) {
-  const containerRef    = useRef(null);
-  const mapRef          = useRef(null);
-  const markersRef      = useRef({});
-  const userMarkerRef   = useRef(null);
-  const polygonRef      = useRef(null);
+export default function SodybaMap({ items, selected, onSelect, userPos, vietos, addMode, onMapClick, onVietaSelect, selectedVieta }) {
+  const containerRef     = useRef(null);
+  const mapRef           = useRef(null);
+  const markersRef       = useRef({});
+  const vietaMarkersRef  = useRef([]);
+  const userMarkerRef    = useRef(null);
+  const polygonRef       = useRef(null);
   const featureLayersRef = useRef([]);
-  const featureCacheRef = useRef(new Map());
+  const featureCacheRef  = useRef(new Map());
 
-  const [isSatellite, setIsSatellite]   = useState(false);
-  const [isCadastre, setIsCadastre]     = useState(false);
+  const [isSatellite, setIsSatellite]         = useState(false);
+  const [isCadastre, setIsCadastre]           = useState(false);
   const [featuresLoading, setFeaturesLoading] = useState(false);
   const [featuresCount, setFeaturesCount]     = useState(null);
 
@@ -42,7 +43,7 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
     else map.removeLayer(layer);
   }, [isCadastre]);
 
-  // Markers
+  // Zone markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -53,16 +54,43 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
       const label = s.pavadinimas || s.adresas || `${s.lat.toFixed(3)}, ${s.lng.toFixed(3)}`;
       const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(s.score, s.statusas) })
         .addTo(map).bindTooltip(label);
-      m.on('click', () => onSelect(s));
+      m.on('click', (e) => { L.DomEvent.stopPropagation(e); onSelect(s); });
       markersRef.current[s.id] = m;
     });
   }, [items]);
 
-  // Selected settlement — polygon + OSM features
+  // Vieta markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    vietaMarkersRef.current.forEach(m => m.remove());
+    vietaMarkersRef.current = [];
+    (vietos ?? []).forEach(v => {
+      if (!v.lat || !v.lng) return;
+      const label = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
+      const m = L.marker([v.lat, v.lng], { icon: makeVietaIcon(v.statusas), zIndexOffset: 100 })
+        .addTo(map).bindTooltip(label);
+      m.on('click', (e) => { L.DomEvent.stopPropagation(e); onVietaSelect?.(v); });
+      vietaMarkersRef.current.push(m);
+    });
+  }, [vietos]);
 
+  // addMode cursor + click handler
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const container = map.getContainer();
+    if (!addMode) { container.style.cursor = ''; return; }
+    container.style.cursor = 'crosshair';
+    const handler = (e) => onMapClick?.(e.latlng.lat, e.latlng.lng);
+    map.on('click', handler);
+    return () => { map.off('click', handler); container.style.cursor = ''; };
+  }, [addMode, onMapClick]);
+
+  // Selected zone — polygon + OSM features
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
     polygonRef.current?.remove();
     polygonRef.current = null;
     featureLayersRef.current.forEach(l => l.remove());
@@ -78,16 +106,13 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
 
     fetchPolygon(selected.gyv_kodas).then(coords => {
       if (!coords || !mapRef.current) return;
-
       polygonRef.current = L.polygon(coords, {
         color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.08,
       }).addTo(mapRef.current);
-
       mapRef.current.fitBounds(polygonRef.current.getBounds(), { padding: [40, 40], maxZoom: 15 });
 
       const bbox = polygonBbox(coords);
       const gk = selected.gyv_kodas;
-
       if (featureCacheRef.current.has(gk)) {
         featureLayersRef.current = renderOsmFeatures(mapRef.current, featureCacheRef.current.get(gk));
         setFeaturesCount(featureCacheRef.current.get(gk).length);
@@ -103,6 +128,12 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
     });
   }, [selected?.id]);
 
+  // Selected vieta — zoom
+  useEffect(() => {
+    if (!selectedVieta || !mapRef.current) return;
+    mapRef.current.setView([selectedVieta.lat, selectedVieta.lng], 15);
+  }, [selectedVieta?.id]);
+
   // User position
   useEffect(() => {
     if (!userPos || !mapRef.current) return;
@@ -116,6 +147,17 @@ export default function SodybaMap({ items, selected, onSelect, userPos }) {
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
       <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
+
+      {addMode && (
+        <div style={{
+          position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 1000, background: '#1e293b', color: 'white',
+          borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)', whiteSpace: 'nowrap',
+        }}>
+          📍 Spustelėkite sodybos vietą žemėlapyje
+        </div>
+      )}
 
       <div style={{ position: 'absolute', bottom: 24, left: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <MapBtn onClick={() => setIsSatellite(s => !s)}>

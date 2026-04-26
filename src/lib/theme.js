@@ -39,6 +39,6 @@ export const VIETA_ATTRS = [
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 export const TABS = [
   { id: 'atrinktos', label: '⭐ Atrinktos' },
-  { id: 'browse',    label: 'Naršyti' },
+  { id: 'browse',    label: 'Vietovės' },
   { id: 'ziuretos',  label: '✓ Žiūrėtos' },
 ];

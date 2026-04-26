@@ -114,15 +114,28 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      <header style={{ padding: '10px 16px', background: '#1e293b', color: 'white', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 20 }}>🏡</span>
-        <span style={{ fontWeight: 700, fontSize: 16 }}>Sodybų paieška</span>
-        <span style={{ marginLeft: 'auto', fontSize: 13, color: '#94a3b8' }}>
-          {loading ? 'Kraunama...' : activeTab === 'atrinktos' ? `${vietos.length} sodybų` : `${displayZones.length} zonų`}
+      <header style={{ padding: '8px 14px', background: '#1e293b', color: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 18 }}>🏡</span>
+        <span style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap' }}>Sodybų paieška</span>
+        <div style={{ flex: 1, display: 'flex', gap: 6, marginLeft: 8 }}>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            placeholder="Adresas arba koordinatės..."
+            style={{ flex: 1, padding: '5px 10px', borderRadius: 7, border: 'none', fontSize: 13, minWidth: 0, background: '#334155', color: 'white', outline: 'none' }}
+          />
+          <button onClick={handleSearch} disabled={searchLoading}
+            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#475569', color: 'white', cursor: 'pointer', fontSize: 13 }}>
+            {searchLoading ? '…' : '🔍'}
+          </button>
+        </div>
+        <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+          {loading ? 'Kraunama...' : activeTab === 'atrinktos' ? `${vietos.length} sod.` : `${displayZones.length} zon.`}
         </span>
         <button onClick={locateMe}
-          style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13 }}>
-          📍 Mano vieta
+          style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' }}>
+          📍 Vieta
         </button>
       </header>
 
@@ -137,23 +150,11 @@ export default function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <div style={{ width: 320, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e5e7eb', flexShrink: 0 }}>
           <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos} onChange={setActiveTab} />
-
           {activeTab === 'browse' && (
-            <div style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 6 }}>
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder="Adresas arba koordinatės..."
-                style={{ flex: 1, padding: '5px 8px', borderRadius: 7, border: '1px solid #d1d5db', fontSize: 12, minWidth: 0 }}
-              />
-              <button onClick={handleSearch} disabled={searchLoading}
-                style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #d1d5db', background: '#f8fafc', cursor: 'pointer', fontSize: 13 }}>
-                {searchLoading ? '…' : '🔍'}
-              </button>
+            <div style={{ padding: '6px 10px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={() => setAddMode(true)}
-                style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid #2563eb', background: '#dbeafe', color: '#1d4ed8', cursor: 'pointer', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                📍 Pin
+                style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid #2563eb', background: '#dbeafe', color: '#1d4ed8', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                📍 Žymėti sodybą
               </button>
             </div>
           )}
@@ -174,7 +175,7 @@ export default function App() {
                 {loading && <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>Kraunama...</div>}
                 {!loading && displayZones.length === 0 && (
                   <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>
-                    {activeTab === 'browse' ? 'Visos zonos peržiūrėtos.' : 'Dar nėra peržiūrėtų zonų.'}
+                    {activeTab === 'browse' ? 'Visos vietovės peržiūrėtos.' : 'Dar nėra peržiūrėtų vietovių.'}
                   </div>
                 )}
                 {displayZones.map(s => (

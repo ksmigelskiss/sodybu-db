@@ -230,10 +230,8 @@ function SearchBox({ onSelect }) {
     if (q.length < 2) { setResults([]); setOpen(false); return; }
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=lt&limit=6&addressdetails=1`,
-        { headers: { 'Accept-Language': 'lt' } }
-      );
+      const res = await fetch(`/api/geocode-proxy?q=${encodeURIComponent(q)}`);
+      if (!res.ok) return;
       const data = await res.json();
       setResults(data);
       setOpen(data.length > 0);

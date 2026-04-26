@@ -12,9 +12,9 @@ export const STATUS_THEME = {
     marker: { bg: null, color: 'white', text: null }, // score-based, see makeMarkerIcon
   },
 
-  // ── Įdomi ─────────────────────────────────────────────────────────────────
+  // ── Atrinkta ──────────────────────────────────────────────────────────────
   idomi: {
-    label: '⭐ Įdomi',
+    label: '⭐ Atrinkta',
     marker: { bg: '#f59e0b', color: 'white', text: '!' },
     card:   { border: '#f59e0b', bg: '#fffbeb' },
     btn:    { bg: '#fef3c7', border: '#f59e0b', color: '#92400e' },
@@ -50,8 +50,8 @@ export const STATUS_KEYS = ['idomi', 'nauja', 'netinka', 'ziureta'];
 
 // Tab'ų konfigūracija
 export const TABS = [
+  { id: 'idomi',   label: '⭐ Atrinktos' },
   { id: 'browse',  label: 'Naršyti' },
-  { id: 'idomi',   label: '⭐ Įdomios' },
   { id: 'nauja',   label: '🆕 Naujos' },
   { id: 'ziureta', label: '✓ Žiūrėtos' },
 ];

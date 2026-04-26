@@ -11,8 +11,25 @@ const PIN_CURSOR = (() => {
 })();
 
 function makeApskritisIcon(label) {
-  const html = `<div style="display:inline-block;transform:translate(-50%,-50%);background:#1e293b;color:white;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.35);cursor:pointer;pointer-events:auto;">${label}</div>`;
+  const html = `<div style="display:inline-block;transform:translate(-50%,-50%);background:rgba(30,41,59,0.88);color:white;border-radius:20px;padding:5px 13px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.3);pointer-events:auto;">${label}</div>`;
   return L.divIcon({ html, className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
+}
+
+// Module-level cache — persists across renders
+const geoCache = new Map();
+
+async function loadCountyGeo(county) {
+  if (geoCache.has(county.id)) return geoCache.get(county.id);
+  const q = `${county.label} apskritis Lithuania`;
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&polygon_geojson=1&limit=1`);
+    const data = await res.json();
+    const geo = data[0]?.geojson ?? null;
+    geoCache.set(county.id, geo);
+    return geo;
+  } catch {
+    return null;
+  }
 }
 
 export default function SodybaMap({
@@ -21,15 +38,17 @@ export default function SodybaMap({
   activeTab, searchPos,
   selectedApskritis, onApskritisSelect,
 }) {
-  const containerRef      = useRef(null);
-  const mapRef            = useRef(null);
-  const markersRef        = useRef({});
-  const vietaMarkersRef   = useRef([]);
-  const apskritisRef      = useRef([]);
-  const userMarkerRef     = useRef(null);
-  const polygonRef        = useRef(null);
-  const featureLayersRef  = useRef([]);
-  const featureCacheRef   = useRef(new Map());
+  const containerRef         = useRef(null);
+  const mapRef               = useRef(null);
+  const markersRef           = useRef({});
+  const vietaMarkersRef      = useRef([]);
+  const apskritisMarkersRef  = useRef([]);
+  const apskritisPolyRef     = useRef([]);
+  const selectedCountyRef    = useRef(null);
+  const userMarkerRef        = useRef(null);
+  const polygonRef           = useRef(null);
+  const featureLayersRef     = useRef([]);
+  const featureCacheRef      = useRef(new Map());
 
   const [isSatellite, setIsSatellite]         = useState(false);
   const [isCadastre, setIsCadastre]           = useState(false);
@@ -60,19 +79,54 @@ export default function SodybaMap({
     else map.removeLayer(layer);
   }, [isCadastre]);
 
-  // Apskritis labels (shown when no county selected and not on Atrinktos tab)
+  // County outlines + label markers (overview mode)
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    apskritisRef.current.forEach(m => m.remove());
-    apskritisRef.current = [];
+
+    apskritisMarkersRef.current.forEach(m => m.remove());
+    apskritisMarkersRef.current = [];
+    apskritisPolyRef.current.forEach(l => l.remove());
+    apskritisPolyRef.current = [];
+
     if (selectedApskritis || activeTab === 'atrinktos') return;
-    APSKRITYS.forEach(a => {
+
+    APSKRITYS.forEach((a, i) => {
+      // Label marker
       const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
       m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect?.(a); });
-      apskritisRef.current.push(m);
+      apskritisMarkersRef.current.push(m);
+
+      // Polygon (staggered fetch to respect Nominatim rate limit)
+      setTimeout(() => {
+        loadCountyGeo(a).then(geo => {
+          if (!geo || !mapRef.current) return;
+          const layer = L.geoJSON(geo, {
+            style: { color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.07 },
+          });
+          layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.18 }));
+          layer.on('mouseout',  () => layer.setStyle({ fillOpacity: 0.07 }));
+          layer.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect?.(a); });
+          layer.addTo(mapRef.current);
+          apskritisPolyRef.current.push(layer);
+        });
+      }, i * 120);
     });
   }, [selectedApskritis, activeTab]);
+
+  // Selected county border (shown while browsing zones)
+  useEffect(() => {
+    selectedCountyRef.current?.remove();
+    selectedCountyRef.current = null;
+    if (!selectedApskritis || !mapRef.current) return;
+
+    loadCountyGeo(selectedApskritis).then(geo => {
+      if (!geo || !mapRef.current) return;
+      selectedCountyRef.current = L.geoJSON(geo, {
+        style: { color: '#2563eb', weight: 2, fillOpacity: 0, dashArray: '6 4' },
+      }).addTo(mapRef.current);
+    });
+  }, [selectedApskritis?.id]);
 
   // Zoom to selected apskritis or reset to Lithuania overview
   useEffect(() => {

@@ -40,28 +40,16 @@ export function renderOsmFeatures(map, elements) {
   const layers = [];
   for (const el of elements) {
     const isBuilding = el.tags?.building;
-    const isWater = el.tags?.natural === 'water';
-    const isWaterway = !!el.tags?.waterway;
 
     if (el.type === 'node' && isBuilding) {
       layers.push(L.circleMarker([el.lat, el.lon], {
         radius: 3, color: '#374151', fillColor: '#9ca3af', fillOpacity: 0.8, weight: 1,
       }).addTo(map));
-    } else if (el.type === 'way' && el.geometry?.length) {
+    } else if (el.type === 'way' && el.geometry?.length && isBuilding) {
       const latlngs = el.geometry.map(p => [p.lat, p.lon]);
-      if (isWater) {
-        layers.push(L.polygon(latlngs, {
-          color: '#1d4ed8', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.35,
-        }).addTo(map));
-      } else if (isWaterway) {
-        layers.push(L.polyline(latlngs, {
-          color: '#3b82f6', weight: 4, opacity: 0.8,
-        }).addTo(map));
-      } else if (isBuilding) {
-        layers.push(L.polygon(latlngs, {
-          color: '#374151', weight: 1.5, fillOpacity: 0,
-        }).addTo(map));
-      }
+      layers.push(L.polygon(latlngs, {
+        color: '#374151', weight: 1.5, fillOpacity: 0,
+      }).addTo(map));
     }
   }
   return layers;

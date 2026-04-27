@@ -6,6 +6,7 @@ import VietaForm from './components/VietaForm.jsx';
 import VietaPanel from './components/VietaPanel.jsx';
 import DetailPanel from './components/DetailPanel.jsx';
 import Filters from './components/Filters.jsx';
+import SkelbimosForm from './components/SkelbimosForm.jsx';
 import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
 import { PIN_CURSOR } from './lib/mapLayers.js';
@@ -22,6 +23,8 @@ export default function App() {
   const [addMode, setAddMode]             = useState(false);
   const [newVietaPos, setNewVietaPos]     = useState(null);
   const [searchPos, setSearchPos]         = useState(null);
+  const [showSkelbimosForm, setShowSkelbimosForm] = useState(false);
+  const [locateVieta, setLocateVieta]         = useState(null);
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
@@ -62,8 +65,14 @@ export default function App() {
   }, []);
 
   const handleMapClick = useCallback((lat, lng) => {
+    if (locateVieta) {
+      handleUpdateVieta(locateVieta.id, { lat, lng });
+      setSelectedVieta({ ...locateVieta, lat, lng });
+      setLocateVieta(null);
+      return;
+    }
     setAddMode(false); setNewVietaPos({ lat, lng });
-  }, []);
+  }, [locateVieta, handleUpdateVieta]);
 
   const handleSaveVieta = useCallback(async (data) => {
     const vieta = await addVieta({
@@ -78,6 +87,13 @@ export default function App() {
     setSelectedVieta(vieta);
     setSelected(null);
   }, [addVieta, selected, handleStatusChange]);
+
+  const handleAddSkelbimas = useCallback(async (data) => {
+    const vieta = await addVieta(data);
+    setShowSkelbimosForm(false);
+    setActiveTab('atrinktos');
+    setSelectedVieta(vieta);
+  }, [addVieta]);
 
   const handleUpdateVieta = useCallback(async (id, updates) => {
     await updateVieta(id, updates);
@@ -111,6 +127,10 @@ export default function App() {
           <button onClick={() => setAddMode(true)} title="Žymėti sodybą"
             style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#1d4ed8', color: 'white', cursor: PIN_CURSOR, fontSize: 13, flexShrink: 0 }}>
             📍
+          </button>
+          <button onClick={() => { setShowSkelbimosForm(true); setActiveTab('atrinktos'); }} title="Pridėti skelbimą"
+            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#d97706', color: 'white', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
+            📢
           </button>
         </div>
         <button onClick={locateMe}
@@ -185,7 +205,8 @@ export default function App() {
             vietos={vietos}
             selectedVieta={selectedVieta}
             onVietaSelect={handleSelectVieta}
-            addMode={addMode}
+            addMode={addMode || !!locateVieta}
+            addModeHint={locateVieta ? 'Spustelėkite žemėlapyje sodybos vietą' : undefined}
             onMapClick={handleMapClick}
             activeTab={activeTab}
             searchPos={searchPos}
@@ -197,9 +218,13 @@ export default function App() {
             <DetailPanel sodyba={selected} onClose={() => setSelected(null)}
               onStatusChange={handleStatusChange} onAddVieta={() => setAddMode(true)} />
           )}
-          {selectedVieta && !newVietaPos && (
+          {selectedVieta && !newVietaPos && !locateVieta && (
             <VietaPanel vieta={selectedVieta} onClose={() => setSelectedVieta(null)}
-              onUpdate={handleUpdateVieta} onDelete={handleDeleteVieta} />
+              onUpdate={handleUpdateVieta} onDelete={handleDeleteVieta}
+              onLocate={(v) => { setLocateVieta(v); setSelectedVieta(null); }} />
+          )}
+          {showSkelbimosForm && !newVietaPos && (
+            <SkelbimosForm onSave={handleAddSkelbimas} onCancel={() => setShowSkelbimosForm(false)} />
           )}
           {newVietaPos && (
             <VietaForm lat={newVietaPos.lat} lng={newVietaPos.lng}

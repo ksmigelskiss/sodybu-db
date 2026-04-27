@@ -33,6 +33,7 @@ export default function SodybaMap({
   activeTab, searchPos,
   selectedApskritis, onApskritisSelect,
   newVietaPos,
+  addModeHint,
 }) {
   const containerRef         = useRef(null);
   const mapRef               = useRef(null);
@@ -279,7 +280,7 @@ export default function SodybaMap({
           borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600,
           boxShadow: '0 2px 8px rgba(0,0,0,0.3)', whiteSpace: 'nowrap',
         }}>
-          📍 Spustelėkite sodybos vietą žemėlapyje
+          📍 {addModeHint ?? 'Spustelėkite sodybos vietą žemėlapyje'}
         </div>
       )}
 

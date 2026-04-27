@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
 
-export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
+export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocate }) {
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
   const [saving, setSaving]         = useState(false);
 
@@ -49,9 +49,18 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
       </div>
 
-      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 10 }}>
-        {vieta.lat?.toFixed(5)}, {vieta.lng?.toFixed(5)}
+      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: vieta.lat ? 10 : 6 }}>
+        {vieta.lat ? `${vieta.lat.toFixed(5)}, ${vieta.lng.toFixed(5)}` : '📍 Vieta nepridėta'}
       </div>
+      {!vieta.lat && (
+        <button onClick={() => onLocate?.(vieta)} style={{
+          width: '100%', marginBottom: 10, padding: '7px', borderRadius: 8,
+          border: '1.5px solid #d97706', background: '#fef3c7',
+          color: '#92400e', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+        }}>
+          📍 Žymėti žemėlapyje
+        </button>
+      )}
 
       {/* Skelbimas info */}
       {isSkelbimas && (vieta.url || vieta.kaina) && (
@@ -116,20 +125,22 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
         }}
       />
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-        <a href={geoportalUrl(vieta.lat, vieta.lng)} target="_blank" rel="noreferrer"
-          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
-          🗺 Geoportal
-        </a>
-        <a href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} target="_blank" rel="noreferrer"
-          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
-          📍 Google Maps
-        </a>
-        <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} target="_blank" rel="noreferrer"
-          style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
-          🗾 Etomesto
-        </a>
-      </div>
+      {vieta.lat && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+          <a href={geoportalUrl(vieta.lat, vieta.lng)} target="_blank" rel="noreferrer"
+            style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
+            🗺 Geoportal
+          </a>
+          <a href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} target="_blank" rel="noreferrer"
+            style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
+            📍 Google Maps
+          </a>
+          <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} target="_blank" rel="noreferrer"
+            style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
+            🗾 Etomesto
+          </a>
+        </div>
+      )}
 
       <button
         onClick={() => { if (window.confirm('Ištrinti šią sodybą?')) onDelete(vieta.id); }}

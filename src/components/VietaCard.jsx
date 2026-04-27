@@ -23,12 +23,18 @@ export default function VietaCard({ vieta, selected, onClick }) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <span style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>
-            {apskritisLabel(vieta.lat, vieta.lng)} apskr.
-          </span>
-          <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
-            {vieta.lat?.toFixed(3)}, {vieta.lng?.toFixed(3)}
-          </span>
+          {vieta.lat ? (
+            <>
+              <span style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>
+                {apskritisLabel(vieta.lat, vieta.lng)} apskr.
+              </span>
+              <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
+                {vieta.lat.toFixed(3)}, {vieta.lng.toFixed(3)}
+              </span>
+            </>
+          ) : (
+            <span style={{ fontSize: 12, color: '#d97706', fontWeight: 600 }}>📍 Vieta nepridėta</span>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
           {isSkelbimas && (

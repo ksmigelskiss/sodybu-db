@@ -49,18 +49,17 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
       </div>
 
-      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: vieta.lat ? 10 : 6 }}>
-        {vieta.lat ? `${vieta.lat.toFixed(5)}, ${vieta.lng.toFixed(5)}` : '📍 Vieta nepridėta'}
-      </div>
-      {!vieta.lat && (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: vieta.lat ? 10 : 6 }}>
+        <span style={{ fontSize: 11, color: '#9ca3af' }}>
+          {vieta.lat ? `${vieta.lat.toFixed(5)}, ${vieta.lng.toFixed(5)}` : '📍 Vieta nepridėta'}
+        </span>
         <button onClick={() => onLocate?.(vieta)} style={{
-          width: '100%', marginBottom: 10, padding: '7px', borderRadius: 8,
-          border: '1.5px solid #d97706', background: '#fef3c7',
-          color: '#92400e', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          padding: '2px 8px', borderRadius: 6, fontSize: 11, cursor: 'pointer', fontWeight: 600,
+          border: '1.5px solid #d1d5db', background: 'none', color: '#6b7280',
         }}>
-          📍 Žymėti žemėlapyje
+          {vieta.lat ? '📍 Perkelti' : '📍 Žymėti'}
         </button>
-      )}
+      </div>
 
       {/* Skelbimas info */}
       {isSkelbimas && (vieta.url || vieta.kaina) && (

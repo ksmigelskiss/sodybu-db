@@ -98,28 +98,35 @@ export default function SodybaMap({
 
     if (selectedApskritis) return;
 
+    const interactive = !!onApskritisSelect;
     const timers = [];
     APSKRITYS.forEach((a, i) => {
-      const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
-      m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect?.(a); });
-      apskritisMarkersRef.current.push(m);
+      if (interactive) {
+        const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
+        m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect(a); });
+        apskritisMarkersRef.current.push(m);
+      }
 
       timers.push(setTimeout(() => {
         loadCountyGeo(a).then(geo => {
           if (!geo || !mapRef.current) return;
           const layer = L.geoJSON(geo, {
-            style: { color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.07 },
+            style: { color: '#2563eb', weight: 1.5, fillOpacity: 0, interactive: false },
           });
-          layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.18 }));
-          layer.on('mouseout',  () => layer.setStyle({ fillOpacity: 0.07 }));
-          layer.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect?.(a); });
+          if (interactive) {
+            layer.options.style = { color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.07, interactive: true };
+            layer.setStyle(layer.options.style);
+            layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.18 }));
+            layer.on('mouseout',  () => layer.setStyle({ fillOpacity: 0.07 }));
+            layer.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect(a); });
+          }
           layer.addTo(mapRef.current);
           apskritisPolyRef.current.push(layer);
         });
       }, i * 200));
     });
     return () => timers.forEach(clearTimeout);
-  }, [selectedApskritis, activeTab]);
+  }, [selectedApskritis, activeTab, onApskritisSelect]);
 
   // Selected county border
   useEffect(() => {

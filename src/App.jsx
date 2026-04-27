@@ -39,11 +39,10 @@ export default function App() {
 
   const displayVietos = useMemo(() => {
     let list = vietos;
-    if (selectedApskritis) list = list.filter(v => v.lat && v.lng && getApskritis(v.lat, v.lng) === selectedApskritis.id);
     if (vietaStatusFilter === 'rasta') list = list.filter(v => !v.statusas);
     else if (vietaStatusFilter) list = list.filter(v => v.statusas === vietaStatusFilter);
     return list;
-  }, [selectedApskritis, vietos, vietaStatusFilter]);
+  }, [vietos, vietaStatusFilter]);
 
   const locateMe = useCallback(() => {
     navigator.geolocation.getCurrentPosition(pos => {
@@ -153,24 +152,24 @@ export default function App() {
           <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos}
             selectedApskritis={selectedApskritis} onChange={setActiveTab} />
 
-          <div style={{ padding: '7px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: selectedApskritis ? '#f0f7ff' : '#f8fafc', minHeight: 38 }}>
-            {selectedApskritis ? (
-              <>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
-                  📍 {selectedApskritis.label} apskritis
-                  <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>
-                    ({activeTab === 'atrinktos' ? displayVietos.length : displayZones.length})
+          {activeTab !== 'atrinktos' && (
+            <div style={{ padding: '7px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: selectedApskritis ? '#f0f7ff' : '#f8fafc', minHeight: 38 }}>
+              {selectedApskritis ? (
+                <>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+                    📍 {selectedApskritis.label} apskritis
+                    <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>({displayZones.length})</span>
                   </span>
-                </span>
-                <button onClick={clearApskritis}
-                  style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '2px 8px', cursor: 'pointer' }}>
-                  × {selectedApskritis.label}
-                </button>
-              </>
-            ) : (
-              <span style={{ fontSize: 12, color: '#9ca3af' }}>Spustelėkite apskritį žemėlapyje</span>
-            )}
-          </div>
+                  <button onClick={clearApskritis}
+                    style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '2px 8px', cursor: 'pointer' }}>
+                    × {selectedApskritis.label}
+                  </button>
+                </>
+              ) : (
+                <span style={{ fontSize: 12, color: '#9ca3af' }}>Spustelėkite apskritį žemėlapyje</span>
+              )}
+            </div>
+          )}
 
           {activeTab === 'atrinktos' && (
             <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} />
@@ -223,7 +222,7 @@ export default function App() {
             activeTab={activeTab}
             searchPos={searchPos}
             selectedApskritis={selectedApskritis}
-            onApskritisSelect={handleApskritisSelect}
+            onApskritisSelect={activeTab !== 'atrinktos' ? handleApskritisSelect : undefined}
             newVietaPos={newVietaPos}
           />
           {selected && !newVietaPos && (

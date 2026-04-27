@@ -15,7 +15,7 @@ import { TABS, VIETA_THEME, VIETA_KEYS } from './lib/theme.js';
 
 const PANEL_W = 380;
 
-const GM = {
+const C = {
   primary:    '#1a73e8',
   text:       '#202124',
   textSec:    '#5f6368',
@@ -175,7 +175,7 @@ export default function App() {
             position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
             zIndex: 1200, background: '#202124', color: 'white',
             borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 500,
-            boxShadow: GM.shadowFab, whiteSpace: 'nowrap',
+            boxShadow: C.shadowFab, whiteSpace: 'nowrap',
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
             <MapPin size={14} />
@@ -207,9 +207,9 @@ export default function App() {
               padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
             }}>
               <div style={{ width: 32, height: 4, background: '#dadce0', borderRadius: 2, flexShrink: 0 }} />
-              <Star size={14} color={GM.primary} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: GM.text }}>
-                Atrinktos <span style={{ fontWeight: 400, color: GM.textSec }}>({displayVietos.length})</span>
+              <Star size={14} color={C.primary} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                Atrinktos <span style={{ fontWeight: 400, color: C.textSec }}>({displayVietos.length})</span>
               </span>
               <div style={{ marginLeft: 'auto' }}>
                 <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} compact />
@@ -272,13 +272,13 @@ export default function App() {
         display: 'flex', flexDirection: 'column',
       }}>
         {/* Header: logo + search */}
-        <div style={{ padding: '12px 16px 10px', flexShrink: 0, borderBottom: `1px solid ${GM.outline}` }}>
+        <div style={{ padding: '12px 16px 10px', flexShrink: 0, borderBottom: `1px solid ${C.outline}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <button onClick={() => setSidebarOpen(false)} style={iconBtnStyle}>
-              <ChevronLeft size={18} color={GM.textSec} />
+              <ChevronLeft size={18} color={C.textSec} />
             </button>
-            <House size={18} color={GM.primary} />
-            <span style={{ fontWeight: 600, fontSize: 15, color: GM.text }}>Sodybų paieška</span>
+            <House size={18} color={C.primary} />
+            <span style={{ fontWeight: 600, fontSize: 15, color: C.text }}>Sodybų paieška</span>
           </div>
           <SearchBox onSelect={setSearchPos} />
         </div>
@@ -310,9 +310,9 @@ export default function App() {
           )}
           {activeTab !== 'atrinktos' && selectedApskritis && (
             <>
-              {loading && <div style={{ padding: 24, textAlign: 'center', color: GM.textTer, fontSize: 13 }}>Kraunama...</div>}
+              {loading && <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>Kraunama...</div>}
               {!loading && displayZones.length === 0 && (
-                <div style={{ padding: 24, textAlign: 'center', color: GM.textTer, fontSize: 13 }}>
+                <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>
                   {activeTab === 'browse' ? 'Visos vietovės peržiūrėtos.' : 'Dar nėra peržiūrėtų vietovių.'}
                 </div>
               )}
@@ -323,7 +323,7 @@ export default function App() {
             </>
           )}
           {activeTab !== 'atrinktos' && !selectedApskritis && (
-            <div style={{ padding: 24, textAlign: 'center', color: GM.textTer, fontSize: 13 }}>
+            <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>
               Spustelėkite apskritį žemėlapyje
             </div>
           )}
@@ -336,10 +336,10 @@ export default function App() {
           position: 'absolute', top: 12, left: 12, zIndex: 1000,
           width: 40, height: 40, borderRadius: 8,
           background: 'white', border: 'none', cursor: 'pointer',
-          boxShadow: GM.shadow,
+          boxShadow: C.shadow,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Menu size={20} color={GM.textSec} />
+          <Menu size={20} color={C.textSec} />
         </button>
       )}
 
@@ -384,11 +384,11 @@ function FabBtn({ onClick, title, primary, children }) {
     <button onClick={onClick} title={title} style={{
       width: 40, height: 40, borderRadius: '50%',
       border: 'none',
-      background: primary ? GM.primary : 'white',
-      color: primary ? 'white' : GM.textSec,
+      background: primary ? C.primary : 'white',
+      color: primary ? 'white' : C.textSec,
       cursor: 'pointer',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: GM.shadowFab,
+      boxShadow: C.shadowFab,
     }}>
       {children}
     </button>
@@ -397,7 +397,7 @@ function FabBtn({ onClick, title, primary, children }) {
 
 function EmptyState({ primary }) {
   return (
-    <div style={{ padding: 32, textAlign: 'center', color: GM.textTer, fontSize: 13, lineHeight: 1.6 }}>
+    <div style={{ padding: 32, textAlign: 'center', color: C.textTer, fontSize: 13, lineHeight: 1.6 }}>
       {primary
         ? <>Dar nėra išsaugotų sodybų.<br />Naršyk ir spausk <MapPin size={12} style={{ display: 'inline' }} /> sodybos vietą.</>
         : 'Nėra pagal filtrą.'}
@@ -407,19 +407,19 @@ function EmptyState({ primary }) {
 
 function ApskritisBar({ selectedApskritis, count, onClear }) {
   if (!selectedApskritis) return (
-    <div style={{ padding: '8px 16px', borderBottom: `1px solid ${GM.outline}`, background: GM.surfaceVar }}>
-      <span style={{ fontSize: 12, color: GM.textTer }}>Spustelėkite apskritį žemėlapyje</span>
+    <div style={{ padding: '8px 16px', borderBottom: `1px solid ${C.outline}`, background: C.surfaceVar }}>
+      <span style={{ fontSize: 12, color: C.textTer }}>Spustelėkite apskritį žemėlapyje</span>
     </div>
   );
   return (
-    <div style={{ padding: '6px 12px', borderBottom: `1px solid ${GM.outline}`, background: '#e8f0fe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: 12, fontWeight: 500, color: GM.text }}>
-        {selectedApskritis.label} apskritis <span style={{ color: GM.textSec }}>({count})</span>
+    <div style={{ padding: '6px 12px', borderBottom: `1px solid ${C.outline}`, background: '#e8f0fe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: 12, fontWeight: 500, color: C.text }}>
+        {selectedApskritis.label} apskritis <span style={{ color: C.textSec }}>({count})</span>
       </span>
       <button onClick={onClear} style={{
         display: 'flex', alignItems: 'center', gap: 3, padding: '2px 8px',
-        borderRadius: 12, border: `1px solid ${GM.primary}`, background: 'white',
-        color: GM.primary, fontSize: 11, cursor: 'pointer', fontWeight: 500,
+        borderRadius: 12, border: `1px solid ${C.primary}`, background: 'white',
+        color: C.primary, fontSize: 11, cursor: 'pointer', fontWeight: 500,
       }}>
         <X size={10} /> {selectedApskritis.label}
       </button>
@@ -440,14 +440,14 @@ const TIPAI = [
 
 function ZonuFilters({ filters, onChange }) {
   return (
-    <div style={{ display: 'flex', gap: 8, padding: '6px 12px', borderBottom: `1px solid ${GM.outline}`, background: GM.surfaceVar, alignItems: 'center', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 8, padding: '6px 12px', borderBottom: `1px solid ${C.outline}`, background: C.surfaceVar, alignItems: 'center', flexWrap: 'wrap' }}>
       <select value={filters.tipas ?? ''} onChange={e => onChange(f => ({ ...f, tipas: e.target.value }))} style={selectStyle}>
         {TIPAI.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: GM.textSec }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.textSec }}>
         Max adresai
         <input type="number" min={1} max={50} placeholder="visi" value={filters.maxAdresas ?? ''} onChange={e => onChange(f => ({ ...f, maxAdresas: e.target.value }))}
-          style={{ width: 48, padding: '3px 6px', borderRadius: 6, border: `1px solid ${GM.outline}`, fontSize: 12, color: GM.text }} />
+          style={{ width: 48, padding: '3px 6px', borderRadius: 6, border: `1px solid ${C.outline}`, fontSize: 12, color: C.text }} />
       </label>
     </div>
   );
@@ -474,13 +474,13 @@ function VietaStatusFilter({ value, onChange, vietos, compact }) {
 
   if (compact) return (
     <select value={value ?? ''} onChange={handleChange} onClick={e => e.stopPropagation()}
-      style={{ padding: '3px 6px', borderRadius: 6, border: `1px solid ${GM.outline}`, fontSize: 11, color: GM.text, background: 'white', cursor: 'pointer' }}>
+      style={{ padding: '3px 6px', borderRadius: 6, border: `1px solid ${C.outline}`, fontSize: 11, color: C.text, background: 'white', cursor: 'pointer' }}>
       {options.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
     </select>
   );
 
   return (
-    <div style={{ padding: '6px 12px', borderBottom: `1px solid ${GM.outline}`, background: GM.surfaceVar }}>
+    <div style={{ padding: '6px 12px', borderBottom: `1px solid ${C.outline}`, background: C.surfaceVar }}>
       <select value={value ?? ''} onChange={handleChange} style={{ ...selectStyle, width: '100%' }}>
         {options.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
       </select>
@@ -489,8 +489,8 @@ function VietaStatusFilter({ value, onChange, vietos, compact }) {
 }
 
 const selectStyle = {
-  padding: '4px 8px', borderRadius: 6, border: `1px solid ${GM.outline}`,
-  fontSize: 12, color: GM.text, background: 'white', cursor: 'pointer',
+  padding: '4px 8px', borderRadius: 6, border: `1px solid ${C.outline}`,
+  fontSize: 12, color: C.text, background: 'white', cursor: 'pointer',
 };
 
 function Tabs({ tabs, active, items, vietos, selectedApskritis, onChange }) {
@@ -505,7 +505,7 @@ function Tabs({ tabs, active, items, vietos, selectedApskritis, onChange }) {
   const TAB_ICONS = { atrinktos: Star, browse: MapPin, ziuretos: Check };
 
   return (
-    <div style={{ display: 'flex', borderBottom: `1px solid ${GM.outline}`, flexShrink: 0 }}>
+    <div style={{ display: 'flex', borderBottom: `1px solid ${C.outline}`, flexShrink: 0 }}>
       {tabs.map(tab => {
         const n = count(tab);
         const isActive = active === tab.id;
@@ -513,15 +513,15 @@ function Tabs({ tabs, active, items, vietos, selectedApskritis, onChange }) {
         return (
           <button key={tab.id} onClick={() => onChange(tab.id)} style={{
             flex: 1, padding: '10px 4px', border: 'none', cursor: 'pointer', background: 'none',
-            color: isActive ? GM.primary : GM.textSec,
-            borderBottom: `2px solid ${isActive ? GM.primary : 'transparent'}`,
+            color: isActive ? C.primary : C.textSec,
+            borderBottom: `2px solid ${isActive ? C.primary : 'transparent'}`,
             fontSize: 12, fontWeight: isActive ? 600 : 400,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
           }}>
             <Icon size={13} />
             {tab.label}
             {n != null && n > 0 && (
-              <span style={{ background: isActive ? '#e8f0fe' : GM.surfaceVar, color: isActive ? GM.primary : GM.textSec, borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 600 }}>{n}</span>
+              <span style={{ background: isActive ? '#e8f0fe' : C.surfaceVar, color: isActive ? C.primary : C.textSec, borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 600 }}>{n}</span>
             )}
           </button>
         );
@@ -587,19 +587,19 @@ function SearchBox({ onSelect }) {
     <div ref={wrapRef} style={{ position: 'relative' }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        background: GM.surfaceVar, borderRadius: 24, padding: '0 12px',
-        border: `1px solid ${GM.outline}`,
+        background: C.surfaceVar, borderRadius: 24, padding: '0 12px',
+        border: `1px solid ${C.outline}`,
       }}>
-        <Search size={15} color={GM.textSec} />
+        <Search size={15} color={C.textSec} />
         <input
           value={query}
           onChange={e => { const q = e.target.value; setQuery(q); clearTimeout(debounceRef.current); debounceRef.current = setTimeout(() => search(q), 350); }}
           onKeyDown={e => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Enter' && results.length > 0) pick(results[0]); }}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Ieškoti vietos, kaimo, adreso..."
-          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: GM.text, padding: '9px 0' }}
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: C.text, padding: '9px 0' }}
         />
-        {loading && <span style={{ fontSize: 12, color: GM.textTer }}>…</span>}
+        {loading && <span style={{ fontSize: 12, color: C.textTer }}>…</span>}
       </div>
 
       {open && results.length > 0 && (
@@ -612,14 +612,14 @@ function SearchBox({ onSelect }) {
             const { name, parts } = getLabel(r);
             return (
               <div key={r.place_id ?? i} onMouseDown={() => pick(r)}
-                onMouseEnter={e => e.currentTarget.style.background = GM.surfaceVar}
+                onMouseEnter={e => e.currentTarget.style.background = C.surfaceVar}
                 onMouseLeave={e => e.currentTarget.style.background = 'white'}
-                style={{ padding: '9px 14px', cursor: 'pointer', borderBottom: i < results.length - 1 ? `1px solid ${GM.outline}` : 'none', display: 'flex', alignItems: 'center', gap: 10 }}
+                style={{ padding: '9px 14px', cursor: 'pointer', borderBottom: i < results.length - 1 ? `1px solid ${C.outline}` : 'none', display: 'flex', alignItems: 'center', gap: 10 }}
               >
-                <MapPin size={14} color={GM.textTer} />
+                <MapPin size={14} color={C.textTer} />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: GM.text }}>{name}</div>
-                  {parts && <div style={{ fontSize: 11, color: GM.textTer }}>{parts}</div>}
+                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{name}</div>
+                  {parts && <div style={{ fontSize: 11, color: C.textTer }}>{parts}</div>}
                 </div>
               </div>
             );

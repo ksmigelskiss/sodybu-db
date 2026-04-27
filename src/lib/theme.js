@@ -27,7 +27,7 @@ export const VIETA_ATTRS = [
   { key: 'upelis',    label: 'Upelis' },
   { key: 'tvenkinys', label: 'Tvenkinys' },
   { key: 'sodas',     label: 'Sodas' },
-  { key: 'medziai',   label: 'Dideli medžiai' },
+  { key: 'medziai',   label: 'Medžiai' },
 ];
 
 export const TABS = [

@@ -178,10 +178,24 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
 
         {/* Geo links */}
         {vieta.lat && (
-          <div style={{ display: 'flex', gap: 6 }}>
-            <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} label="Geoportal" />
-            <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} label="Etomesto" />
-          </div>
+          <>
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${vieta.lat},${vieta.lng}`}
+              target="_blank" rel="noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                width: '100%', padding: '9px', borderRadius: 8,
+                background: '#1a73e8', color: 'white',
+                textDecoration: 'none', fontSize: 13, fontWeight: 600,
+              }}
+            >
+              <Navigation size={14} />Važiuoti
+            </a>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} label="Geoportal" />
+              <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} label="Etomesto" />
+            </div>
+          </>
         )}
 
         {/* Delete */}

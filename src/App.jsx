@@ -64,6 +64,15 @@ export default function App() {
     setSelectedVieta(v); setSelected(null); setNewVietaPos(null); setAddMode(false);
   }, []);
 
+  const handleUpdateVieta = useCallback(async (id, updates) => {
+    await updateVieta(id, updates);
+    setSelectedVieta(prev => prev?.id === id ? { ...prev, ...updates } : prev);
+  }, [updateVieta]);
+
+  const handleDeleteVieta = useCallback(async (id) => {
+    await deleteVieta(id); setSelectedVieta(null);
+  }, [deleteVieta]);
+
   const handleMapClick = useCallback((lat, lng) => {
     if (locateVieta) {
       handleUpdateVieta(locateVieta.id, { lat, lng });
@@ -94,15 +103,6 @@ export default function App() {
     setActiveTab('atrinktos');
     setSelectedVieta(vieta);
   }, [addVieta]);
-
-  const handleUpdateVieta = useCallback(async (id, updates) => {
-    await updateVieta(id, updates);
-    setSelectedVieta(prev => prev?.id === id ? { ...prev, ...updates } : prev);
-  }, [updateVieta]);
-
-  const handleDeleteVieta = useCallback(async (id) => {
-    await deleteVieta(id); setSelectedVieta(null);
-  }, [deleteVieta]);
 
   const handleApskritisSelect = useCallback((a) => {
     setSelectedApskritis(a);

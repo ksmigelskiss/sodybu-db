@@ -262,28 +262,21 @@ function VietaStatusFilter({ value, onChange, vietos }) {
     if (key in counts) counts[key]++;
   });
 
-  const chips = [
-    { key: null,         label: 'Visos',          color: '#374151', bg: '#f1f5f9', active: '#e2e8f0' },
-    { key: 'rasta',      ...VIETA_DEFAULT_THEME,  label: '📌 Rasta' },
-    ...VIETA_KEYS.map(k => ({ key: k, ...VIETA_THEME[k] })),
+  const options = [
+    { key: '',           label: `Visos (${vietos.length})` },
+    { key: 'rasta',      label: `📌 Rasta (${counts.rasta})` },
+    ...VIETA_KEYS.map(k => ({ key: k, label: `${VIETA_THEME[k].label} (${counts[k] ?? 0})` })),
   ];
 
   return (
-    <div style={{ display: 'flex', gap: 5, padding: '6px 10px', borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap', background: '#fafafa' }}>
-      {chips.map(c => {
-        const isActive = value === c.key;
-        const n = c.key === null ? vietos.length : (counts[c.key] ?? 0);
-        return (
-          <button key={String(c.key)} onClick={() => onChange(c.key)} style={{
-            padding: '3px 9px', borderRadius: 20, fontSize: 11, cursor: 'pointer', fontWeight: isActive ? 700 : 400,
-            border: `1.5px solid ${isActive ? c.color : '#e2e8f0'}`,
-            background: isActive ? c.bg : '#f8fafc',
-            color: isActive ? c.color : '#6b7280',
-          }}>
-            {c.label} {n > 0 && <span style={{ opacity: 0.7 }}>{n}</span>}
-          </button>
-        );
-      })}
+    <div style={{ padding: '5px 10px', borderBottom: '1px solid #e5e7eb', background: '#fafafa' }}>
+      <select
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value || null)}
+        style={{ width: '100%', padding: '4px 8px', borderRadius: 7, border: '1px solid #d1d5db', fontSize: 12, color: '#374151', background: 'white', cursor: 'pointer' }}
+      >
+        {options.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+      </select>
     </div>
   );
 }

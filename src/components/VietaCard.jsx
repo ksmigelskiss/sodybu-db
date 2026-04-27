@@ -18,7 +18,7 @@ export default function VietaCard({ vieta, selected, onClick }) {
   return (
     <div onClick={onClick} style={{
       padding: '8px 12px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer',
-      background: selected ? '#f0f7ff' : isSkelbimas ? '#fffbeb' : 'white',
+      background: selected ? '#f0f7ff' : !vieta.lat ? '#fffbeb' : 'white',
       borderLeft: `3px solid ${selected ? '#2563eb' : th.color}`,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

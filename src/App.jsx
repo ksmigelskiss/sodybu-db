@@ -11,7 +11,7 @@ import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
 import { PIN_CURSOR } from './lib/mapLayers.js';
 import { getApskritis } from './lib/apskritys.js';
-import { TABS } from './lib/theme.js';
+import { TABS, VIETA_THEME, VIETA_DEFAULT_THEME, VIETA_KEYS } from './lib/theme.js';
 
 export default function App() {
   const [filters, setFilters]             = useState({});
@@ -26,6 +26,7 @@ export default function App() {
   const [searchPos, setSearchPos]         = useState(null);
   const [showSkelbimosForm, setShowSkelbimosForm] = useState(false);
   const [locateVieta, setLocateVieta]         = useState(null);
+  const [vietaStatusFilter, setVietaStatusFilter] = useState(null);
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
@@ -39,9 +40,12 @@ export default function App() {
   }, [activeTab, selectedApskritis, items]);
 
   const displayVietos = useMemo(() => {
-    if (!selectedApskritis) return vietos;
-    return vietos.filter(v => v.lat && v.lng && getApskritis(v.lat, v.lng) === selectedApskritis.id);
-  }, [selectedApskritis, vietos]);
+    let list = vietos;
+    if (selectedApskritis) list = list.filter(v => v.lat && v.lng && getApskritis(v.lat, v.lng) === selectedApskritis.id);
+    if (vietaStatusFilter === 'rasta') list = list.filter(v => !v.statusas);
+    else if (vietaStatusFilter) list = list.filter(v => v.statusas === vietaStatusFilter);
+    return list;
+  }, [selectedApskritis, vietos, vietaStatusFilter]);
 
   const locateMe = useCallback(() => {
     navigator.geolocation.getCurrentPosition(pos => {
@@ -176,6 +180,10 @@ export default function App() {
             )}
           </div>
 
+          {activeTab === 'atrinktos' && (
+            <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} />
+          )}
+
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {activeTab === 'atrinktos' && (
               displayVietos.length === 0
@@ -242,6 +250,40 @@ export default function App() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function VietaStatusFilter({ value, onChange, vietos }) {
+  const counts = { rasta: 0 };
+  VIETA_KEYS.forEach(k => { counts[k] = 0; });
+  vietos.forEach(v => {
+    const key = v.statusas ?? 'rasta';
+    if (key in counts) counts[key]++;
+  });
+
+  const chips = [
+    { key: null,         label: 'Visos',          color: '#374151', bg: '#f1f5f9', active: '#e2e8f0' },
+    { key: 'rasta',      ...VIETA_DEFAULT_THEME,  label: '📌 Rasta' },
+    ...VIETA_KEYS.map(k => ({ key: k, ...VIETA_THEME[k] })),
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: 5, padding: '6px 10px', borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap', background: '#fafafa' }}>
+      {chips.map(c => {
+        const isActive = value === c.key;
+        const n = c.key === null ? vietos.length : (counts[c.key] ?? 0);
+        return (
+          <button key={String(c.key)} onClick={() => onChange(c.key)} style={{
+            padding: '3px 9px', borderRadius: 20, fontSize: 11, cursor: 'pointer', fontWeight: isActive ? 700 : 400,
+            border: `1.5px solid ${isActive ? c.color : '#e2e8f0'}`,
+            background: isActive ? c.bg : '#f8fafc',
+            color: isActive ? c.color : '#6b7280',
+          }}>
+            {c.label} {n > 0 && <span style={{ opacity: 0.7 }}>{n}</span>}
+          </button>
+        );
+      })}
     </div>
   );
 }

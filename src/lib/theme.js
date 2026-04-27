@@ -24,11 +24,12 @@ export const STATUS_THEME = {
 // saltinis: 'zona' = rasta žemėlapyje, 'skelbimas' = iš skelbimų
 
 export const VIETA_THEME = {
-  aplankyta: { label: '🚶 Aplankyta', color: '#2563eb', bg: '#dbeafe' },
-  atmesta:   { label: '✗ Atmesta',   color: '#6b7280', bg: '#f3f4f6' },
+  nuvaziuoti: { label: '🚗 Nuvažiuoti', color: '#16a34a', bg: '#dcfce7' },
+  aplankyta:  { label: '🚶 Aplankyta',  color: '#2563eb', bg: '#dbeafe' },
+  atmesta:    { label: '✗ Atmesta',    color: '#6b7280', bg: '#f3f4f6' },
 };
 export const VIETA_DEFAULT_THEME = { label: '📌 Rasta', color: '#d97706', bg: '#fef3c7' };
-export const VIETA_KEYS = ['aplankyta', 'atmesta'];
+export const VIETA_KEYS = ['nuvaziuoti', 'aplankyta', 'atmesta'];
 
 export function vietaTheme(statusas) {
   return VIETA_THEME[statusas] ?? VIETA_DEFAULT_THEME;

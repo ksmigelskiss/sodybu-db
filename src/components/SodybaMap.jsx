@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Satellite, Map, Layers } from 'lucide-react';
+import { Satellite, Map as MapIcon, Layers } from 'lucide-react';
 import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 import { APSKRITYS } from '../lib/apskritys.js';
@@ -298,7 +298,7 @@ export default function SodybaMap({
         zIndex: 900, display: 'flex', flexDirection: 'column', gap: 6,
       }}>
         <MapBtn onClick={() => setIsSatellite(s => !s)}>
-          {isSatellite ? <><Map size={14} />Žemėlapis</> : <><Satellite size={14} />Palydovas</>}
+          {isSatellite ? <><MapIcon size={14} />Žemėlapis</> : <><Satellite size={14} />Palydovas</>}
         </MapBtn>
         <MapBtn onClick={() => setIsCadastre(s => !s)} active={isCadastre}>
           <Layers size={14} />Sklypai

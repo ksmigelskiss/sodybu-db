@@ -87,7 +87,7 @@ export default function SodybaMap({
     apskritisPolyRef.current.forEach(l => l.remove());
     apskritisPolyRef.current = [];
 
-    if (selectedApskritis || activeTab === 'atrinktos') return;
+    if (selectedApskritis) return;
 
     const timers = [];
     APSKRITYS.forEach((a, i) => {

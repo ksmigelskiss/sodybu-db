@@ -34,6 +34,11 @@ export default function App() {
     return byTab.filter(s => s.lat && s.lng && getApskritis(s.lat, s.lng) === selectedApskritis.id);
   }, [activeTab, selectedApskritis, items]);
 
+  const displayVietos = useMemo(() => {
+    if (!selectedApskritis) return vietos;
+    return vietos.filter(v => v.lat && v.lng && getApskritis(v.lat, v.lng) === selectedApskritis.id);
+  }, [selectedApskritis, vietos]);
+
   const locateMe = useCallback(() => {
     navigator.geolocation.getCurrentPosition(pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
@@ -123,30 +128,32 @@ export default function App() {
           <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos}
             selectedApskritis={selectedApskritis} onChange={setActiveTab} />
 
-          {activeTab !== 'atrinktos' && (
-            <div style={{ padding: '7px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: selectedApskritis ? '#f0f7ff' : '#f8fafc', minHeight: 38 }}>
-              {selectedApskritis ? (
-                <>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
-                    📍 {selectedApskritis.label} apskritis
-                    <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>({displayZones.length})</span>
+          <div style={{ padding: '7px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: selectedApskritis ? '#f0f7ff' : '#f8fafc', minHeight: 38 }}>
+            {selectedApskritis ? (
+              <>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+                  📍 {selectedApskritis.label} apskritis
+                  <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>
+                    ({activeTab === 'atrinktos' ? displayVietos.length : displayZones.length})
                   </span>
-                  <button onClick={clearApskritis}
-                    style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '2px 8px', cursor: 'pointer' }}>
-                    × Visos
-                  </button>
-                </>
-              ) : (
-                <span style={{ fontSize: 12, color: '#9ca3af' }}>Spustelėkite apskritį žemėlapyje</span>
-              )}
-            </div>
-          )}
+                </span>
+                <button onClick={clearApskritis}
+                  style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '2px 8px', cursor: 'pointer' }}>
+                  × Visos
+                </button>
+              </>
+            ) : (
+              <span style={{ fontSize: 12, color: '#9ca3af' }}>Spustelėkite apskritį žemėlapyje</span>
+            )}
+          </div>
 
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {activeTab === 'atrinktos' && (
-              vietos.length === 0
-                ? <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>Dar nėra išsaugotų sodybų.<br/>Naršyk ir spausk 📍 sodybos vietą.</div>
-                : vietos.map(v => (
+              displayVietos.length === 0
+                ? <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>
+                    {vietos.length === 0 ? <>Dar nėra išsaugotų sodybų.<br/>Naršyk ir spausk 📍 sodybos vietą.</> : 'Šioje apskrityje nėra sodybų.'}
+                  </div>
+                : displayVietos.map(v => (
                     <VietaCard key={v.id} vieta={v} selected={selectedVieta?.id === v.id}
                       onClick={() => handleSelectVieta(v)} />
                   ))

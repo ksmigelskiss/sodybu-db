@@ -140,19 +140,10 @@ export default function App() {
         <span style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap' }}>Sodybų paieška</span>
         <div style={{ flex: 1, display: 'flex', gap: 6, marginLeft: 8, position: 'relative' }}>
           <SearchBox onSelect={setSearchPos} />
-          <button onClick={() => setAddMode(true)} title="Žymėti sodybą"
-            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#1d4ed8', color: 'white', cursor: PIN_CURSOR, fontSize: 13, flexShrink: 0 }}>
-            📍
-          </button>
-          <button onClick={() => { setShowSkelbimosForm(true); setActiveTab('atrinktos'); }} title="Pridėti skelbimą"
-            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#d97706', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-            +
-          </button>
+          <HeaderBtn onClick={() => setAddMode(true)} title="Žymėti sodybą žemėlapyje" bg="#1d4ed8" cursor={PIN_CURSOR}>📍</HeaderBtn>
+          <HeaderBtn onClick={() => { setShowSkelbimosForm(true); setActiveTab('atrinktos'); }} title="Pridėti skelbimą" bg="#d97706" bold>+</HeaderBtn>
         </div>
-        <button onClick={locateMe}
-          style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          📍 Vieta
-        </button>
+        <HeaderBtn onClick={locateMe} title="Mano vieta" bg="#2563eb">📍</HeaderBtn>
       </header>
 
       {error &&<div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>Klaida: {error}</div>}
@@ -255,6 +246,15 @@ export default function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+function HeaderBtn({ onClick, title, bg, cursor, bold, children }) {
+  return (
+    <button onClick={onClick} title={title}
+      style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: bg, color: 'white', cursor: cursor ?? 'pointer', fontSize: 13, fontWeight: bold ? 700 : 400, flexShrink: 0 }}>
+      {children}
+    </button>
   );
 }
 

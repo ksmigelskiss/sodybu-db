@@ -15,6 +15,7 @@ import { TABS } from './lib/theme.js';
 
 export default function App() {
   const [filters, setFilters]             = useState({});
+  const [radiusKm, setRadiusKm]           = useState('');
   const [selected, setSelected]           = useState(null);
   const [selectedVieta, setSelectedVieta] = useState(null);
   const [selectedApskritis, setSelectedApskritis] = useState(null);
@@ -46,9 +47,9 @@ export default function App() {
     navigator.geolocation.getCurrentPosition(pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
       setUserPos({ lat, lng });
-      setFilters(f => ({ ...f, lat, lng }));
+      setFilters(f => ({ ...f, lat, lng, radiusKm: radiusKm ? Number(radiusKm) : undefined }));
     });
-  }, []);
+  }, [radiusKm]);
 
   const handleStatusChange = useCallback(async (id, statusas, komentaras) => {
     updateItem(id, { statusas, komentaras });
@@ -129,14 +130,22 @@ export default function App() {
             📍
           </button>
           <button onClick={() => { setShowSkelbimosForm(true); setActiveTab('atrinktos'); }} title="Pridėti skelbimą"
-            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#d97706', color: 'white', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
-            📢
+            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#d97706', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+            +
           </button>
         </div>
-        <button onClick={locateMe}
-          style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' }}>
-          📍 Vieta
-        </button>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+          <input
+            type="number" min={1} max={300} placeholder="km"
+            value={radiusKm}
+            onChange={e => setRadiusKm(e.target.value)}
+            style={{ width: 48, padding: '5px 6px', borderRadius: 7, border: 'none', background: '#334155', color: 'white', fontSize: 13, textAlign: 'center' }}
+          />
+          <button onClick={locateMe}
+            style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' }}>
+            📍 Vieta
+          </button>
+        </div>
       </header>
 
       <Filters onApply={setFilters} />

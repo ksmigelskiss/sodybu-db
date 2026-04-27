@@ -7,20 +7,13 @@ const TIPAI = [
 ];
 
 export default function Filters({ onApply }) {
-  const [f, setF] = useState({
-    tipas: 'Viensėdis',
-    maxAdresas: '',
-    miskas: false,
-    upelis: false,
-    radiusKm: '',
-  });
+  const [f, setF] = useState({ tipas: 'Viensėdis', maxAdresas: '' });
 
   const set = (k, v) => setF(prev => ({ ...prev, [k]: v }));
 
   return (
-    <div style={{ padding: '12px 14px', borderBottom: '1px solid #ddd', background: '#f9fafb' }}>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-
+    <div style={{ padding: '8px 14px', borderBottom: '1px solid #ddd', background: '#f9fafb' }}>
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
         <label style={labelStyle}>
           <span style={{ fontWeight: 600 }}>Tipas</span>
           <select
@@ -42,19 +35,6 @@ export default function Filters({ onApply }) {
           />
         </label>
 
-        <Toggle label="🌲 Miškas" value={f.miskas} onChange={v => set('miskas', v)} />
-        <Toggle label="💧 Upė/ežeras" value={f.upelis} onChange={v => set('upelis', v)} />
-
-        <label style={labelStyle}>
-          <span>Spindulys (km)</span>
-          <input
-            type="number" min={1} max={200} placeholder="visi"
-            value={f.radiusKm}
-            onChange={e => set('radiusKm', e.target.value)}
-            style={{ width: 52, padding: '2px 6px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13 }}
-          />
-        </label>
-
         <button
           onClick={() => onApply(f)}
           style={{
@@ -67,15 +47,6 @@ export default function Filters({ onApply }) {
         </button>
       </div>
     </div>
-  );
-}
-
-function Toggle({ label, value, onChange }) {
-  return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13 }}>
-      <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)} />
-      {label}
-    </label>
   );
 }
 

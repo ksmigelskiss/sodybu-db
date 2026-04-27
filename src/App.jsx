@@ -14,6 +14,7 @@ import { TABS, VIETA_THEME, VIETA_DEFAULT_THEME, VIETA_KEYS } from './lib/theme.
 
 export default function App() {
   const [filters, setFilters]             = useState({ tipas: 'Viensėdis' });
+  const [sidebarOpen, setSidebarOpen]     = useState(true);
   const [selected, setSelected]           = useState(null);
   const [selectedVieta, setSelectedVieta] = useState(null);
   const [selectedApskritis, setSelectedApskritis] = useState(null);
@@ -148,7 +149,7 @@ export default function App() {
       {error &&<div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>Klaida: {error}</div>}
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <div style={{ width: 320, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e5e7eb', flexShrink: 0 }}>
+        <div style={{ width: sidebarOpen ? 320 : 0, display: 'flex', flexDirection: 'column', borderRight: sidebarOpen ? '1px solid #e5e7eb' : 'none', flexShrink: 0, overflow: 'hidden', transition: 'width 0.2s ease' }}>
           <Tabs tabs={TABS} active={activeTab} items={items} vietos={vietos}
             selectedApskritis={selectedApskritis} onChange={setActiveTab} />
 
@@ -208,6 +209,15 @@ export default function App() {
         </div>
 
         <div style={{ flex: 1, position: 'relative' }}>
+          <button onClick={() => setSidebarOpen(o => !o)} style={{
+            position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+            zIndex: 1000, background: 'white', border: '1px solid #e2e8f0',
+            borderLeft: 'none', borderRadius: '0 6px 6px 0',
+            padding: '10px 4px', cursor: 'pointer', color: '#6b7280', fontSize: 11, lineHeight: 1,
+            boxShadow: '2px 0 6px rgba(0,0,0,0.08)',
+          }}>
+            {sidebarOpen ? '‹' : '›'}
+          </button>
           <SodybaMap
             items={mapZones}
             selected={selected}

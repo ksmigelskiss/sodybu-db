@@ -10,17 +10,25 @@ function makeApskritisIcon(label) {
   return L.divIcon({ html, className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
 }
 
-// Module-level cache — persists across renders
-const geoCache = new Map();
+const memCache = new Map();
+const LS_PREFIX = 'apskritis_geo_v1_';
 
 async function loadCountyGeo(county) {
-  if (geoCache.has(county.id)) return geoCache.get(county.id);
-  const q = `${county.label} apskritis Lithuania`;
+  if (memCache.has(county.id)) return memCache.get(county.id);
+  const lsKey = LS_PREFIX + county.id;
+  const stored = localStorage.getItem(lsKey);
+  if (stored) {
+    const geo = JSON.parse(stored);
+    memCache.set(county.id, geo);
+    return geo;
+  }
   try {
+    const q = `${county.label} apskritis Lithuania`;
     const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&polygon_geojson=1&limit=1`);
     const data = await res.json();
     const geo = data[0]?.geojson ?? null;
-    geoCache.set(county.id, geo);
+    memCache.set(county.id, geo);
+    if (geo) localStorage.setItem(lsKey, JSON.stringify(geo));
     return geo;
   } catch {
     return null;

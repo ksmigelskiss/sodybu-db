@@ -160,6 +160,7 @@ export default function App() {
           selectedApskritis={null}
           onApskritisSelect={undefined}
           newVietaPos={newVietaPos}
+          bottomOffset={72}
         />
 
         {/* Add mode banner */}

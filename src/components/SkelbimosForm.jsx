@@ -4,6 +4,7 @@ import { VIETA_ATTRS } from '../lib/theme.js';
 export default function SkelbimosForm({ onSave, onCancel, mobile }) {
   const [url, setUrl]               = useState('');
   const [kaina, setKaina]           = useState('');
+  const [tel, setTel]               = useState('');
   const [komentaras, setKomentaras] = useState('');
   const [attrs, setAttrs]           = useState({});
   const [saving, setSaving]         = useState(false);
@@ -17,6 +18,7 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
         saltinis: 'skelbimas',
         url: url.trim() || null,
         kaina: kaina ? Number(kaina) : null,
+        tel: tel.trim() || null,
         komentaras: komentaras || null,
         lat: null,
         lng: null,
@@ -53,16 +55,21 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
         }}
       />
 
-      <input
-        value={kaina}
-        onChange={e => setKaina(e.target.value.replace(/\D/g, ''))}
-        placeholder="Kaina €"
-        style={{
-          width: '100%', boxSizing: 'border-box', marginBottom: 10,
-          border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px',
-          fontSize: 13, fontFamily: 'inherit', color: '#374151',
-        }}
-      />
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <input
+          value={kaina}
+          onChange={e => setKaina(e.target.value.replace(/\D/g, ''))}
+          placeholder="Kaina €"
+          style={{ flex: 1, boxSizing: 'border-box', border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px', fontSize: 13, fontFamily: 'inherit', color: '#374151' }}
+        />
+        <input
+          value={tel}
+          onChange={e => setTel(e.target.value)}
+          placeholder="📞 Tel."
+          type="tel"
+          style={{ flex: 1, boxSizing: 'border-box', border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px', fontSize: 13, fontFamily: 'inherit', color: '#374151' }}
+        />
+      </div>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
         {VIETA_ATTRS.map(({ key, label }) => (

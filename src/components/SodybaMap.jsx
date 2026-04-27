@@ -42,6 +42,7 @@ export default function SodybaMap({
   selectedApskritis, onApskritisSelect,
   newVietaPos,
   addModeHint,
+  bottomOffset = 24,
 }) {
   const containerRef         = useRef(null);
   const mapRef               = useRef(null);
@@ -292,7 +293,7 @@ export default function SodybaMap({
         </div>
       )}
 
-      <div style={{ position: 'absolute', bottom: 24, left: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ position: 'absolute', bottom: bottomOffset, left: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <MapBtn onClick={() => setIsSatellite(s => !s)}>
           {isSatellite ? '🗺 Žemėlapis' : '🛰 Palydovas'}
         </MapBtn>

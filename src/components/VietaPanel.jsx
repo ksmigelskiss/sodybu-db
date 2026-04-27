@@ -4,10 +4,11 @@ import { geoportalUrl } from '../lib/coords.js';
 
 export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocate, mobile }) {
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
+  const [tel, setTel]               = useState(vieta.tel || '');
   const [saving, setSaving]         = useState(false);
   const [ogImage, setOgImage]       = useState(null);
 
-  useEffect(() => { setKomentaras(vieta.komentaras || ''); }, [vieta.id]);
+  useEffect(() => { setKomentaras(vieta.komentaras || ''); setTel(vieta.tel || ''); }, [vieta.id]);
 
   useEffect(() => {
     if (!vieta.url) { setOgImage(null); return; }
@@ -31,6 +32,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const toggleAttr = (key) => onUpdate(vieta.id, { [key]: !vieta[key] });
 
   const saveComment = () => onUpdate(vieta.id, { komentaras: komentaras || null });
+  const saveTel = () => onUpdate(vieta.id, { tel: tel.trim() || null });
 
   const containerStyle = mobile ? {
     position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -95,6 +97,11 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
                 fontSize: 12, color: '#2563eb', textDecoration: 'none', wordBreak: 'break-all',
               }}>🔗 Atidaryti skelbimą</a>
             )}
+            {vieta.tel && (
+              <a href={`tel:${vieta.tel}`} style={{ fontSize: 12, color: '#374151', textDecoration: 'none', display: 'block', marginTop: 4 }}>
+                📞 {vieta.tel}
+              </a>
+            )}
           </div>
         </div>
       )}
@@ -132,6 +139,19 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           </button>
         ))}
       </div>
+
+      <input
+        value={tel}
+        onChange={e => setTel(e.target.value)}
+        onBlur={saveTel}
+        placeholder="📞 Telefono numeris..."
+        type="tel"
+        style={{
+          width: '100%', boxSizing: 'border-box',
+          border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
+          fontSize: 12, fontFamily: 'inherit', marginBottom: 8, color: '#374151',
+        }}
+      />
 
       <textarea
         value={komentaras}

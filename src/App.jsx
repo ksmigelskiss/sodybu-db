@@ -143,7 +143,7 @@ export default function App() {
           <HeaderBtn onClick={() => setAddMode(true)} title="Žymėti sodybą žemėlapyje" bg="#1d4ed8" cursor={PIN_CURSOR}>📍</HeaderBtn>
           <HeaderBtn onClick={() => { setShowSkelbimosForm(true); setActiveTab('atrinktos'); }} title="Pridėti skelbimą" bg="#d97706" bold>+</HeaderBtn>
         </div>
-        <HeaderBtn onClick={locateMe} title="Mano vieta" bg="#2563eb">📍</HeaderBtn>
+        <HeaderBtn onClick={locateMe} title="Mano vieta" bg="#2563eb">🎯</HeaderBtn>
       </header>
 
       {error &&<div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>Klaida: {error}</div>}

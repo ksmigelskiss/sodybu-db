@@ -344,6 +344,7 @@ export default function App() {
             selectedApskritis={selectedApskritis}
             onApskritisSelect={activeTab !== 'atrinktos' ? handleApskritisSelect : undefined}
             newVietaPos={newVietaPos}
+            sidebarOpen={sidebarOpen}
           />
           {selected && !newVietaPos && (
             <DetailPanel sodyba={selected} onClose={() => setSelected(null)}

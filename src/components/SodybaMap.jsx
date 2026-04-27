@@ -43,6 +43,7 @@ export default function SodybaMap({
   newVietaPos,
   addModeHint,
   bottomOffset = 24,
+  sidebarOpen,
 }) {
   const containerRef         = useRef(null);
   const mapRef               = useRef(null);
@@ -69,6 +70,13 @@ export default function SodybaMap({
     mapRef.current = L.map(containerRef.current).setView([55.3, 23.9], 7);
     LAYERS.map.addTo(mapRef.current);
   }, []);
+
+  // Invalidate size after sidebar CSS transition (200ms)
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const t = setTimeout(() => mapRef.current?.invalidateSize(), 210);
+    return () => clearTimeout(t);
+  }, [sidebarOpen]);
 
   // Base layer toggle
   useEffect(() => {

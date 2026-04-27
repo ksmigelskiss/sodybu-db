@@ -18,7 +18,7 @@ body {
 .leaflet-add-mode .leaflet-interactive,
 .leaflet-add-mode .leaflet-grab,
 .leaflet-add-mode * {
-  cursor: crosshair !important;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='38' viewBox='0 0 30 38'%3E%3Cpath d='M15 2C8.9 2 4 6.9 4 13C4 21.5 15 35 15 35S26 21.5 26 13C26 6.9 21.1 2 15 2Z' fill='%231a73e8' stroke='white' stroke-width='1.5'/%3E%3Cpath d='M15 8L21 13H19.5V20H10.5V13H9Z' fill='white'/%3E%3Crect x='13' y='15.5' width='4' height='4.5' rx='.5' fill='%231a73e8'/%3E%3C/svg%3E") 15 35, crosshair !important;
 }
 
 input, textarea, select, button {

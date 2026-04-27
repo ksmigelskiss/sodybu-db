@@ -12,18 +12,13 @@ export default function SodybaCard({ sodyba: s, onClick, selected }) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 5 }}>
-          {s.statusas != null && <span style={{ fontSize: 12, color: '#16a34a' }}>✓</span>}
+          {s.statusas !== null && s.statusas !== undefined && <span style={{ fontSize: 12, color: '#16a34a' }}>✓</span>}
           {s.pavadinimas || s.adresas || s.savivaldybe || `${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)}`}
         </div>
         <ScoreBadge score={s.score} />
       </div>
       <div style={{ fontSize: 12, color: '#666', marginTop: 4, display: 'flex', gap: 8 }}>
-        {s.miskas_m === 0      && <Tag icon="🌲" label="miškas" />}
-        {s.upelis_m === 0      && <Tag icon="💧" label="upė" />}
-        {s.kaimynai_200m === 0 && <Tag icon="🏡" label="vienkiemis" />}
-        {s.kultura_paveldas    && <Tag icon="🏛" label="paveldas" />}
-        {s.saugomos_terit      && <Tag icon="🌿" label="saugoma" />}
-        {s.pastato_metai       && <Tag icon="📅" label={s.pastato_metai} />}
+        {s.pastato_metai && <Tag icon="📅" label={s.pastato_metai} />}
       </div>
     </div>
   );

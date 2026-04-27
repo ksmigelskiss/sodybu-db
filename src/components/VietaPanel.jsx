@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
 
 export default function VietaPanel({ vieta, onClose, onUpdate, onDelete }) {
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
   const [saving, setSaving]         = useState(false);
+
+  useEffect(() => { setKomentaras(vieta.komentaras || ''); }, [vieta.id]);
 
   const th = vietaTheme(vieta.statusas);
   const isSkelbimas = vieta.saltinis === 'skelbimas';

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import SodybaMap from './components/SodybaMap.jsx';
 import SodybaCard from './components/SodybaCard.jsx';
 import VietaCard from './components/VietaCard.jsx';
@@ -26,13 +26,13 @@ export default function App() {
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
 
-  const displayZones = (() => {
+  const displayZones = useMemo(() => {
     if (activeTab === 'atrinktos' || !selectedApskritis) return [];
     const byTab = activeTab === 'browse'
-      ? items.filter(s => s.statusas == null)
-      : items.filter(s => s.statusas != null);
+      ? items.filter(s => s.statusas === null || s.statusas === undefined)
+      : items.filter(s => s.statusas !== null && s.statusas !== undefined);
     return byTab.filter(s => s.lat && s.lng && getApskritis(s.lat, s.lng) === selectedApskritis.id);
-  })();
+  }, [activeTab, selectedApskritis, items]);
 
   const locateMe = useCallback(() => {
     navigator.geolocation.getCurrentPosition(pos => {
@@ -211,6 +211,7 @@ function SearchBox({ onSelect }) {
   const [loading, setLoading]   = useState(false);
   const [open, setOpen]         = useState(false);
   const debounceRef             = useRef(null);
+  const abortRef                = useRef(null);
   const wrapRef                 = useRef(null);
 
   // Close dropdown on outside click
@@ -228,9 +229,11 @@ function SearchBox({ onSelect }) {
       return;
     }
     if (q.length < 2) { setResults([]); setOpen(false); return; }
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
     setLoading(true);
     try {
-      const res = await fetch(`/api/geocode-proxy?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/geocode-proxy?q=${encodeURIComponent(q)}`, { signal: abortRef.current.signal });
       if (!res.ok) return;
       const data = await res.json();
       setResults(data);

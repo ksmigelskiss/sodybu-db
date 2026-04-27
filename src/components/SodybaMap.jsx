@@ -50,7 +50,7 @@ export default function SodybaMap({
 
   const [isSatellite, setIsSatellite]           = useState(false);
   const [isCadastre, setIsCadastre]             = useState(false);
-const [featuresLoading, setFeaturesLoading]   = useState(false);
+  const [featuresLoading, setFeaturesLoading]   = useState(false);
   const [featuresCount, setFeaturesCount]       = useState(null);
 
   // Init map + custom pane for waterways (below overlay, above tiles)
@@ -89,12 +89,13 @@ const [featuresLoading, setFeaturesLoading]   = useState(false);
 
     if (selectedApskritis || activeTab === 'atrinktos') return;
 
+    const timers = [];
     APSKRITYS.forEach((a, i) => {
       const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
       m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect?.(a); });
       apskritisMarkersRef.current.push(m);
 
-      setTimeout(() => {
+      timers.push(setTimeout(() => {
         loadCountyGeo(a).then(geo => {
           if (!geo || !mapRef.current) return;
           const layer = L.geoJSON(geo, {
@@ -106,8 +107,9 @@ const [featuresLoading, setFeaturesLoading]   = useState(false);
           layer.addTo(mapRef.current);
           apskritisPolyRef.current.push(layer);
         });
-      }, i * 120);
+      }, i * 200));
     });
+    return () => timers.forEach(clearTimeout);
   }, [selectedApskritis, activeTab]);
 
   // Selected county border

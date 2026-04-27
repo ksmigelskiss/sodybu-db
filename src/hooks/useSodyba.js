@@ -21,17 +21,7 @@ export function useSodybaList(filters = {}) {
       const snap = await getDocs(query(collection(db, COL), ...constraints));
       let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      if (filters.miskas)    docs = docs.filter(s => s.miskas_m != null);
-      if (filters.upelis)    docs = docs.filter(s => s.upelis_m != null);
       if (filters.maxAdresas) docs = docs.filter(s => s.adresas_sk != null && s.adresas_sk <= Number(filters.maxAdresas));
-
-      if (filters.lat && filters.lng && filters.radiusKm) {
-        const deg = filters.radiusKm / 111;
-        docs = docs.filter(s =>
-          Math.abs(s.lat - filters.lat) <= deg &&
-          Math.abs(s.lng - filters.lng) <= deg * 1.5
-        );
-      }
 
       docs.sort((a, b) => {
         if (a.score != null && b.score != null) return b.score - a.score;

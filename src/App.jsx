@@ -5,7 +5,6 @@ import VietaCard from './components/VietaCard.jsx';
 import VietaForm from './components/VietaForm.jsx';
 import VietaPanel from './components/VietaPanel.jsx';
 import DetailPanel from './components/DetailPanel.jsx';
-import Filters from './components/Filters.jsx';
 import SkelbimosForm from './components/SkelbimosForm.jsx';
 import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
@@ -14,8 +13,7 @@ import { getApskritis } from './lib/apskritys.js';
 import { TABS, VIETA_THEME, VIETA_DEFAULT_THEME, VIETA_KEYS } from './lib/theme.js';
 
 export default function App() {
-  const [filters, setFilters]             = useState({});
-  const [radiusKm, setRadiusKm]           = useState('');
+  const [filters, setFilters]             = useState({ tipas: 'Viensėdis' });
   const [selected, setSelected]           = useState(null);
   const [selectedVieta, setSelectedVieta] = useState(null);
   const [selectedApskritis, setSelectedApskritis] = useState(null);
@@ -51,9 +49,8 @@ export default function App() {
     navigator.geolocation.getCurrentPosition(pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
       setUserPos({ lat, lng });
-      setFilters(f => ({ ...f, lat, lng, radiusKm: radiusKm ? Number(radiusKm) : undefined }));
     });
-  }, [radiusKm]);
+  }, []);
 
   const handleStatusChange = useCallback(async (id, statusas, komentaras) => {
     updateItem(id, { statusas, komentaras });
@@ -152,23 +149,13 @@ export default function App() {
             +
           </button>
         </div>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-          <input
-            type="number" min={1} max={300} placeholder="km"
-            value={radiusKm}
-            onChange={e => setRadiusKm(e.target.value)}
-            style={{ width: 48, padding: '5px 6px', borderRadius: 7, border: 'none', background: '#334155', color: 'white', fontSize: 13, textAlign: 'center' }}
-          />
-          <button onClick={locateMe}
-            style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' }}>
-            📍 Vieta
-          </button>
-        </div>
+        <button onClick={locateMe}
+          style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          📍 Vieta
+        </button>
       </header>
 
-      <Filters onApply={setFilters} />
-
-      {error && <div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>Klaida: {error}</div>}
+      {error &&<div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>Klaida: {error}</div>}
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <div style={{ width: 320, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e5e7eb', flexShrink: 0 }}>
@@ -196,6 +183,9 @@ export default function App() {
 
           {activeTab === 'atrinktos' && (
             <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} />
+          )}
+          {activeTab !== 'atrinktos' && (
+            <ZonuFilters filters={filters} onChange={setFilters} />
           )}
 
           <div style={{ overflowY: 'auto', flex: 1 }}>
@@ -264,6 +254,35 @@ export default function App() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const TIPAI = [
+  { value: '',          label: 'Visi' },
+  { value: 'Viensėdis', label: '🏚 Viensėdis' },
+  { value: 'Kaimas',    label: '🏘 Kaimas' },
+];
+
+function ZonuFilters({ filters, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, padding: '6px 10px', borderBottom: '1px solid #e5e7eb', background: '#fafafa', alignItems: 'center', flexWrap: 'wrap' }}>
+      <select
+        value={filters.tipas ?? ''}
+        onChange={e => onChange(f => ({ ...f, tipas: e.target.value }))}
+        style={{ padding: '3px 7px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 12, color: '#374151', background: 'white' }}
+      >
+        {TIPAI.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+      </select>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#374151' }}>
+        Max adresai
+        <input
+          type="number" min={1} max={50} placeholder="visi"
+          value={filters.maxAdresas ?? ''}
+          onChange={e => onChange(f => ({ ...f, maxAdresas: e.target.value }))}
+          style={{ width: 48, padding: '2px 5px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 12 }}
+        />
+      </label>
     </div>
   );
 }

@@ -155,7 +155,7 @@ export default function App() {
           selected={null}
           onSelect={() => {}}
           userPos={userPos}
-          vietos={vietos}
+          vietos={displayVietos}
           selectedVieta={selectedVieta}
           onVietaSelect={v => { setSelectedVieta(v); setSheetOpen(false); }}
           addMode={addMode || !!locateVieta}
@@ -246,7 +246,7 @@ export default function App() {
         selected={selected}
         onSelect={handleSelectZone}
         userPos={userPos}
-        vietos={vietos}
+        vietos={displayVietos}
         selectedVieta={selectedVieta}
         onVietaSelect={handleSelectVieta}
         addMode={addMode || !!locateVieta}

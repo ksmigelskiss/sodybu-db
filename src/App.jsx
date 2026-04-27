@@ -57,8 +57,9 @@ export default function App() {
 
   const displayVietos = useMemo(() => {
     let list = vietos;
-    if (vietaStatusFilter === 'rasta') list = list.filter(v => !v.statusas);
-    else if (vietaStatusFilter) list = list.filter(v => v.statusas === vietaStatusFilter);
+    if (vietaStatusFilter === 'rasta')     list = list.filter(v => !v.statusas && v.saltinis !== 'skelbimas');
+    else if (vietaStatusFilter === 'skelbimas') list = list.filter(v => v.saltinis === 'skelbimas');
+    else if (vietaStatusFilter)            list = list.filter(v => v.statusas === vietaStatusFilter);
     return list;
   }, [vietos, vietaStatusFilter]);
 
@@ -456,16 +457,18 @@ function ZonuFilters({ filters, onChange }) {
 }
 
 function VietaStatusFilter({ value, onChange, vietos, compact }) {
-  const counts = { rasta: 0 };
+  const counts = { rasta: 0, skelbimas: 0 };
   VIETA_KEYS.forEach(k => { counts[k] = 0; });
   vietos.forEach(v => {
+    if (v.saltinis === 'skelbimas') { counts.skelbimas++; return; }
     const key = v.statusas ?? 'rasta';
     if (key in counts) counts[key]++;
   });
 
   const options = [
-    { key: '',      label: `Visos (${vietos.length})` },
-    { key: 'rasta', label: `Rasta (${counts.rasta})` },
+    { key: '',           label: `Visos (${vietos.length})` },
+    { key: 'rasta',      label: `Rasta (${counts.rasta})` },
+    { key: 'skelbimas',  label: `Iš skelbimų (${counts.skelbimas})` },
     ...VIETA_KEYS.map(k => ({ key: k, label: `${VIETA_THEME[k].label} (${counts[k] ?? 0})` })),
   ];
 

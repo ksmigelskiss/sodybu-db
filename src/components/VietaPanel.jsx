@@ -10,6 +10,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
   const [vardas, setVardas]         = useState(vieta.vardas || '');
   const [tel, setTel]               = useState(vieta.tel || '');
+  const [pavadinimas, setPavadinimas] = useState(vieta.zonaPavadinimas || '');
   const [saving, setSaving]         = useState(false);
   const [ogImage, setOgImage]       = useState(null);
 
@@ -17,6 +18,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     setKomentaras(vieta.komentaras || '');
     setVardas(vieta.vardas || '');
     setTel(vieta.tel || '');
+    setPavadinimas(vieta.zonaPavadinimas || '');
   }, [vieta.id]);
 
   useEffect(() => {
@@ -61,9 +63,20 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f3f4' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1, marginRight: 8 }}>
-            <div style={{ fontWeight: 600, fontSize: 14, color: '#202124', lineHeight: 1.3 }}>
-              {vieta.zonaPavadinimas || (vieta.lat ? `${vieta.lat.toFixed(4)}, ${vieta.lng.toFixed(4)}` : 'Be vietos')}
-            </div>
+            <input
+              value={pavadinimas}
+              onChange={e => setPavadinimas(e.target.value)}
+              onBlur={() => save('zonaPavadinimas', pavadinimas.trim())}
+              placeholder={vieta.lat ? `${vieta.lat.toFixed(4)}, ${vieta.lng.toFixed(4)}` : 'Pavadinimas...'}
+              style={{
+                width: '100%', border: 'none', outline: 'none', background: 'transparent',
+                fontWeight: 600, fontSize: 14, color: '#202124', lineHeight: 1.3,
+                padding: 0, borderBottom: '1.5px solid transparent',
+                borderRadius: 0, cursor: 'text',
+              }}
+              onFocus={e => e.target.style.borderBottomColor = '#1a73e8'}
+              onBlurCapture={e => e.target.style.borderBottomColor = 'transparent'}
+            />
             <div style={{ display: 'flex', gap: 6, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: 11, color: th.color, fontWeight: 500, background: th.bg, borderRadius: 12, padding: '2px 8px' }}>
                 {th.label}

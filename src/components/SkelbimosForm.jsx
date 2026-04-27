@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Megaphone, Link, Euro, User, Phone, MessageSquare, X } from 'lucide-react';
 import { VIETA_ATTRS } from '../lib/theme.js';
 
 export default function SkelbimosForm({ onSave, onCancel, mobile }) {
@@ -22,9 +23,7 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
         vardas: vardas.trim() || null,
         tel: tel.trim() || null,
         komentaras: komentaras || null,
-        lat: null,
-        lng: null,
-        statusas: null,
+        lat: null, lng: null, statusas: null,
         ...attrs,
       });
     } catch (e) {
@@ -34,80 +33,94 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
     }
   };
 
-  const style = mobile
-    ? { position: 'absolute', bottom: 0, left: 0, right: 0, background: 'white', borderRadius: '16px 16px 0 0', boxShadow: '0 -4px 24px rgba(0,0,0,0.2)', padding: '16px 20px 32px', zIndex: 2000, maxHeight: '85vh', overflowY: 'auto' }
-    : { position: 'absolute', bottom: 16, right: 16, background: 'white', borderRadius: 12, boxShadow: '0 4px 32px rgba(0,0,0,0.2)', padding: 20, width: 300, zIndex: 2000 };
+  const style = mobile ? {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    background: 'white', borderRadius: '16px 16px 0 0',
+    boxShadow: '0 -2px 16px rgba(0,0,0,0.12)',
+    zIndex: 2000, maxHeight: '85vh', overflowY: 'auto',
+  } : {
+    position: 'absolute', bottom: 16, right: 16,
+    background: 'white', borderRadius: 12,
+    boxShadow: '0 2px 10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+    width: 320, zIndex: 2000,
+  };
 
   return (
     <div style={style}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <span style={{ fontWeight: 700, fontSize: 14 }}>📢 Pridėti skelbimą</span>
-        <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
+      {mobile && <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2, margin: '10px auto 0' }} />}
+
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f3f4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontWeight: 600, fontSize: 14, color: '#202124', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Megaphone size={15} color="#1a73e8" /> Pridėti skelbimą
+        </span>
+        <button onClick={onCancel} style={iconBtn}><X size={16} color="#5f6368" /></button>
       </div>
 
-      <input
-        value={url}
-        onChange={e => setUrl(e.target.value)}
-        placeholder="Nuoroda į skelbimą..."
-        autoFocus
-        style={{ ...inp, marginBottom: 8 }}
-      />
+      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ position: 'relative' }}>
+          <Link size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Nuoroda į skelbimą..." autoFocus style={{ ...field, paddingLeft: 28 }} />
+        </div>
 
-      <input
-        value={kaina}
-        onChange={e => setKaina(e.target.value.replace(/\D/g, ''))}
-        placeholder="Kaina €"
-        style={inp}
-      />
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-        <input value={vardas} onChange={e => setVardas(e.target.value)} placeholder="👤 Vardas" style={{ ...inp, flex: 1, marginBottom: 0 }} />
-        <input value={tel} onChange={e => setTel(e.target.value)} placeholder="📞 Tel." type="tel" style={{ ...inp, flex: 1, marginBottom: 0 }} />
-      </div>
+        <div style={{ position: 'relative' }}>
+          <Euro size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <input value={kaina} onChange={e => setKaina(e.target.value.replace(/\D/g, ''))} placeholder="Kaina" style={{ ...field, paddingLeft: 28 }} />
+        </div>
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-        {VIETA_ATTRS.map(({ key, label }) => (
-          <button key={key} onClick={() => toggleAttr(key)} style={{
-            padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
-            border: `1.5px solid ${attrs[key] ? '#2563eb' : '#e2e8f0'}`,
-            background: attrs[key] ? '#dbeafe' : '#f8fafc',
-            color: attrs[key] ? '#1d4ed8' : '#6b7280',
-            fontWeight: attrs[key] ? 600 : 400,
-          }}>{label}</button>
-        ))}
-      </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <User size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <input value={vardas} onChange={e => setVardas(e.target.value)} placeholder="Vardas" style={{ ...field, paddingLeft: 28 }} />
+          </div>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Phone size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <input value={tel} onChange={e => setTel(e.target.value)} placeholder="Tel." type="tel" style={{ ...field, paddingLeft: 28 }} />
+          </div>
+        </div>
 
-      <textarea
-        value={komentaras}
-        onChange={e => setKomentaras(e.target.value)}
-        placeholder="Komentaras..."
-        rows={2}
-        style={{
-          width: '100%', boxSizing: 'border-box', resize: 'none', marginBottom: 12,
-          border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
-          fontSize: 12, fontFamily: 'inherit', color: '#374151',
-        }}
-      />
+        {/* Attrs */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {VIETA_ATTRS.map(({ key, label }) => (
+            <button key={key} onClick={() => toggleAttr(key)} style={{
+              padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
+              border: `1.5px solid ${attrs[key] ? '#1a73e8' : '#dadce0'}`,
+              background: attrs[key] ? '#e8f0fe' : 'white',
+              color: attrs[key] ? '#1a73e8' : '#5f6368',
+              fontWeight: attrs[key] ? 600 : 400,
+            }}>{label}</button>
+          ))}
+        </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={onCancel} style={{
-          flex: 1, padding: '8px', borderRadius: 8,
-          border: '1.5px solid #e2e8f0', background: '#f8fafc',
-          color: '#374151', fontSize: 13, cursor: 'pointer',
-        }}>Atšaukti</button>
-        <button onClick={handleSave} disabled={saving} style={{
-          flex: 2, padding: '8px', borderRadius: 8, border: 'none',
-          background: '#2563eb', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          opacity: saving ? 0.7 : 1,
-        }}>
-          {saving ? 'Saugoma...' : '💾 Išsaugoti'}
-        </button>
+        <div style={{ position: 'relative' }}>
+          <MessageSquare size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: 10, pointerEvents: 'none' }} />
+          <textarea value={komentaras} onChange={e => setKomentaras(e.target.value)} placeholder="Komentaras..." rows={2} style={{ ...field, paddingLeft: 28, width: '100%', resize: 'none' }} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+          <button onClick={onCancel} style={{
+            flex: 1, padding: '9px', borderRadius: 8,
+            border: '1px solid #dadce0', background: 'white', color: '#5f6368', fontSize: 13, cursor: 'pointer',
+          }}>Atšaukti</button>
+          <button onClick={handleSave} disabled={saving} style={{
+            flex: 2, padding: '9px', borderRadius: 8, border: 'none',
+            background: '#1a73e8', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            opacity: saving ? 0.7 : 1,
+          }}>
+            {saving ? 'Saugoma...' : 'Išsaugoti'}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-const inp = {
-  width: '100%', boxSizing: 'border-box', marginBottom: 10,
-  border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px',
-  fontSize: 16, fontFamily: 'inherit', color: '#374151',
+const field = {
+  width: '100%', boxSizing: 'border-box',
+  border: '1px solid #dadce0', borderRadius: 8, padding: '8px 10px',
+  fontSize: 16, color: '#202124', background: 'white', outline: 'none',
+};
+
+const iconBtn = {
+  background: 'none', border: 'none', cursor: 'pointer',
+  padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
 };

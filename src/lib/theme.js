@@ -1,34 +1,22 @@
-// ─── ZONE STATUS THEME ───────────────────────────────────────────────────────
-// Zonos (gyvenvietės) turi tik du būsenus:
-//   null     = nežiūrėta (žymeklis pagal score)
-//   ziureta  = žiūrėta   (žalias ✓)
-// Legacy statusai (seni duomenys) paliekami žymekliuose dėl suderinamumo.
-
 export const STATUS_THEME = {
   null:    { marker: { bg: null, text: null } },
   ziureta: {
-    label: '✓ Žiūrėta',
-    marker: { bg: '#16a34a', text: '✓' },
-    card:   { border: '#10b981', bg: '#f0fdf4' },
-    btn:    { bg: '#d1fae5', border: '#10b981', color: '#065f46' },
+    label: 'Žiūrėta',
+    marker: { bg: '#137333', text: '✓' },
+    card:   { border: '#34a853', bg: '#e6f4ea' },
+    btn:    { bg: '#e6f4ea', border: '#34a853', color: '#137333' },
   },
-  // Legacy — seni duomenys, rodomi kaip "žiūrėta"
-  idomi:   { marker: { bg: '#f59e0b', text: '!' }, card: { border: '#f59e0b', bg: '#fffbeb' } },
-  nauja:   { marker: { bg: '#ef4444', text: 'N' }, card: { border: '#ef4444', bg: '#fef2f2' } },
-  netinka: { marker: { bg: '#111827', text: '✕' }, card: { border: '#9ca3af', bg: '#f9fafb' } },
+  idomi:   { marker: { bg: '#e37400', text: '!' }, card: { border: '#e37400', bg: '#fef3c7' } },
+  nauja:   { marker: { bg: '#c5221f', text: 'N' }, card: { border: '#c5221f', bg: '#fce8e6' } },
+  netinka: { marker: { bg: '#5f6368', text: '✕' }, card: { border: '#9aa0a6', bg: '#f1f3f4' } },
 };
-
-// ─── VIETA (SODYBA TAŠKAS) THEME ─────────────────────────────────────────────
-// Išsaugoti sodybų taškai žemėlapyje su savo statusais.
-// statusas: null = rasta (default), 'aplankyta', 'atmesta'
-// saltinis: 'zona' = rasta žemėlapyje, 'skelbimas' = iš skelbimų
 
 export const VIETA_THEME = {
-  nuvaziuoti: { label: '🚗 Nuvažiuoti', color: '#16a34a', bg: '#dcfce7' },
-  aplankyta:  { label: '🚶 Aplankyta',  color: '#2563eb', bg: '#dbeafe' },
-  atmesta:    { label: '✗ Atmesta',    color: '#6b7280', bg: '#f3f4f6' },
+  nuvaziuoti: { label: 'Nuvažiuoti', color: '#137333', bg: '#e6f4ea' },
+  aplankyta:  { label: 'Aplankyta',  color: '#1a73e8', bg: '#e8f0fe' },
+  atmesta:    { label: 'Atmesta',    color: '#5f6368', bg: '#f1f3f4' },
 };
-export const VIETA_DEFAULT_THEME = { label: '📌 Rasta', color: '#d97706', bg: '#fef3c7' };
+export const VIETA_DEFAULT_THEME = { label: 'Rasta', color: '#e37400', bg: '#fef3c7' };
 export const VIETA_KEYS = ['nuvaziuoti', 'aplankyta', 'atmesta'];
 
 export function vietaTheme(statusas) {
@@ -36,15 +24,14 @@ export function vietaTheme(statusas) {
 }
 
 export const VIETA_ATTRS = [
-  { key: 'upelis',  label: '💧 Upelis' },
-  { key: 'tvenkinys', label: '🏊 Tvenkinys' },
-  { key: 'sodas',   label: '🍎 Sodas' },
-  { key: 'medziai', label: '🌳 Dideli medžiai' },
+  { key: 'upelis',    label: 'Upelis' },
+  { key: 'tvenkinys', label: 'Tvenkinys' },
+  { key: 'sodas',     label: 'Sodas' },
+  { key: 'medziai',   label: 'Dideli medžiai' },
 ];
 
-// ─── TABS ─────────────────────────────────────────────────────────────────────
 export const TABS = [
-  { id: 'atrinktos', label: '⭐ Atrinktos' },
+  { id: 'atrinktos', label: 'Atrinktos' },
   { id: 'browse',    label: 'Vietovės' },
-  { id: 'ziuretos',  label: '✓ Žiūrėtos' },
+  { id: 'ziuretos',  label: 'Žiūrėtos' },
 ];

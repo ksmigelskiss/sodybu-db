@@ -51,8 +51,8 @@ export function makeMarkerIcon(score, statusas) {
 }
 
 export function makeVietaIcon(statusas, saltinis) {
-  const colors = { nuvaziuoti: '#16a34a', aplankyta: '#2563eb', atmesta: '#6b7280' };
-  const color = colors[statusas] ?? '#d97706';
+  const colors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#5f6368' };
+  const color = colors[statusas] ?? '#e37400';
   const isSkelbimas = saltinis === 'skelbimas';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="30" viewBox="0 0 26 30">
     <path d="M13 2 L24 11 L20 11 L20 27 L6 27 L6 11 L2 11 Z" fill="${color}" stroke="white" stroke-width="2"/>

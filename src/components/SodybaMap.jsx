@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Satellite, Map, Layers } from 'lucide-react';
 import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 import { APSKRITYS } from '../lib/apskritys.js';
@@ -44,6 +45,7 @@ export default function SodybaMap({
   addModeHint,
   bottomOffset = 24,
   sidebarOpen,
+  ctrlOffset = 0,
 }) {
   const containerRef         = useRef(null);
   const mapRef               = useRef(null);
@@ -290,23 +292,16 @@ export default function SodybaMap({
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
       <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
 
-      {addMode && (
-        <div style={{
-          position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 1000, background: '#1e293b', color: 'white',
-          borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.3)', whiteSpace: 'nowrap',
-        }}>
-          📍 {addModeHint ?? 'Spustelėkite sodybos vietą žemėlapyje'}
-        </div>
-      )}
-
-      <div style={{ position: 'absolute', bottom: bottomOffset, left: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{
+        position: 'absolute', bottom: bottomOffset, left: 12 + ctrlOffset,
+        transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)',
+        zIndex: 900, display: 'flex', flexDirection: 'column', gap: 6,
+      }}>
         <MapBtn onClick={() => setIsSatellite(s => !s)}>
-          {isSatellite ? '🗺 Žemėlapis' : '🛰 Palydovas'}
+          {isSatellite ? <><Map size={14} />Žemėlapis</> : <><Satellite size={14} />Palydovas</>}
         </MapBtn>
         <MapBtn onClick={() => setIsCadastre(s => !s)} active={isCadastre}>
-          📐 Sklypai
+          <Layers size={14} />Sklypai
         </MapBtn>
       </div>
 
@@ -314,7 +309,7 @@ export default function SodybaMap({
         <div style={{
           position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
           zIndex: 1000, background: 'white', borderRadius: 8, padding: '6px 14px',
-          fontSize: 12, color: '#6b7280', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+          fontSize: 12, color: '#5f6368', boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
         }}>
           {featuresLoading ? 'Kraunami OSM objektai…'
             : featuresCount === 0 ? 'OSM: pastatų / vandens nerasta'
@@ -328,10 +323,13 @@ export default function SodybaMap({
 function MapBtn({ onClick, active, children }) {
   return (
     <button onClick={onClick} style={{
-      background: active ? '#2563eb' : 'white', color: active ? 'white' : '#374151',
-      border: '2px solid rgba(0,0,0,0.2)', borderRadius: 8, padding: '6px 12px',
-      cursor: 'pointer', fontSize: 13, fontWeight: 600,
-      boxShadow: '0 2px 6px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 6,
+      background: active ? '#1a73e8' : 'white',
+      color: active ? 'white' : '#5f6368',
+      border: 'none', borderRadius: 8, padding: '7px 12px',
+      cursor: 'pointer', fontSize: 12, fontWeight: 500,
+      boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.08)',
+      display: 'flex', alignItems: 'center', gap: 6,
+      fontFamily: 'system-ui, sans-serif',
     }}>
       {children}
     </button>

@@ -8,6 +8,7 @@ import DetailPanel from './components/DetailPanel.jsx';
 import SkelbimosForm from './components/SkelbimosForm.jsx';
 import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
+import { useIsMobile } from './hooks/useIsMobile.js';
 import { PIN_CURSOR } from './lib/mapLayers.js';
 import { getApskritis } from './lib/apskritys.js';
 import { TABS, VIETA_THEME, VIETA_DEFAULT_THEME, VIETA_KEYS } from './lib/theme.js';
@@ -15,6 +16,8 @@ import { TABS, VIETA_THEME, VIETA_DEFAULT_THEME, VIETA_KEYS } from './lib/theme.
 export default function App() {
   const [filters, setFilters]             = useState({ tipas: 'Viensėdis' });
   const [sidebarOpen, setSidebarOpen]     = useState(true);
+  const [sheetOpen, setSheetOpen]         = useState(false);
+  const isMobile = useIsMobile();
   const [selected, setSelected]           = useState(null);
   const [selectedVieta, setSelectedVieta] = useState(null);
   const [selectedApskritis, setSelectedApskritis] = useState(null);
@@ -132,6 +135,112 @@ export default function App() {
   }, [newVietaPos, showSkelbimosForm, locateVieta, addMode, selectedVieta, selected]);
 
   const mapZones = selected ? [selected] : (activeTab !== 'atrinktos' ? displayZones : []);
+
+  // ── MOBILE LAYOUT ──────────────────────────────────────────────────────────
+  if (isMobile) {
+    const showPanel = selectedVieta && !newVietaPos && !locateVieta;
+    const showForm  = !!newVietaPos;
+    const showSkelbimas = showSkelbimosForm && !newVietaPos;
+
+    return (
+      <div style={{ height: '100dvh', position: 'relative', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}>
+        <SodybaMap
+          items={[]}
+          selected={null}
+          onSelect={() => {}}
+          userPos={userPos}
+          vietos={vietos}
+          selectedVieta={selectedVieta}
+          onVietaSelect={v => { setSelectedVieta(v); setSheetOpen(false); }}
+          addMode={addMode || !!locateVieta}
+          addModeHint={locateVieta ? 'Spustelėkite sodybos vietą' : undefined}
+          onMapClick={handleMapClick}
+          activeTab="atrinktos"
+          searchPos={searchPos}
+          selectedApskritis={null}
+          onApskritisSelect={undefined}
+          newVietaPos={newVietaPos}
+        />
+
+        {/* Add mode banner */}
+        {(addMode || locateVieta) && (
+          <div style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 1100,
+            background: '#1e293b', color: 'white', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)', whiteSpace: 'nowrap' }}>
+            📍 {locateVieta ? 'Spustelėkite sodybos vietą' : 'Spustelėkite vietą žemėlapyje'}
+          </div>
+        )}
+
+        {/* FAB buttons - top right */}
+        {!showPanel && !showForm && !showSkelbimas && (
+          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Fab onClick={locateMe} title="Mano vieta">🎯</Fab>
+            <Fab onClick={() => { setAddMode(true); setSheetOpen(false); }} title="Žymėti sodybą" color="#1d4ed8">📍</Fab>
+            <Fab onClick={() => { setShowSkelbimosForm(true); setSheetOpen(false); }} title="Pridėti skelbimą" color="#d97706" bold>+</Fab>
+          </div>
+        )}
+
+        {/* Bottom sheet - Atrinktos list */}
+        {!showPanel && !showForm && !showSkelbimas && (
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 1000,
+            background: 'white', borderRadius: '16px 16px 0 0',
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+            maxHeight: sheetOpen ? '60vh' : 56,
+            transition: 'max-height 0.25s ease',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <button onClick={() => setSheetOpen(o => !o)} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              flexShrink: 0,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 36, height: 4, background: '#d1d5db', borderRadius: 2 }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+                  ⭐ Atrinktos
+                  <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>({displayVietos.length})</span>
+                </span>
+              </div>
+              <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} compact />
+            </button>
+            {sheetOpen && (
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {displayVietos.length === 0
+                  ? <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>
+                      {vietos.length === 0 ? 'Dar nėra išsaugotų sodybų.' : 'Nėra pagal filtrą.'}
+                    </div>
+                  : displayVietos.map(v => (
+                      <VietaCard key={v.id} vieta={v} selected={selectedVieta?.id === v.id}
+                        onClick={() => { handleSelectVieta(v); setSheetOpen(false); }} />
+                    ))
+                }
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* VietaPanel bottom sheet */}
+        {showPanel && (
+          <VietaPanel vieta={selectedVieta} onClose={() => setSelectedVieta(null)}
+            onUpdate={handleUpdateVieta} onDelete={handleDeleteVieta}
+            onLocate={v => { setLocateVieta(v); setSelectedVieta(null); }}
+            mobile />
+        )}
+
+        {/* VietaForm bottom sheet */}
+        {showForm && (
+          <VietaForm lat={newVietaPos.lat} lng={newVietaPos.lng}
+            onSave={handleSaveVieta} onCancel={() => setNewVietaPos(null)} mobile />
+        )}
+
+        {/* SkelbimosForm bottom sheet */}
+        {showSkelbimas && (
+          <SkelbimosForm onSave={handleAddSkelbimas} onCancel={() => setShowSkelbimosForm(false)} mobile />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
@@ -258,6 +367,19 @@ export default function App() {
   );
 }
 
+function Fab({ onClick, title, color = '#1e293b', bold, children }) {
+  return (
+    <button onClick={onClick} title={title} style={{
+      width: 44, height: 44, borderRadius: '50%', border: 'none',
+      background: color, color: 'white', fontSize: 18, cursor: 'pointer',
+      fontWeight: bold ? 700 : 400, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+    }}>
+      {children}
+    </button>
+  );
+}
+
 function HeaderBtn({ onClick, title, bg, cursor, bold, children }) {
   return (
     <button onClick={onClick} title={title}
@@ -296,7 +418,7 @@ function ZonuFilters({ filters, onChange }) {
   );
 }
 
-function VietaStatusFilter({ value, onChange, vietos }) {
+function VietaStatusFilter({ value, onChange, vietos, compact }) {
   const counts = { rasta: 0 };
   VIETA_KEYS.forEach(k => { counts[k] = 0; });
   vietos.forEach(v => {
@@ -309,6 +431,17 @@ function VietaStatusFilter({ value, onChange, vietos }) {
     { key: 'rasta',      label: `📌 Rasta (${counts.rasta})` },
     ...VIETA_KEYS.map(k => ({ key: k, label: `${VIETA_THEME[k].label} (${counts[k] ?? 0})` })),
   ];
+
+  if (compact) return (
+    <select
+      value={value ?? ''}
+      onChange={e => { e.stopPropagation(); onChange(e.target.value || null); }}
+      onClick={e => e.stopPropagation()}
+      style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 11, color: '#374151', background: 'white', cursor: 'pointer' }}
+    >
+      {options.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+    </select>
+  );
 
   return (
     <div style={{ padding: '5px 10px', borderBottom: '1px solid #e5e7eb', background: '#fafafa' }}>

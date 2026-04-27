@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { VIETA_ATTRS } from '../lib/theme.js';
 
-export default function SkelbimosForm({ onSave, onCancel }) {
+export default function SkelbimosForm({ onSave, onCancel, mobile }) {
   const [url, setUrl]               = useState('');
   const [kaina, setKaina]           = useState('');
   const [komentaras, setKomentaras] = useState('');
@@ -30,12 +30,12 @@ export default function SkelbimosForm({ onSave, onCancel }) {
     }
   };
 
+  const style = mobile
+    ? { position: 'absolute', bottom: 0, left: 0, right: 0, background: 'white', borderRadius: '16px 16px 0 0', boxShadow: '0 -4px 24px rgba(0,0,0,0.2)', padding: '16px 20px 32px', zIndex: 2000, maxHeight: '85vh', overflowY: 'auto' }
+    : { position: 'absolute', bottom: 16, right: 16, background: 'white', borderRadius: 12, boxShadow: '0 4px 32px rgba(0,0,0,0.2)', padding: 20, width: 300, zIndex: 2000 };
+
   return (
-    <div style={{
-      position: 'absolute', bottom: 16, right: 16,
-      background: 'white', borderRadius: 12, boxShadow: '0 4px 32px rgba(0,0,0,0.2)',
-      padding: 20, width: 300, zIndex: 2000,
-    }}>
+    <div style={style}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <span style={{ fontWeight: 700, fontSize: 14 }}>📢 Pridėti skelbimą</span>
         <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
 
-export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocate }) {
+export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocate, mobile }) {
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
   const [saving, setSaving]         = useState(false);
   const [ogImage, setOgImage]       = useState(null);
@@ -32,12 +32,19 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
 
   const saveComment = () => onUpdate(vieta.id, { komentaras: komentaras || null });
 
+  const containerStyle = mobile ? {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    background: 'white', borderRadius: '16px 16px 0 0',
+    boxShadow: '0 -4px 24px rgba(0,0,0,0.15)',
+    padding: '16px 20px 32px', zIndex: 1100, maxHeight: '80vh', overflowY: 'auto',
+  } : {
+    position: 'absolute', bottom: 16, right: 16,
+    background: 'white', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+    padding: 20, width: 300, zIndex: 1000,
+  };
+
   return (
-    <div style={{
-      position: 'absolute', bottom: 16, right: 16,
-      background: 'white', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-      padding: 20, width: 300, zIndex: 1000,
-    }}>
+    <div style={containerStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
         <div>
           <span style={{ fontWeight: 700, fontSize: 15 }}>
@@ -141,18 +148,15 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
 
       {vieta.lat && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-          <a href={geoportalUrl(vieta.lat, vieta.lng)} target="_blank" rel="noreferrer"
-            style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
-            🗺 Geoportal
-          </a>
-          <a href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} target="_blank" rel="noreferrer"
-            style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
-            📍 Google Maps
-          </a>
-          <a href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} target="_blank" rel="noreferrer"
-            style={{ flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8, padding: '7px', fontSize: 11, textDecoration: 'none', color: '#374151', fontWeight: 500 }}>
-            🗾 Etomesto
-          </a>
+          {mobile ? (<>
+            <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} icon="🗺" label="Geoportal" mini />
+            <GeoLink href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} icon="📍" label="Google" mini />
+            <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} icon="🗾" label="Etomesto" mini />
+          </>) : (<>
+            <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} icon="🗺" label="Geoportal" />
+            <GeoLink href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} icon="📍" label="Google Maps" />
+            <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} icon="🗾" label="Etomesto" />
+          </>)}
         </div>
       )}
 
@@ -167,5 +171,18 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
         🗑 Ištrinti
       </button>
     </div>
+  );
+}
+
+function GeoLink({ href, icon, label, mini }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" style={{
+      flex: 1, textAlign: 'center', background: '#f1f5f9', borderRadius: 8,
+      padding: mini ? '8px 4px' : '7px', textDecoration: 'none', color: '#374151',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+    }}>
+      <span style={{ fontSize: mini ? 20 : 14 }}>{icon}</span>
+      <span style={{ fontSize: mini ? 9 : 11, fontWeight: 500, color: mini ? '#9ca3af' : '#374151' }}>{label}</span>
+    </a>
   );
 }

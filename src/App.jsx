@@ -20,7 +20,7 @@ export default function App() {
   const [selectedVieta, setSelectedVieta] = useState(null);
   const [selectedApskritis, setSelectedApskritis] = useState(null);
   const [userPos, setUserPos]             = useState(null);
-  const [activeTab, setActiveTab]         = useState('browse');
+  const [activeTab, setActiveTab]         = useState('atrinktos');
   const [addMode, setAddMode]             = useState(false);
   const [newVietaPos, setNewVietaPos]     = useState(null);
   const [searchPos, setSearchPos]         = useState(null);

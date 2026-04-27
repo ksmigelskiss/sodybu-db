@@ -175,11 +175,11 @@ export default function SodybaMap({
     const map = mapRef.current;
     if (!map) return;
     const container = map.getContainer();
-    if (!addMode) { container.style.cursor = ''; return; }
-    container.style.cursor = PIN_CURSOR;
+    if (!addMode) { container.classList.remove('leaflet-add-mode'); return; }
+    container.classList.add('leaflet-add-mode');
     const handler = (e) => onMapClick?.(e.latlng.lat, e.latlng.lng);
     map.on('click', handler);
-    return () => { map.off('click', handler); container.style.cursor = ''; };
+    return () => { map.off('click', handler); container.classList.remove('leaflet-add-mode'); };
   }, [addMode, onMapClick]);
 
   // Selected zone — polygon + OSM features

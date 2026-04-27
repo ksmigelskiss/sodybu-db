@@ -37,6 +37,13 @@ body {
   margin: 0;
 }
 
+.leaflet-add-mode,
+.leaflet-add-mode .leaflet-interactive,
+.leaflet-add-mode .leaflet-grab,
+.leaflet-add-mode * {
+  cursor: crosshair !important;
+}
+
 #root {
   width: 100%;
   height: 100vh;

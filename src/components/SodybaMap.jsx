@@ -223,9 +223,9 @@ export default function SodybaMap({
     });
   }, [selected?.id]);
 
-  // Selected vieta — zoom
+  // Selected vieta — zoom (skip if no location, e.g. skelbimas without pin)
   useEffect(() => {
-    if (!selectedVieta || !mapRef.current) return;
+    if (!selectedVieta?.lat || !selectedVieta?.lng || !mapRef.current) return;
     mapRef.current.setView([selectedVieta.lat, selectedVieta.lng], 15);
   }, [selectedVieta?.id]);
 

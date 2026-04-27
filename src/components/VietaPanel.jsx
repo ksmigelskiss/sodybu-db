@@ -5,8 +5,18 @@ import { geoportalUrl } from '../lib/coords.js';
 export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocate }) {
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
   const [saving, setSaving]         = useState(false);
+  const [ogImage, setOgImage]       = useState(null);
 
   useEffect(() => { setKomentaras(vieta.komentaras || ''); }, [vieta.id]);
+
+  useEffect(() => {
+    if (!vieta.url) { setOgImage(null); return; }
+    setOgImage(null);
+    fetch(`/api/og-fetch?url=${encodeURIComponent(vieta.url)}`)
+      .then(r => r.json())
+      .then(d => setOgImage(d.image ?? null))
+      .catch(() => {});
+  }, [vieta.url]);
 
   const th = vietaTheme(vieta.statusas);
   const isSkelbimas = vieta.saltinis === 'skelbimas';
@@ -63,17 +73,22 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
 
       {/* Skelbimas info */}
       {isSkelbimas && (vieta.url || vieta.kaina) && (
-        <div style={{ marginBottom: 10, padding: '8px 10px', background: '#fffbeb', borderRadius: 8, border: '1px solid #fde68a' }}>
-          {vieta.kaina && (
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: vieta.url ? 4 : 0 }}>
-              {vieta.kaina.toLocaleString('lt-LT')} €
-            </div>
+        <div style={{ marginBottom: 10, borderRadius: 8, border: '1px solid #fde68a', overflow: 'hidden' }}>
+          {ogImage && (
+            <img src={ogImage} alt="" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
           )}
-          {vieta.url && (
-            <a href={vieta.url} target="_blank" rel="noreferrer" style={{
-              fontSize: 12, color: '#2563eb', textDecoration: 'none', wordBreak: 'break-all',
-            }}>🔗 Atidaryti skelbimą</a>
-          )}
+          <div style={{ padding: '8px 10px', background: '#fffbeb' }}>
+            {vieta.kaina && (
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: vieta.url ? 4 : 0 }}>
+                {vieta.kaina.toLocaleString('lt-LT')} €
+              </div>
+            )}
+            {vieta.url && (
+              <a href={vieta.url} target="_blank" rel="noreferrer" style={{
+                fontSize: 12, color: '#2563eb', textDecoration: 'none', wordBreak: 'break-all',
+              }}>🔗 Atidaryti skelbimą</a>
+            )}
+          </div>
         </div>
       )}
 

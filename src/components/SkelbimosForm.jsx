@@ -4,6 +4,7 @@ import { VIETA_ATTRS } from '../lib/theme.js';
 export default function SkelbimosForm({ onSave, onCancel, mobile }) {
   const [url, setUrl]               = useState('');
   const [kaina, setKaina]           = useState('');
+  const [vardas, setVardas]         = useState('');
   const [tel, setTel]               = useState('');
   const [komentaras, setKomentaras] = useState('');
   const [attrs, setAttrs]           = useState({});
@@ -18,6 +19,7 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
         saltinis: 'skelbimas',
         url: url.trim() || null,
         kaina: kaina ? Number(kaina) : null,
+        vardas: vardas.trim() || null,
         tel: tel.trim() || null,
         komentaras: komentaras || null,
         lat: null,
@@ -48,27 +50,18 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
         onChange={e => setUrl(e.target.value)}
         placeholder="Nuoroda į skelbimą..."
         autoFocus
-        style={{
-          width: '100%', boxSizing: 'border-box', marginBottom: 8,
-          border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px',
-          fontSize: 13, fontFamily: 'inherit', color: '#374151',
-        }}
+        style={{ ...inp, marginBottom: 8 }}
       />
 
+      <input
+        value={kaina}
+        onChange={e => setKaina(e.target.value.replace(/\D/g, ''))}
+        placeholder="Kaina €"
+        style={inp}
+      />
       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-        <input
-          value={kaina}
-          onChange={e => setKaina(e.target.value.replace(/\D/g, ''))}
-          placeholder="Kaina €"
-          style={{ flex: 1, boxSizing: 'border-box', border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px', fontSize: 13, fontFamily: 'inherit', color: '#374151' }}
-        />
-        <input
-          value={tel}
-          onChange={e => setTel(e.target.value)}
-          placeholder="📞 Tel."
-          type="tel"
-          style={{ flex: 1, boxSizing: 'border-box', border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px', fontSize: 13, fontFamily: 'inherit', color: '#374151' }}
-        />
+        <input value={vardas} onChange={e => setVardas(e.target.value)} placeholder="👤 Vardas" style={{ ...inp, flex: 1, marginBottom: 0 }} />
+        <input value={tel} onChange={e => setTel(e.target.value)} placeholder="📞 Tel." type="tel" style={{ ...inp, flex: 1, marginBottom: 0 }} />
       </div>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
@@ -112,3 +105,9 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
     </div>
   );
 }
+
+const inp = {
+  width: '100%', boxSizing: 'border-box', marginBottom: 10,
+  border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '7px 10px',
+  fontSize: 16, fontFamily: 'inherit', color: '#374151',
+};

@@ -4,11 +4,16 @@ import { geoportalUrl } from '../lib/coords.js';
 
 export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocate, mobile }) {
   const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
+  const [vardas, setVardas]         = useState(vieta.vardas || '');
   const [tel, setTel]               = useState(vieta.tel || '');
   const [saving, setSaving]         = useState(false);
   const [ogImage, setOgImage]       = useState(null);
 
-  useEffect(() => { setKomentaras(vieta.komentaras || ''); setTel(vieta.tel || ''); }, [vieta.id]);
+  useEffect(() => {
+    setKomentaras(vieta.komentaras || '');
+    setVardas(vieta.vardas || '');
+    setTel(vieta.tel || '');
+  }, [vieta.id]);
 
   useEffect(() => {
     if (!vieta.url) { setOgImage(null); return; }
@@ -30,9 +35,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   };
 
   const toggleAttr = (key) => onUpdate(vieta.id, { [key]: !vieta[key] });
-
-  const saveComment = () => onUpdate(vieta.id, { komentaras: komentaras || null });
-  const saveTel = () => onUpdate(vieta.id, { tel: tel.trim() || null });
+  const save = (field, val) => onUpdate(vieta.id, { [field]: val || null });
 
   const containerStyle = mobile ? {
     position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -47,28 +50,29 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
 
   return (
     <div style={containerStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
         <div>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>
             {vieta.zonaPavadinimas || `${vieta.lat?.toFixed(4)}, ${vieta.lng?.toFixed(4)}`}
-          </span>
-          <div style={{ display: 'flex', gap: 6, marginTop: 3, alignItems: 'center' }}>
-            <span style={{
-              fontSize: 11, color: th.color, fontWeight: 600,
-              background: th.bg, borderRadius: 6, padding: '2px 6px',
-            }}>{th.label}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, color: th.color, fontWeight: 600, background: th.bg, borderRadius: 6, padding: '2px 6px' }}>
+              {th.label}
+            </span>
             {isSkelbimas && (
-              <span style={{
-                fontSize: 11, color: '#92400e', fontWeight: 600,
-                background: '#fef3c7', borderRadius: 6, padding: '2px 6px',
-              }}>📢 Skelbimas</span>
+              <span style={{ fontSize: 11, color: '#92400e', fontWeight: 600, background: '#fef3c7', borderRadius: 6, padding: '2px 6px' }}>
+                📢 Skelbimas
+              </span>
             )}
           </div>
         </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6b7280' }}>×</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#6b7280', lineHeight: 1 }}>×</button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: vieta.lat ? 10 : 6 }}>
+      {/* Location row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <span style={{ fontSize: 11, color: '#9ca3af' }}>
           {vieta.lat ? `${vieta.lat.toFixed(5)}, ${vieta.lng.toFixed(5)}` : '📍 Vieta nepridėta'}
         </span>
@@ -81,27 +85,14 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
       </div>
 
       {/* Skelbimas info */}
-      {isSkelbimas && (vieta.url || vieta.kaina) && (
+      {isSkelbimas && (vieta.url || vieta.kaina || vieta.tel || vieta.vardas) && (
         <div style={{ marginBottom: 10, borderRadius: 8, border: '1px solid #fde68a', overflow: 'hidden' }}>
-          {ogImage && (
-            <img src={ogImage} alt="" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
-          )}
-          <div style={{ padding: '8px 10px', background: '#fffbeb' }}>
-            {vieta.kaina && (
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: vieta.url ? 4 : 0 }}>
-                {vieta.kaina.toLocaleString('lt-LT')} €
-              </div>
-            )}
-            {vieta.url && (
-              <a href={vieta.url} target="_blank" rel="noreferrer" style={{
-                fontSize: 12, color: '#2563eb', textDecoration: 'none', wordBreak: 'break-all',
-              }}>🔗 Atidaryti skelbimą</a>
-            )}
-            {vieta.tel && (
-              <a href={`tel:${vieta.tel}`} style={{ fontSize: 12, color: '#374151', textDecoration: 'none', display: 'block', marginTop: 4 }}>
-                📞 {vieta.tel}
-              </a>
-            )}
+          {ogImage && <img src={ogImage} alt="" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />}
+          <div style={{ padding: '8px 10px', background: '#fffbeb', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {vieta.kaina && <span style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>{vieta.kaina.toLocaleString('lt-LT')} €</span>}
+            {vieta.vardas && <span style={{ fontSize: 12, color: '#374151' }}>👤 {vieta.vardas}</span>}
+            {vieta.tel && <a href={`tel:${vieta.tel}`} style={{ fontSize: 12, color: '#374151', textDecoration: 'none' }}>📞 {vieta.tel}</a>}
+            {vieta.url && <a href={vieta.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#2563eb', textDecoration: 'none' }}>🔗 Atidaryti skelbimą</a>}
           </div>
         </div>
       )}
@@ -113,8 +104,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           const active = vieta.statusas === key;
           return (
             <button key={key} disabled={saving} onClick={() => handleStatus(key)} style={{
-              flex: 1, padding: '6px 4px', borderRadius: 8,
-              cursor: 'pointer', fontSize: 11, fontWeight: 600,
+              flex: 1, padding: '6px 4px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600,
               border: `1.5px solid ${active ? t.color : '#e2e8f0'}`,
               background: active ? t.bg : '#f8fafc',
               color: active ? t.color : '#374151',
@@ -126,7 +116,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
       </div>
 
       {/* Attrs */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
         {VIETA_ATTRS.map(({ key, label }) => (
           <button key={key} onClick={() => toggleAttr(key)} style={{
             padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
@@ -140,59 +130,59 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
         ))}
       </div>
 
-      <input
-        value={tel}
-        onChange={e => setTel(e.target.value)}
-        onBlur={saveTel}
-        placeholder="📞 Telefono numeris..."
-        type="tel"
-        style={{
-          width: '100%', boxSizing: 'border-box',
-          border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
-          fontSize: 12, fontFamily: 'inherit', marginBottom: 8, color: '#374151',
-        }}
-      />
+      {/* Kontaktas */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+        <input
+          value={vardas}
+          onChange={e => setVardas(e.target.value)}
+          onBlur={() => save('vardas', vardas.trim())}
+          placeholder="👤 Vardas"
+          style={inputStyle}
+        />
+        <input
+          value={tel}
+          onChange={e => setTel(e.target.value)}
+          onBlur={() => save('tel', tel.trim())}
+          placeholder="📞 Tel."
+          type="tel"
+          style={inputStyle}
+        />
+      </div>
 
+      {/* Komentaras */}
       <textarea
         value={komentaras}
         onChange={e => setKomentaras(e.target.value)}
-        onBlur={saveComment}
+        onBlur={() => save('komentaras', komentaras)}
         placeholder="Komentaras..."
         rows={2}
-        style={{
-          width: '100%', boxSizing: 'border-box', resize: 'vertical',
-          border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
-          fontSize: 12, fontFamily: 'inherit', marginBottom: 10, color: '#374151',
-        }}
+        style={{ ...inputStyle, width: '100%', resize: 'vertical', marginBottom: 10 }}
       />
 
+      {/* Geo links */}
       {vieta.lat && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-          {mobile ? (<>
-            <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} icon="🗺" label="Geoportal" mini />
-            <GeoLink href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} icon="📍" label="Google" mini />
-            <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} icon="🗾" label="Etomesto" mini />
-          </>) : (<>
-            <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} icon="🗺" label="Geoportal" />
-            <GeoLink href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} icon="📍" label="Google Maps" />
-            <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} icon="🗾" label="Etomesto" />
-          </>)}
+          <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} icon="🗺" label="Geoportal" mini={mobile} />
+          <GeoLink href={`https://maps.google.com/?q=${vieta.lat},${vieta.lng}`} icon="📍" label={mobile ? 'Google' : 'Google Maps'} mini={mobile} />
+          <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} icon="🗾" label="Etomesto" mini={mobile} />
         </div>
       )}
 
       <button
         onClick={() => { if (window.confirm('Ištrinti šią sodybą?')) onDelete(vieta.id); }}
-        style={{
-          width: '100%', padding: '7px', borderRadius: 8,
-          border: '1.5px solid #fca5a5', background: '#fef2f2',
-          color: '#dc2626', fontSize: 12, cursor: 'pointer',
-        }}
+        style={{ width: '100%', padding: '7px', borderRadius: 8, border: '1.5px solid #fca5a5', background: '#fef2f2', color: '#dc2626', fontSize: 12, cursor: 'pointer' }}
       >
         🗑 Ištrinti
       </button>
     </div>
   );
 }
+
+const inputStyle = {
+  flex: 1, boxSizing: 'border-box',
+  border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '6px 8px',
+  fontSize: 16, fontFamily: 'inherit', color: '#374151',
+};
 
 function GeoLink({ href, icon, label, mini }) {
   return (

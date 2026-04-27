@@ -15,23 +15,26 @@ export default function VietaCard({ vieta, selected, onClick }) {
   const activeAttrs = VIETA_ATTRS.filter(a => vieta[a.key]);
   const isSkelbimas = vieta.saltinis === 'skelbimas';
 
+  const meta = [
+    vieta.kaina ? `${vieta.kaina.toLocaleString('lt-LT')} €` : null,
+    ...activeAttrs.map(a => a.label),
+  ].filter(Boolean).join(' · ');
+
   return (
     <div onClick={onClick} style={{
-      padding: '8px 12px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer',
+      padding: '6px 12px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer',
       background: selected ? '#f0f7ff' : !vieta.lat ? '#fffbeb' : vieta.statusas === 'nuvaziuoti' ? '#f0fdf4' : 'white',
       borderLeft: `3px solid ${selected ? '#2563eb' : th.color}`,
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+        <div style={{ minWidth: 0 }}>
           {vieta.lat ? (
-            <>
-              <span style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>
-                {apskritisLabel(vieta.lat, vieta.lng)} apskr.
-              </span>
-              <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
+            <span style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>
+              {apskritisLabel(vieta.lat, vieta.lng)} apskr.
+              <span style={{ fontWeight: 400, fontSize: 11, color: '#9ca3af', marginLeft: 5 }}>
                 {vieta.lat.toFixed(3)}, {vieta.lng.toFixed(3)}
               </span>
-            </>
+            </span>
           ) : (
             <span style={{ fontSize: 12, color: '#d97706', fontWeight: 600 }}>📍 Vieta nepridėta</span>
           )}
@@ -46,19 +49,11 @@ export default function VietaCard({ vieta, selected, onClick }) {
         </div>
       </div>
 
-      {(vieta.kaina || activeAttrs.length > 0 || vieta.komentaras) && (
-        <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-          {vieta.kaina && (
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>
-              {vieta.kaina.toLocaleString('lt-LT')} €
-            </span>
-          )}
-          {activeAttrs.map(a => (
-            <span key={a.key} style={{ fontSize: 11, color: '#6b7280' }}>{a.label}</span>
-          ))}
-          {vieta.komentaras && (
-            <span style={{ fontSize: 11, color: '#9ca3af' }}>{vieta.komentaras}</span>
-          )}
+      {(meta || vieta.komentaras) && (
+        <div style={{ marginTop: 2, fontSize: 11, color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {meta && <span style={{ fontWeight: vieta.kaina ? 600 : 400, color: vieta.kaina ? '#92400e' : '#6b7280' }}>{meta}</span>}
+          {meta && vieta.komentaras && <span style={{ color: '#d1d5db' }}> · </span>}
+          {vieta.komentaras && <span style={{ color: '#9ca3af' }}>{vieta.komentaras}</span>}
         </div>
       )}
     </div>

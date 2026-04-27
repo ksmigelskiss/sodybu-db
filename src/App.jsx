@@ -120,6 +120,20 @@ export default function App() {
     setSelected(null);
   }, []);
 
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (newVietaPos)         { setNewVietaPos(null); return; }
+      if (showSkelbimosForm)   { setShowSkelbimosForm(false); return; }
+      if (locateVieta)         { setLocateVieta(null); return; }
+      if (addMode)             { setAddMode(false); return; }
+      if (selectedVieta)       { setSelectedVieta(null); return; }
+      if (selected)            { setSelected(null); return; }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [newVietaPos, showSkelbimosForm, locateVieta, addMode, selectedVieta, selected]);
+
   const mapZones = selected ? [selected] : (activeTab !== 'atrinktos' ? displayZones : []);
 
   return (

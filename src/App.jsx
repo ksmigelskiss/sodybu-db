@@ -168,7 +168,7 @@ export default function App() {
                 </span>
                 <button onClick={clearApskritis}
                   style={{ fontSize: 12, color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '2px 8px', cursor: 'pointer' }}>
-                  × Visos
+                  × {selectedApskritis.label}
                 </button>
               </>
             ) : (

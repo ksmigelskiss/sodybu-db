@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Search, MapPin, Navigation, Plus, X, ChevronLeft, Menu, House, Star, Check, Megaphone } from 'lucide-react';
+import { Search, MapPin, Navigation, Plus, X, ChevronLeft, ChevronRight, House, Star, Check } from 'lucide-react';
 import SodybaMap from './components/SodybaMap.jsx';
 import SodybaCard from './components/SodybaCard.jsx';
 import VietaCard from './components/VietaCard.jsx';
@@ -271,12 +271,27 @@ export default function App() {
         boxShadow: '2px 0 8px rgba(0,0,0,0.12)',
         display: 'flex', flexDirection: 'column',
       }}>
+        {/* Sidebar toggle tab — always at right edge of panel */}
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          title={sidebarOpen ? 'Slėpti sąrašą' : 'Rodyti sąrašą'}
+          style={{
+            position: 'absolute', top: '50%', right: -28,
+            transform: 'translateY(-50%)',
+            width: 28, height: 56,
+            background: 'white', border: 'none', borderRadius: '0 8px 8px 0',
+            boxShadow: '2px 0 6px rgba(0,0,0,0.12)',
+            cursor: 'pointer', zIndex: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: C.textSec,
+          }}
+        >
+          {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        </button>
+
         {/* Header: logo + search */}
         <div style={{ padding: '12px 16px 10px', flexShrink: 0, borderBottom: `1px solid ${C.outline}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <button onClick={() => setSidebarOpen(false)} style={iconBtnStyle}>
-              <ChevronLeft size={18} color={C.textSec} />
-            </button>
             <House size={18} color={C.primary} />
             <span style={{ fontWeight: 600, fontSize: 15, color: C.text }}>Sodybų paieška</span>
           </div>
@@ -329,19 +344,6 @@ export default function App() {
           )}
         </div>
       </div>
-
-      {/* Open panel FAB */}
-      {!sidebarOpen && (
-        <button onClick={() => setSidebarOpen(true)} title="Atidaryti meniu" style={{
-          position: 'absolute', top: 12, left: 12, zIndex: 1000,
-          width: 40, height: 40, borderRadius: 8,
-          background: 'white', border: 'none', cursor: 'pointer',
-          boxShadow: C.shadow,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Menu size={20} color={C.textSec} />
-        </button>
-      )}
 
       {/* Right FABs */}
       <div style={{ position: 'absolute', bottom: 24, right: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>

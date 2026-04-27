@@ -96,30 +96,23 @@ export default function SodybaMap({
     apskritisPolyRef.current.forEach(l => l.remove());
     apskritisPolyRef.current = [];
 
-    if (selectedApskritis) return;
+    if (selectedApskritis || !onApskritisSelect) return;
 
-    const interactive = !!onApskritisSelect;
     const timers = [];
     APSKRITYS.forEach((a, i) => {
-      if (interactive) {
-        const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
-        m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect(a); });
-        apskritisMarkersRef.current.push(m);
-      }
+      const m = L.marker([a.lat, a.lng], { icon: makeApskritisIcon(a.label), zIndexOffset: 200 }).addTo(map);
+      m.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect(a); });
+      apskritisMarkersRef.current.push(m);
 
       timers.push(setTimeout(() => {
         loadCountyGeo(a).then(geo => {
           if (!geo || !mapRef.current) return;
           const layer = L.geoJSON(geo, {
-            style: { color: '#2563eb', weight: 1.5, fillOpacity: 0, interactive: false },
+            style: { color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.07 },
           });
-          if (interactive) {
-            layer.options.style = { color: '#2563eb', weight: 1.5, fillColor: '#3b82f6', fillOpacity: 0.07, interactive: true };
-            layer.setStyle(layer.options.style);
-            layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.18 }));
-            layer.on('mouseout',  () => layer.setStyle({ fillOpacity: 0.07 }));
-            layer.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect(a); });
-          }
+          layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.18 }));
+          layer.on('mouseout',  () => layer.setStyle({ fillOpacity: 0.07 }));
+          layer.on('click', (e) => { L.DomEvent.stopPropagation(e); onApskritisSelect(a); });
           layer.addTo(mapRef.current);
           apskritisPolyRef.current.push(layer);
         });

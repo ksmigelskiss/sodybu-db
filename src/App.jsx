@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Search, MapPin, Navigation, Plus, X, ChevronLeft, ChevronRight, House, Star } from 'lucide-react';
+import { Search, MapPin, Navigation, Plus, X, ChevronLeft, ChevronRight, House, Star, LayoutGrid } from 'lucide-react';
 import SodybaMap from './components/SodybaMap.jsx';
 import SodybaCard from './components/SodybaCard.jsx';
 import VietaCard from './components/VietaCard.jsx';
@@ -511,7 +511,7 @@ function Tabs({ tabs, active, items, vietos, selectedApskritis, onChange }) {
     return null;
   };
 
-  const TAB_ICONS = { atrinktos: Star, browse: MapPin };
+  const TAB_ICONS = { atrinktos: Star, browse: MapPin, korteles: LayoutGrid };
 
   return (
     <div style={{ display: 'flex', borderBottom: `1px solid ${C.outline}`, flexShrink: 0 }}>

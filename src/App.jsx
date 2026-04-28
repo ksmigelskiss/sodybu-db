@@ -12,6 +12,7 @@ import { useVietos } from './hooks/useVietos.js';
 import { useIsMobile } from './hooks/useIsMobile.js';
 import { getApskritis } from './lib/apskritys.js';
 import { TABS, VIETA_THEME, VIETA_KEYS } from './lib/theme.js';
+import KortelesGrid from './components/KortelesGrid.jsx';
 
 const PANEL_W = 380;
 
@@ -304,13 +305,13 @@ export default function App() {
           selectedApskritis={selectedApskritis} onChange={setActiveTab} />
 
         {/* Filters */}
-        {activeTab === 'atrinktos' && (
+        {(activeTab === 'atrinktos' || activeTab === 'korteles') && (
           <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} />
         )}
-        {activeTab !== 'atrinktos' && (
+        {activeTab === 'browse' && (
           <ApskritisBar selectedApskritis={selectedApskritis} count={displayZones.length} onClear={clearApskritis} />
         )}
-        {activeTab !== 'atrinktos' && (
+        {activeTab === 'browse' && (
           <ZonuFilters filters={filters} onChange={setFilters} />
         )}
 
@@ -324,12 +325,15 @@ export default function App() {
                     onClick={() => handleSelectVieta(v)} />
                 ))
           )}
-          {activeTab !== 'atrinktos' && selectedApskritis && (
+          {activeTab === 'korteles' && (
+            <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id} onSelect={handleSelectVieta} />
+          )}
+          {activeTab === 'browse' && selectedApskritis && (
             <>
               {loading && <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>Kraunama...</div>}
               {!loading && displayZones.length === 0 && (
                 <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>
-                  {activeTab === 'browse' ? 'Visos vietovės peržiūrėtos.' : 'Dar nėra peržiūrėtų vietovių.'}
+                  Visos vietovės peržiūrėtos.
                 </div>
               )}
               {displayZones.map(s => (
@@ -338,7 +342,7 @@ export default function App() {
               ))}
             </>
           )}
-          {activeTab !== 'atrinktos' && !selectedApskritis && (
+          {activeTab === 'browse' && !selectedApskritis && (
             <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>
               Spustelėkite apskritį žemėlapyje
             </div>

@@ -39,7 +39,7 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel,
   };
 
   return (
-    <div style={style}>
+    <div style={style} className={mobile ? 'sheet-slide-up' : undefined}>
       {mobile && <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2, margin: '10px auto 0' }} />}
 
       <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #f1f3f4' }}>

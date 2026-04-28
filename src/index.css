@@ -24,3 +24,12 @@ body {
 input, textarea, select, button {
   font-family: inherit;
 }
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.sheet-slide-up {
+  animation: slideUp 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}

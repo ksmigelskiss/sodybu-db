@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation } from 'lucide-react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
+import PhotoStrip from './PhotoStrip.jsx';
 
 const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
 const STATUS_ICONS = { nuvaziuoti: Car, aplankyta: Eye, atmesta: XCircle };
@@ -56,7 +57,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   };
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} className={mobile ? 'sheet-slide-up' : undefined}>
       {mobile && <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2, margin: '10px auto 0' }} />}
 
       {/* Header */}
@@ -197,6 +198,9 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
             </div>
           </>
         )}
+
+        {/* Photos */}
+        <PhotoStrip vieta={vieta} onUpdate={onUpdate} />
 
         {/* Delete */}
         <button onClick={() => { if (window.confirm('Ištrinti šią sodybą?')) onDelete(vieta.id); }} style={{

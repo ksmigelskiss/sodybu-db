@@ -46,7 +46,7 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
   };
 
   return (
-    <div style={style}>
+    <div style={style} className={mobile ? 'sheet-slide-up' : undefined}>
       {mobile && <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2, margin: '10px auto 0' }} />}
 
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f3f4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

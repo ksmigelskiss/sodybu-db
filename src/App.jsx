@@ -13,6 +13,7 @@ import { useIsMobile } from './hooks/useIsMobile.js';
 import { getApskritis } from './lib/apskritys.js';
 import { TABS, VIETA_THEME, VIETA_KEYS } from './lib/theme.js';
 import KortelesGrid from './components/KortelesGrid.jsx';
+import LithuaniaMiniMap from './components/LithuaniaMiniMap.jsx';
 
 const PANEL_W = 380;
 
@@ -171,6 +172,12 @@ export default function App() {
           sidebarOpen={false}
         />
 
+        {/* Location minimap — mobile */}
+        {(() => {
+          const pos = selectedVieta?.lat ? selectedVieta : null;
+          return pos && !sheetOpen ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} /> : null;
+        })()}
+
         {/* Add mode banner */}
         {(addMode || locateVieta) && (
           <div style={{
@@ -256,11 +263,19 @@ export default function App() {
         activeTab={activeTab}
         searchPos={searchPos}
         selectedApskritis={selectedApskritis}
-        onApskritisSelect={activeTab !== 'atrinktos' ? handleApskritisSelect : undefined}
+        onApskritisSelect={activeTab === 'browse' ? handleApskritisSelect : undefined}
         newVietaPos={newVietaPos}
         sidebarOpen={sidebarOpen}
         ctrlOffset={sidebarOpen ? PANEL_W : 0}
       />
+
+      {/* Location minimap */}
+      {!isMobile && (() => {
+        const pos = selectedVieta?.lat ? selectedVieta
+                  : selected?.lat      ? selected
+                  : null;
+        return pos ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} /> : null;
+      })()}
 
       {/* Left sliding panel */}
       <div style={{

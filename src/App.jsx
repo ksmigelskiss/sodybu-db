@@ -581,10 +581,17 @@ function SearchBox({ onSelect }) {
   }, []);
 
   const search = useCallback(async (q) => {
-    const coordMatch = q.match(/^(-?\d+[.,]?\d*)[,\s]+(-?\d+[.,]?\d*)$/);
+    // Strip parens/brackets, then extract two decimal numbers separated by comma/space
+    const clean = q.replace(/[()[\]]/g, '').trim();
+    const coordMatch = clean.match(/^(-?\d+[.,]\d+)[,\s]+(-?\d+[.,]\d+)$/) ||
+                       clean.match(/^(-?\d+)[,\s]+(-?\d+)$/);
     if (coordMatch) {
-      onSelect({ lat: parseFloat(coordMatch[1].replace(',', '.')), lng: parseFloat(coordMatch[2].replace(',', '.')) });
-      setOpen(false); return;
+      const lat = parseFloat(coordMatch[1].replace(',', '.'));
+      const lng = parseFloat(coordMatch[2].replace(',', '.'));
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        onSelect({ lat, lng });
+        setOpen(false); return;
+      }
     }
     if (q.length < 2) { setResults([]); setOpen(false); return; }
     abortRef.current?.abort();

@@ -31,7 +31,7 @@ function proj(lat, lng) {
   return [x, y];
 }
 
-export default function LithuaniaMiniMap({ lat, lng }) {
+export default function LithuaniaMiniMap({ lat, lng, topOffset = 12 }) {
   if (!lat || !lng) return null;
 
   const points = LT_OUTLINE.map(([la, lo]) => proj(la, lo).join(',')).join(' ');
@@ -39,7 +39,7 @@ export default function LithuaniaMiniMap({ lat, lng }) {
 
   return (
     <div style={{
-      position: 'absolute', top: 12, right: 12, zIndex: 900,
+      position: 'absolute', top: topOffset, right: 12, zIndex: 900,
       background: 'white', borderRadius: 10,
       boxShadow: '0 2px 8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)',
       padding: '4px 4px 2px',

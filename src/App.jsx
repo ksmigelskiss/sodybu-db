@@ -172,10 +172,21 @@ export default function App() {
           sidebarOpen={false}
         />
 
+        {/* Top search bar */}
+        {!addMode && !locateVieta && !showPanel && !showForm && !showSkelbimas && (
+          <div style={{
+            position: 'absolute', top: 12, left: 12, right: 12, zIndex: 1200,
+            background: 'white', borderRadius: 24,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)',
+          }}>
+            <SearchBox onSelect={pos => { setSearchPos(pos); }} />
+          </div>
+        )}
+
         {/* Location minimap — mobile */}
         {(() => {
           const pos = selectedVieta?.lat ? selectedVieta : null;
-          return pos && !sheetOpen ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} /> : null;
+          return pos && !sheetOpen ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} topOffset={72} /> : null;
         })()}
 
         {/* Add mode banner */}

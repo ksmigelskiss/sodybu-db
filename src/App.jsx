@@ -219,13 +219,13 @@ export default function App() {
             )}
             <div style={{
               position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100,
-              background: 'white', borderRadius: '16px 16px 0 0',
+              background: 'white', borderRadius: '14px 14px 0 0',
               boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
-              maxHeight: sheetOpen ? '62dvh' : 60,
+              maxHeight: sheetOpen ? '62dvh' : 48,
               transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)',
-              display: 'flex', flexDirection: 'column',
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
             }}>
-              {/* Handle + header — swipeable */}
+              {/* Toggle tab — matches desktop tab style */}
               <div
                 onTouchStart={e => { swipeStartY.current = e.touches[0].clientY; }}
                 onTouchEnd={e => {
@@ -234,24 +234,28 @@ export default function App() {
                   swipeStartY.current = null;
                 }}
                 onClick={() => setSheetOpen(o => !o)}
-                style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0 6px', flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}
               >
-                <div style={{ width: 32, height: 4, background: '#dadce0', borderRadius: 2, flexShrink: 0 }} />
-                <Star size={14} color={C.primary} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                  Atrinktos <span style={{ fontWeight: 400, color: C.textSec }}>({displayVietos.length})</span>
-                </span>
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {sheetOpen && (
-                    <div onClick={e => e.stopPropagation()}>
-                      <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} compact />
-                    </div>
-                  )}
-                  <ChevronDown size={16} color={C.textSec} style={{
-                    transition: 'transform 0.2s', transform: sheetOpen ? 'rotate(0deg)' : 'rotate(180deg)',
-                  }} />
-                </div>
+                <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2 }} />
+                <ChevronDown size={15} color={C.textSec} style={{
+                  marginTop: 3, transition: 'transform 0.2s',
+                  transform: sheetOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+                }} />
               </div>
+
+              {/* Header — title + filter, shown when open */}
+              {sheetOpen && (
+                <div style={{ padding: '0 16px 8px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <Star size={13} color={C.primary} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                    Atrinktos <span style={{ fontWeight: 400, color: C.textSec }}>({displayVietos.length})</span>
+                  </span>
+                  <div style={{ marginLeft: 'auto' }}>
+                    <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} compact />
+                  </div>
+                </div>
+              )}
+
               {sheetOpen && (
                 <div style={{ overflowY: 'auto', flex: 1 }}>
                   {displayVietos.length === 0
@@ -317,22 +321,23 @@ export default function App() {
         boxShadow: '2px 0 8px rgba(0,0,0,0.12)',
         display: 'flex', flexDirection: 'column',
       }}>
-        {/* Sidebar toggle tab — always at right edge of panel */}
+        {/* Sidebar toggle tab — right edge of panel */}
         <button
           onClick={() => setSidebarOpen(o => !o)}
           title={sidebarOpen ? 'Slėpti sąrašą' : 'Rodyti sąrašą'}
           style={{
-            position: 'absolute', top: '50%', right: -28,
+            position: 'absolute', top: '50%', right: -24,
             transform: 'translateY(-50%)',
-            width: 28, height: 56,
-            background: 'white', border: 'none', borderRadius: '0 8px 8px 0',
+            width: 24, height: 56,
+            background: 'white', border: 'none', borderRadius: '0 10px 10px 0',
             boxShadow: '2px 0 6px rgba(0,0,0,0.12)',
             cursor: 'pointer', zIndex: 10,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
             color: C.textSec,
           }}
         >
-          {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+          <div style={{ width: 3, height: 20, background: '#dadce0', borderRadius: 2 }} />
+          {sidebarOpen ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
         </button>
 
         {/* Header: logo + search */}

@@ -69,7 +69,7 @@ export default function SodybaMap({
   // Init map + custom pane for waterways (below overlay, above tiles)
   useEffect(() => {
     if (mapRef.current) return;
-    mapRef.current = L.map(containerRef.current).setView([55.3, 23.9], 7);
+    mapRef.current = L.map(containerRef.current, { zoomControl: false }).setView([55.3, 23.9], 7);
     LAYERS.map.addTo(mapRef.current);
   }, []);
 

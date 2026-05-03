@@ -205,7 +205,7 @@ export default function App() {
 
         {/* FABs */}
         {!showPanel && !showForm && !showSkelbimas && (
-          <div style={{ position: 'absolute', right: 12, bottom: 116, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ position: 'fixed', right: 12, bottom: 116, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <FabBtn onClick={locateMe} title="Mano vieta"><Navigation size={18} /></FabBtn>
             <FabBtn onClick={() => { setAddMode(true); setSheetOpen(false); }} title="Žymėti sodybą" primary><MapPin size={18} /></FabBtn>
             <FabBtn onClick={() => { setShowSkelbimosForm(true); setSheetOpen(false); }} title="Pridėti skelbimą"><Plus size={18} /></FabBtn>
@@ -215,10 +215,10 @@ export default function App() {
         {/* Bottom sheet — list */}
         {!showPanel && !showForm && !showSkelbimas && (
           <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 1100,
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100,
             background: 'white', borderRadius: '16px 16px 0 0',
             boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
-            maxHeight: sheetOpen ? '62vh' : 60,
+            maxHeight: sheetOpen ? '62dvh' : 60,
             transition: 'max-height 0.25s ease',
             display: 'flex', flexDirection: 'column',
           }}>

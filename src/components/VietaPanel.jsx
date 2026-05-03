@@ -45,10 +45,10 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const save = (field, val) => onUpdate(vieta.id, { [field]: val || null });
 
   const containerStyle = mobile ? {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    position: 'fixed', bottom: 0, left: 0, right: 0,
     background: 'white', borderRadius: '16px 16px 0 0',
     boxShadow: '0 -2px 16px rgba(0,0,0,0.12)',
-    zIndex: 1200, maxHeight: '82vh', overflowY: 'auto',
+    zIndex: 1200, maxHeight: '82dvh', overflowY: 'auto',
   } : {
     position: 'absolute', bottom: 16, right: 16,
     background: 'white', borderRadius: 12,

@@ -27,10 +27,10 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel,
   };
 
   const style = mobile ? {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    position: 'fixed', bottom: 0, left: 0, right: 0,
     background: 'white', borderRadius: '16px 16px 0 0',
     boxShadow: '0 -2px 16px rgba(0,0,0,0.12)',
-    padding: '0 0 24px', zIndex: 2000, maxHeight: '85vh', overflowY: 'auto',
+    padding: '0 0 24px', zIndex: 2000, maxHeight: '85dvh', overflowY: 'auto',
   } : {
     position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
     background: 'white', borderRadius: 12,

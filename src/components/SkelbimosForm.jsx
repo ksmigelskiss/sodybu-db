@@ -34,10 +34,10 @@ export default function SkelbimosForm({ onSave, onCancel, mobile }) {
   };
 
   const style = mobile ? {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    position: 'fixed', bottom: 0, left: 0, right: 0,
     background: 'white', borderRadius: '16px 16px 0 0',
     boxShadow: '0 -2px 16px rgba(0,0,0,0.12)',
-    zIndex: 2000, maxHeight: '85vh', overflowY: 'auto',
+    zIndex: 2000, maxHeight: '85dvh', overflowY: 'auto',
   } : {
     position: 'absolute', bottom: 16, right: 16,
     background: 'white', borderRadius: 12,

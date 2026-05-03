@@ -23,6 +23,7 @@ body {
 
 input, textarea, select, button {
   font-family: inherit;
+  font-size: 16px; /* prevent iOS auto-zoom on focus */
 }
 
 @keyframes slideUp {

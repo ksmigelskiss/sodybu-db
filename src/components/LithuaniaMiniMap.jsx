@@ -1,29 +1,36 @@
-// Simplified Lithuania border outline (clockwise, ~20 key points)
+// Simplified Lithuania border — clockwise from Palanga (NW coast)
 const LT_OUTLINE = [
-  [55.72, 21.10], // Klaipėda coast
-  [56.40, 22.00], // North border west
-  [56.45, 23.50], // North center
-  [56.45, 25.00], // North east
-  [56.40, 26.65], // NE corner (Latvia)
-  [55.90, 26.82], // East border
-  [55.30, 26.75], // East
-  [54.65, 25.80], // SE
-  [54.15, 25.50], // South-east
-  [53.90, 25.00], // South
-  [53.90, 24.35], // South
-  [54.05, 23.50], // SW area
-  [54.15, 23.00], // Near Kaliningrad
-  [54.30, 22.73], // SW corner
-  [54.38, 22.00], // West near Kaliningrad
-  [54.55, 21.30], // West coast approach
-  [55.28, 21.05], // West coast
-  [55.65, 21.08], // Coast south of Klaipėda
-  [55.72, 21.10], // close
+  [56.05, 21.06],  // Palanga
+  [56.21, 21.30],  // coast → Latvia
+  [56.38, 21.75],  // Latvia border W
+  [56.41, 22.50],  // Latvia border
+  [56.45, 23.40],  // Latvia border, Joniškis
+  [56.46, 24.10],  // Latvia border, Biržai
+  [56.45, 24.80],  // Latvia border E
+  [56.40, 26.59],  // NE corner
+  [55.85, 26.82],  // E border
+  [55.20, 26.80],  // E border
+  [54.70, 25.90],  // E border SW
+  [54.25, 25.75],  // Eišiškės area
+  [53.91, 25.53],  // SE corner
+  [53.89, 24.75],  // S border
+  [53.90, 24.00],  // S, Druskininkai
+  [53.96, 23.48],  // S, Seinai
+  [54.22, 22.83],  // Lazdijai, Kaliningrad border starts
+  [54.35, 22.37],  // Kaliningrad border
+  [54.43, 22.06],  // Kaliningrad border
+  [54.45, 21.60],  // Kaliningrad border
+  [54.57, 21.28],  // Šilutė area
+  [54.75, 21.07],  // Coast S of Klaipėda
+  [55.05, 21.04],  // Coast
+  [55.35, 21.05],  // Coast
+  [55.70, 21.10],  // Klaipėda
+  [56.05, 21.06],  // back to Palanga
 ];
 
-const MIN_LAT = 53.80, MAX_LAT = 56.55;
-const MIN_LNG = 20.90, MAX_LNG = 27.10;
-const W = 138, H = 100, P = 7;
+const MIN_LAT = 53.85, MAX_LAT = 56.52;
+const MIN_LNG = 21.00, MAX_LNG = 26.90;
+const W = 138, H = 100, P = 8;
 
 function proj(lat, lng) {
   const x = P + (lng - MIN_LNG) / (MAX_LNG - MIN_LNG) * (W - 2 * P);

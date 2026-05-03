@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Search, MapPin, Navigation, Plus, X, ChevronLeft, ChevronRight, House, Star, LayoutGrid } from 'lucide-react';
+import { Search, MapPin, Navigation, Plus, X, ChevronLeft, ChevronRight, ChevronDown, House, Star, LayoutGrid } from 'lucide-react';
 import SodybaMap from './components/SodybaMap.jsx';
 import SodybaCard from './components/SodybaCard.jsx';
 import VietaCard from './components/VietaCard.jsx';
@@ -45,6 +45,7 @@ export default function App() {
   const [showSkelbimosForm, setShowSkelbimosForm] = useState(false);
   const [locateVieta, setLocateVieta]     = useState(null);
   const [vietaStatusFilter, setVietaStatusFilter] = useState(null);
+  const swipeStartY = useRef(null);
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
@@ -146,8 +147,8 @@ export default function App() {
 
   // ── MOBILE ──────────────────────────────────────────────────────────────────
   if (isMobile) {
-    const showPanel    = selectedVieta && !newVietaPos && !locateVieta;
-    const showForm     = !!newVietaPos;
+    const showPanel     = selectedVieta && !newVietaPos && !locateVieta;
+    const showForm      = !!newVietaPos;
     const showSkelbimas = showSkelbimosForm && !newVietaPos;
 
     return (
@@ -209,39 +210,61 @@ export default function App() {
 
         {/* Bottom sheet — list */}
         {!showPanel && !showForm && !showSkelbimas && (
-          <div style={{
-            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100,
-            background: 'white', borderRadius: '16px 16px 0 0',
-            boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
-            maxHeight: sheetOpen ? '62dvh' : 60,
-            transition: 'max-height 0.25s ease',
-            display: 'flex', flexDirection: 'column',
-          }}>
-            <button onClick={() => setSheetOpen(o => !o)} style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
-            }}>
-              <div style={{ width: 32, height: 4, background: '#dadce0', borderRadius: 2, flexShrink: 0 }} />
-              <Star size={14} color={C.primary} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                Atrinktos <span style={{ fontWeight: 400, color: C.textSec }}>({displayVietos.length})</span>
-              </span>
-              <div style={{ marginLeft: 'auto' }}>
-                <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} compact />
-              </div>
-            </button>
+          <>
+            {/* Backdrop — tap to close */}
             {sheetOpen && (
-              <div style={{ overflowY: 'auto', flex: 1 }}>
-                {displayVietos.length === 0
-                  ? <EmptyState primary={vietos.length === 0} />
-                  : displayVietos.map(v => (
-                      <VietaCard key={v.id} vieta={v} selected={selectedVieta?.id === v.id}
-                        onClick={() => { handleSelectVieta(v); setSheetOpen(false); }} />
-                    ))
-                }
-              </div>
+              <div onClick={() => setSheetOpen(false)} style={{
+                position: 'fixed', inset: 0, zIndex: 1090, background: 'rgba(0,0,0,0.18)',
+              }} />
             )}
-          </div>
+            <div style={{
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100,
+              background: 'white', borderRadius: '16px 16px 0 0',
+              boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
+              maxHeight: sheetOpen ? '62dvh' : 60,
+              transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              {/* Handle + header — swipeable */}
+              <div
+                onTouchStart={e => { swipeStartY.current = e.touches[0].clientY; }}
+                onTouchEnd={e => {
+                  if (swipeStartY.current === null) return;
+                  if (e.changedTouches[0].clientY - swipeStartY.current > 48) setSheetOpen(false);
+                  swipeStartY.current = null;
+                }}
+                onClick={() => setSheetOpen(o => !o)}
+                style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}
+              >
+                <div style={{ width: 32, height: 4, background: '#dadce0', borderRadius: 2, flexShrink: 0 }} />
+                <Star size={14} color={C.primary} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                  Atrinktos <span style={{ fontWeight: 400, color: C.textSec }}>({displayVietos.length})</span>
+                </span>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {sheetOpen && (
+                    <div onClick={e => e.stopPropagation()}>
+                      <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} compact />
+                    </div>
+                  )}
+                  <ChevronDown size={16} color={C.textSec} style={{
+                    transition: 'transform 0.2s', transform: sheetOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+                  }} />
+                </div>
+              </div>
+              {sheetOpen && (
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  {displayVietos.length === 0
+                    ? <EmptyState primary={vietos.length === 0} />
+                    : displayVietos.map(v => (
+                        <VietaCard key={v.id} vieta={v} selected={selectedVieta?.id === v.id}
+                          onClick={() => { handleSelectVieta(v); setSheetOpen(false); }} />
+                      ))
+                  }
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {showPanel    && <VietaPanel vieta={selectedVieta} onClose={() => setSelectedVieta(null)} onUpdate={handleUpdateVieta} onDelete={handleDeleteVieta} onLocate={v => { setLocateVieta(v); setSelectedVieta(null); }} mobile />}

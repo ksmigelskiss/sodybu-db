@@ -183,11 +183,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Location minimap — mobile */}
-        {(() => {
-          const pos = selectedVieta?.lat ? selectedVieta : null;
-          return pos && !sheetOpen ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} topOffset={72} /> : null;
-        })()}
 
         {/* Add mode banner */}
         {(addMode || locateVieta) && (

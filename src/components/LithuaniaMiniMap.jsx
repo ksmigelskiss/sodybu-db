@@ -1,31 +1,40 @@
-// Simplified Lithuania border — clockwise from Palanga (NW coast)
+// Lithuania border — clockwise from NW coast (Palanga/Salantas crossing)
+// Calibrated against known city coordinates:
+//   Vilnius   54.687°N 25.280°E  → should appear right-center-low
+//   Kaunas    54.899°N 23.904°E  → center, slightly low
+//   Klaipėda  55.703°N 21.144°E  → far left, upper-mid
+//   Šiauliai  55.935°N 23.314°E  → center-left, upper
 const LT_OUTLINE = [
-  [56.05, 21.06],  // Palanga
-  [56.21, 21.30],  // coast → Latvia
-  [56.38, 21.75],  // Latvia border W
-  [56.41, 22.50],  // Latvia border
-  [56.45, 23.40],  // Latvia border, Joniškis
-  [56.46, 24.10],  // Latvia border, Biržai
-  [56.45, 24.80],  // Latvia border E
-  [56.40, 26.59],  // NE corner
-  [55.85, 26.82],  // E border
-  [55.20, 26.80],  // E border
-  [54.70, 25.90],  // E border SW
-  [54.25, 25.75],  // Eišiškės area
-  [53.91, 25.53],  // SE corner
-  [53.89, 24.75],  // S border
-  [53.90, 24.00],  // S, Druskininkai
-  [53.96, 23.48],  // S, Seinai
-  [54.22, 22.83],  // Lazdijai, Kaliningrad border starts
-  [54.35, 22.37],  // Kaliningrad border
-  [54.43, 22.06],  // Kaliningrad border
-  [54.45, 21.60],  // Kaliningrad border
-  [54.57, 21.28],  // Šilutė area
-  [54.75, 21.07],  // Coast S of Klaipėda
-  [55.05, 21.04],  // Coast
-  [55.35, 21.05],  // Coast
-  [55.70, 21.10],  // Klaipėda
-  [56.05, 21.06],  // back to Palanga
+  [56.05, 21.07],  // NW: Palanga coast / Latvia border start
+  [56.18, 21.49],  // Latvia border →
+  [56.28, 22.08],  // Latvia border, Skuodas area
+  [56.43, 22.75],  // Latvia border
+  [56.45, 23.44],  // Latvia border, Joniškis
+  [56.45, 24.22],  // Latvia border, Biržai
+  [56.44, 24.89],  // Latvia border E
+  [56.40, 25.75],  // Latvia border, toward NE corner
+  [56.39, 26.59],  // NE corner (LT-LV-BY tripoint)
+  [55.80, 26.83],  // E border, Belarus ↓
+  [55.18, 26.84],  // E border
+  [54.84, 26.65],  // E border
+  [54.63, 25.97],  // E border, curving SW
+  [54.17, 25.85],  // E border, near Eišiškės
+  [53.91, 25.54],  // SE corner
+  [53.89, 25.08],  // S border, Belarus →
+  [53.89, 24.36],  // S border
+  [53.90, 23.97],  // S border, Druskininkai
+  [53.95, 23.50],  // S border, Poland starts
+  [54.17, 22.97],  // SW, Lazdijai / Poland border
+  [54.22, 22.83],  // Kaliningrad border starts
+  [54.35, 22.38],  // Kaliningrad border ↑
+  [54.43, 22.07],  // Kaliningrad border
+  [54.45, 21.62],  // Kaliningrad border
+  [54.57, 21.27],  // Pagėgiai / Šilutė area
+  [54.82, 21.06],  // W coast ↑
+  [55.07, 21.04],  // W coast
+  [55.35, 21.05],  // W coast
+  [55.72, 21.10],  // Klaipėda
+  [56.05, 21.07],  // back to Palanga
 ];
 
 const MIN_LAT = 53.85, MAX_LAT = 56.52;

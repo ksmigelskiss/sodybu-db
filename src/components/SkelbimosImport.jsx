@@ -1,8 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, X, MapPin, Check, AlertCircle, Euro, Home, Ruler, Calendar, Phone, User, MessageSquare, Droplets, Waves, Apple, Trees, ClipboardPaste, BookMarked } from 'lucide-react';
+import { Sparkles, X, MapPin, Check, AlertCircle, Euro, Home, Ruler, Calendar, Phone, User, MessageSquare, Droplets, Waves, Apple, Trees, ClipboardPaste, BookMarked, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { VIETA_ATTRS } from '../lib/theme.js';
 
 const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
+
+const T = {
+  title:   { fontSize: 18, fontWeight: 700, color: '#202124', lineHeight: 1.2, fontFamily: 'system-ui, sans-serif' },
+  price:   { fontSize: 22, fontWeight: 800, color: '#b45309', letterSpacing: '-0.5px', fontFamily: 'system-ui, sans-serif' },
+  caption: { fontSize: 12, color: '#5f6368', fontFamily: 'system-ui, sans-serif' },
+  micro:   { fontSize: 11, color: '#9aa0a6', fontFamily: 'system-ui, sans-serif' },
+};
+
 const APP_URL = typeof window !== 'undefined' ? window.location.origin : 'https://sodybu-db.vercel.app';
 const BOOKMARKLET = `javascript:(function(){var u=location.href;var t=document.body.innerText.slice(0,18000);var h='';var ogMeta=document.querySelector('meta[property="og:image"]');var imgUrl=ogMeta?ogMeta.content:null;if(!imgUrl){var SKIP=/logo|icon|avatar|pixel|1x1|sprite|track|banner|button|arrow|blank/i;var imgs=document.querySelectorAll('img[src]');for(var ii=0;ii<imgs.length;ii++){var s=imgs[ii].src;if(s&&s.startsWith('http')&&!SKIP.test(s)&&/\\.(jpe?g|png|webp)(\\?|$)/i.test(s)){imgUrl=s;break;}}}if(imgUrl)h='[IMG: '+imgUrl+']\\n';var html=document.documentElement.innerHTML;var r1=/\\blat=(5[3456]\\.\\d{4,})[\\s\\S]{0,60}?lng=(2[0-6]\\.\\d{4,})/i.exec(html);if(r1){h+='[GPS: lat='+r1[1]+', lng='+r1[2]+']\\n';}else{var ss=document.querySelectorAll('script');var re=/["']?(?:lat(?:itude)?|y)["']?\\s*[:=]\\s*(5[3456]\\.\\d{4,})[\\s\\S]{0,80}?["']?(?:l(?:ng|on)(?:gitude)?|x)["']?\\s*[:=]\\s*(2[0-6]\\.\\d{4,})/i;for(var i=0;i<ss.length;i++){var m=re.exec(ss[i].textContent);if(m){h+='[GPS: lat='+m[1]+', lng='+m[2]+']\\n';break;}}}window.open('${APP_URL}/#bm/'+encodeURIComponent(u)+'/'+encodeURIComponent(h+t),'_blank');})();`;
 
@@ -49,6 +57,8 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
   const [coordInput, setCoordInput]   = useState('');
   const [pastedText, setPastedText]   = useState('');
   const [showBm, setShowBm]           = useState(false);
+  const [noteOpen, setNoteOpen]       = useState(!!(ie?.komentaras));
+  const textareaRef = useRef(null);
 
   const handleAnalyzeText = () => analyze(urlInput, pastedText);
 
@@ -123,235 +133,286 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
     });
   };
 
+  const isPreview = step === 'preview' || step === 'saving';
+
   const wrapStyle = mobile ? {
     position: 'fixed', bottom: 0, left: 0, right: 0,
-    background: 'white', borderRadius: '16px 16px 0 0',
-    boxShadow: '0 -2px 16px rgba(0,0,0,0.12)',
-    zIndex: 2000, maxHeight: '90dvh', overflowY: 'auto',
+    background: 'white', borderRadius: '20px 20px 0 0',
+    boxShadow: '0 -4px 32px rgba(0,0,0,0.16)',
+    zIndex: 2000, maxHeight: '92dvh', overflowY: 'auto',
+    display: 'flex', flexDirection: 'column',
   } : {
     position: 'fixed', top: '50%', left: '50%',
     transform: 'translate(-50%, -50%)',
-    background: 'white', borderRadius: 14,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)',
-    width: 440, maxHeight: '88vh', overflowY: 'auto',
-    zIndex: 2000,
+    background: 'white', borderRadius: 16,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)',
+    width: 400, maxHeight: '88vh', overflowY: 'auto',
+    zIndex: 2000, display: 'flex', flexDirection: 'column',
   };
 
   return (
     <>
       <div onClick={onCancel} style={{ position: 'fixed', inset: 0, zIndex: 1999, background: 'rgba(0,0,0,0.28)', backdropFilter: 'blur(2px)' }} />
       <div style={wrapStyle} className={mobile ? 'sheet-slide-up' : undefined}>
-        {mobile && <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2, margin: '10px auto 0' }} />}
+        {mobile && !isPreview && <div style={{ width: 40, height: 4, background: '#dadce0', borderRadius: 2, margin: '12px auto 0', flexShrink: 0 }} />}
 
-        {/* Header */}
-        <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid #f1f3f4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: '#202124', display: 'flex', alignItems: 'center', gap: 7 }}>
-            <Sparkles size={16} color="#1a73e8" /> Importuoti iš skelbimo
-          </span>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex' }}>
-            <X size={17} color="#5f6368" />
-          </button>
-        </div>
-
-        <div style={{ padding: '16px' }}>
-
-          {/* ── STEP: url ── */}
-          {step === 'url' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-              {/* Primary: paste URL */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#202124' }}>
-                  Įklijuok skelbimo nuorodą:
-                </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input
-                    value={urlInput}
-                    onChange={e => setUrlInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && urlInput.trim() && analyze(urlInput, '')}
-                    placeholder="https://www.aruodas.lt/..."
-                    autoFocus
-                    style={{
-                      flex: 1, border: '1.5px solid #e8eaed', borderRadius: 10,
-                      padding: '10px 12px', fontSize: 13, color: '#202124',
-                      outline: 'none', background: 'white', fontFamily: 'system-ui, sans-serif',
-                    }}
-                    onFocus={e => e.target.style.borderColor = '#1a73e8'}
-                    onBlur={e => e.target.style.borderColor = '#e8eaed'}
-                  />
-                  <button
-                    onClick={() => urlInput.trim() && analyze(urlInput, '')}
-                    disabled={!urlInput.trim()}
-                    style={{ ...btnPri, flex: 'none', padding: '0 16px', opacity: urlInput.trim() ? 1 : 0.4 }}
-                  >
-                    <Sparkles size={14} />AI
-                  </button>
-                </div>
-                {error && <div style={{ fontSize: 12, color: '#c5221f' }}>{error}</div>}
-              </div>
-
-              {/* Divider */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ flex: 1, height: 1, background: '#f1f3f4' }} />
-                <span style={{ fontSize: 11, color: '#9aa0a6' }}>arba naudok automatinį sprendimą</span>
-                <div style={{ flex: 1, height: 1, background: '#f1f3f4' }} />
-              </div>
-
-              {/* Secondary: bookmarklet / shortcut */}
-              {mobile ? <IosShortcutGuide /> : <BookmarkletGuide bm={BOOKMARKLET} />}
-
-              <button onClick={onCancel} style={btnSec}>Uždaryti</button>
-            </div>
-          )}
-
-          {/* ── STEP: analyzing ── */}
-          {step === 'analyzing' && (
-            <div style={{ padding: '32px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-              <Loader size={28} />
-              <div style={{ color: '#5f6368', fontSize: 13 }}>Nuskaitome skelbimą…</div>
-            </div>
-          )}
-
-          {/* ── STEP: blocked (Cloudflare etc.) ── */}
-          {step === 'blocked' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ background: '#fff8e1', borderRadius: 10, padding: '12px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <AlertCircle size={15} color="#f29900" style={{ flexShrink: 0, marginTop: 1 }} />
-                <div style={{ fontSize: 13, color: '#5f6368', lineHeight: 1.6 }}>
-                  <strong style={{ color: '#202124' }}>Portalas blokuoja automatinį nuskaitymą.</strong><br />
-                  Atidaryk skelbimą naršyklėje, paspausk <Kbd>Ctrl+A</Kbd> → <Kbd>Ctrl+C</Kbd>, tada įklijuok čia:
-                </div>
-              </div>
-
-              <div style={{ position: 'relative' }}>
-                <ClipboardPaste size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: 10, pointerEvents: 'none' }} />
-                <textarea
-                  value={pastedText}
-                  onChange={e => setPastedText(e.target.value)}
-                  placeholder="Įklijuok čia (Ctrl+V)…"
-                  rows={mobile ? 6 : 8}
-                  autoFocus
-                  style={{ ...field, paddingLeft: 28, resize: 'none', fontSize: 13, lineHeight: 1.5 }}
-                />
-                {pastedText.length > 0 && (
-                  <span style={{ position: 'absolute', bottom: 8, right: 10, fontSize: 11, color: '#9aa0a6' }}>
-                    {(pastedText.length / 1000).toFixed(1)}K sim.
-                  </span>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setStep('url')} style={btnSec}>← Atgal</button>
-                <button
-                  onClick={handleAnalyzeText}
-                  disabled={pastedText.trim().length < 50}
-                  style={{ ...btnPri, opacity: pastedText.trim().length >= 50 ? 1 : 0.45 }}
-                >
-                  <Sparkles size={14} /> Analizuoti
-                </button>
-              </div>
-
-              {/* Bookmarklet promo */}
-              <button onClick={() => setShowBm(s => !s)} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, display: 'flex', alignItems: 'center', gap: 6, color: '#1a73e8', fontSize: 12, fontWeight: 500 }}>
-                <BookMarked size={13} /> Norint ateityje išvengti copy-paste — naudok bookmarklet →
+        {/* ── Non-preview steps: simple header + padded body ── */}
+        {!isPreview && (
+          <>
+            <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid #f1f3f4', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <span style={{ fontWeight: 700, fontSize: 15, color: '#202124', display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Sparkles size={16} color="#1a73e8" /> Importuoti iš skelbimo
+              </span>
+              <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex' }}>
+                <X size={17} color="#5f6368" />
               </button>
-              {showBm && (
-                <div style={{ background: '#f0f4ff', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <BookmarkletLink bm={BOOKMARKLET} />
-                  <div style={{ fontSize: 11, color: '#5f6368', lineHeight: 1.6 }}>
-                    Nutempk į Bookmarks juostą. Skelbimo puslapyje — vienas paspaudimas ir duomenys ateina automatiškai.
+            </div>
+
+            <div style={{ padding: '16px', overflowY: 'auto', flex: 1 }}>
+              {/* ── STEP: url ── */}
+              {step === 'url' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {error && (
+                    <div style={{ background: '#fce8e6', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#c5221f' }}>
+                      {error}
+                    </div>
+                  )}
+                  {mobile ? <IosShortcutGuide /> : <BookmarkletGuide bm={BOOKMARKLET} />}
+                  <button onClick={onCancel} style={btnSec}>Uždaryti</button>
+                </div>
+              )}
+
+              {/* ── STEP: analyzing ── */}
+              {step === 'analyzing' && (
+                <div style={{ padding: '32px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                  <Loader size={28} />
+                  <div style={{ color: '#5f6368', fontSize: 13 }}>Nuskaitome skelbimą…</div>
+                </div>
+              )}
+
+              {/* ── STEP: blocked ── */}
+              {step === 'blocked' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ background: '#fff8e1', borderRadius: 10, padding: '12px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <AlertCircle size={15} color="#f29900" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ fontSize: 13, color: '#5f6368', lineHeight: 1.6 }}>
+                      <strong style={{ color: '#202124' }}>Portalas blokuoja automatinį nuskaitymą.</strong><br />
+                      Atidaryk skelbimą naršyklėje, paspausk <Kbd>Ctrl+A</Kbd> → <Kbd>Ctrl+C</Kbd>, tada įklijuok čia:
+                    </div>
                   </div>
+                  <div style={{ position: 'relative' }}>
+                    <ClipboardPaste size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: 10, pointerEvents: 'none' }} />
+                    <textarea value={pastedText} onChange={e => setPastedText(e.target.value)} placeholder="Įklijuok čia (Ctrl+V)…" rows={mobile ? 6 : 8} autoFocus
+                      style={{ ...field, paddingLeft: 28, resize: 'none', fontSize: 13, lineHeight: 1.5 }} />
+                    {pastedText.length > 0 && (
+                      <span style={{ position: 'absolute', bottom: 8, right: 10, fontSize: 11, color: '#9aa0a6' }}>
+                        {(pastedText.length / 1000).toFixed(1)}K sim.
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setStep('url')} style={btnSec}>← Atgal</button>
+                    <button onClick={handleAnalyzeText} disabled={pastedText.trim().length < 50}
+                      style={{ ...btnPri, opacity: pastedText.trim().length >= 50 ? 1 : 0.45 }}>
+                      <Sparkles size={14} /> Analizuoti
+                    </button>
+                  </div>
+                  <button onClick={() => setShowBm(s => !s)} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, display: 'flex', alignItems: 'center', gap: 6, color: '#1a73e8', fontSize: 12, fontWeight: 500 }}>
+                    <BookMarked size={13} /> Norint ateityje išvengti copy-paste — naudok bookmarklet →
+                  </button>
+                  {showBm && (
+                    <div style={{ background: '#f0f4ff', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <BookmarkletLink bm={BOOKMARKLET} />
+                      <div style={{ fontSize: 11, color: '#5f6368', lineHeight: 1.6 }}>
+                        Nutempk į Bookmarks juostą. Skelbimo puslapyje — vienas paspaudimas ir duomenys ateina automatiškai.
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+          </>
+        )}
 
-          {/* ── STEP: preview ── */}
-          {(step === 'preview' || step === 'saving') && extracted && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* ── PREVIEW step: VietaPanel-style layout ── */}
+        {isPreview && extracted && (
+          <>
+            {mobile && <div style={{ width: 40, height: 4, background: '#dadce0', borderRadius: 2, margin: '12px auto 0', flexShrink: 0 }} />}
 
-              {nuotrauka && (
-                <div style={{ borderRadius: 10, overflow: 'hidden', background: '#f1f3f4', aspectRatio: '16/9' }}>
-                  <img src={nuotrauka} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    onError={e => { e.currentTarget.parentElement.style.display = 'none'; }} />
+            {/* Hero */}
+            <div style={{ position: 'relative', flexShrink: 0, height: nuotrauka ? 200 : undefined }}>
+              {nuotrauka
+                ? <img src={nuotrauka} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }}
+                    onError={e => { e.currentTarget.parentElement.style.height = 'auto'; e.currentTarget.style.display = 'none'; }} />
+                : <div style={{ height: 8 }} />}
+              <button onClick={onCancel} style={{
+                position: 'absolute', top: nuotrauka ? 12 : (mobile ? 0 : 6), right: 12,
+                background: nuotrauka ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.06)',
+                border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <X size={15} color={nuotrauka ? 'white' : '#5f6368'} />
+              </button>
+            </div>
+
+            {/* Header: editable title + badge + coords */}
+            <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
+              <input
+                value={pavadinimas}
+                onChange={e => setPavadinimas(e.target.value)}
+                placeholder="Pavadinimas…"
+                style={{
+                  width: '100%', border: 'none', outline: 'none', background: 'transparent',
+                  borderBottom: '2px solid transparent', borderRadius: 0, padding: '0 0 2px',
+                  boxSizing: 'border-box', ...T.title,
+                }}
+                onFocus={e => e.target.style.borderBottomColor = '#1a73e8'}
+                onBlur={e => e.target.style.borderBottomColor = 'transparent'}
+              />
+              <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <ImportBadge color="#b45309" bg="#fef3c7">Skelbimas</ImportBadge>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <CoordSection
+                  lat={lat} lng={lng}
+                  geocoding={geocoding}
+                  coordEdit={coordEdit} setCoordEdit={setCoordEdit}
+                  coordInput={coordInput} setCoordInput={setCoordInput}
+                  onApply={(la, lo) => { setLat(la); setLng(lo); setCoordEdit(false); setCoordInput(''); }}
+                  onPickOnMap={onPickOnMap}
+                />
+              </div>
+            </div>
+
+            {/* fffbf0 price / contact strip */}
+            {(kaina || extracted.tel || extracted.vardas || urlInput) && (
+              <div style={{ padding: '12px 16px', background: '#fffbf0', borderBottom: '1px solid #f1f3f4', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                {kaina && (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                    <input
+                      value={kaina}
+                      onChange={e => setKaina(e.target.value.replace(/\D/g, ''))}
+                      style={{ ...T.price, border: 'none', outline: 'none', background: 'transparent', minWidth: 40, width: `${Math.max(kaina.length, 2) + 1}ch` }}
+                    />
+                    <span style={T.price}>€</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px' }}>
+                  {extracted.vardas && (
+                    <span style={{ ...T.caption, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <User size={12} color="#9aa0a6" />{extracted.vardas}
+                    </span>
+                  )}
+                  {extracted.tel && (
+                    <a href={`tel:${extracted.tel}`} style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <Phone size={12} color="#9aa0a6" />{extracted.tel}
+                    </a>
+                  )}
+                  {urlInput && (
+                    <a href={urlInput} target="_blank" rel="noreferrer" style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <ExternalLink size={12} />Atidaryti skelbimą
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Body */}
+            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', flex: 1 }}>
+
+              {/* Adresas */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid #e8eaed', borderRadius: 10, padding: '0 12px', background: '#fafafa', minHeight: 40 }}>
+                <MapPin size={13} color="#c4c7cc" />
+                <input
+                  value={adresas}
+                  onChange={e => setAdresas(e.target.value)}
+                  placeholder="Adresas"
+                  style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', padding: '10px 0', fontSize: 13, color: '#202124', fontFamily: 'system-ui, sans-serif' }}
+                />
+              </div>
+
+              {/* Attr grid 2×2 — identical to VietaPanel */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {VIETA_ATTRS.map(({ key, label }) => {
+                  const Icon = ATTR_ICONS[key];
+                  const active = !!attrs[key];
+                  return (
+                    <button key={key} onClick={() => setAttrs(a => ({ ...a, [key]: !a[key] }))} style={{
+                      padding: '7px 10px', borderRadius: 10, fontSize: 12, cursor: 'pointer',
+                      border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
+                      background: active ? '#e8f0fe' : '#fafafa',
+                      color: active ? '#1a73e8' : '#5f6368', fontWeight: active ? 600 : 400,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      transition: 'all 0.12s', fontFamily: 'system-ui, sans-serif',
+                    }}>
+                      {Icon && <Icon size={13} />}{label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Meta chips: plotas, kambariai, statybos_metai */}
+              {(extracted.statybos_metai || extracted.plotas_sklypas || extracted.plotas_namas || extracted.kambariai) && (
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                  {extracted.statybos_metai && <Chip icon={<Calendar size={11} />}>{extracted.statybos_metai} m.</Chip>}
+                  {extracted.plotas_sklypas  && <Chip icon={<Ruler size={11} />}>{extracted.plotas_sklypas}</Chip>}
+                  {extracted.plotas_namas    && <Chip icon={<Home size={11} />}>{extracted.plotas_namas} m²</Chip>}
+                  {extracted.kambariai       && <Chip icon={<Home size={11} />}>{extracted.kambariai} kamb.</Chip>}
                 </div>
               )}
 
-              <Field label="Pavadinimas" icon={<Home size={13} color="#9aa0a6" />}>
-                <input value={pavadinimas} onChange={e => setPavadinimas(e.target.value)} style={field} />
-              </Field>
-
-              <Field label="Adresas" icon={<MapPin size={13} color="#9aa0a6" />}>
-                <input value={adresas} onChange={e => setAdresas(e.target.value)} style={field} />
-              </Field>
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Field label="Kaina (€)" icon={<Euro size={13} color="#9aa0a6" />} style={{ flex: 1 }}>
-                  <input value={kaina} onChange={e => setKaina(e.target.value.replace(/\D/g, ''))} placeholder="—" style={field} />
-                </Field>
-                {extracted.plotas_namas && (
-                  <Field label="Namo plotas" icon={<Ruler size={13} color="#9aa0a6" />} style={{ flex: 1 }}>
-                    <input defaultValue={`${extracted.plotas_namas} m²`} readOnly style={{ ...field, background: '#f8f9fa', color: '#5f6368' }} />
-                  </Field>
+              {/* Komentaras — collapsible, identical to VietaPanel */}
+              <div>
+                <button onClick={() => setNoteOpen(o => !o)} style={{
+                  width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '4px 0', marginBottom: noteOpen ? 6 : 0,
+                }}>
+                  <span style={{ ...T.micro, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: komentaras ? '#3c4043' : '#9aa0a6' }}>
+                    {komentaras ? 'Komentaras' : 'Pridėti komentarą'}
+                  </span>
+                  {noteOpen ? <ChevronUp size={14} color="#9aa0a6" /> : <ChevronDown size={14} color="#9aa0a6" />}
+                </button>
+                {noteOpen && (
+                  <textarea
+                    ref={textareaRef}
+                    value={komentaras}
+                    onChange={e => setKomentaras(e.target.value)}
+                    placeholder="Komentaras…"
+                    rows={3}
+                    style={{
+                      width: '100%', boxSizing: 'border-box', resize: 'none',
+                      padding: '10px 12px', lineHeight: 1.55, borderRadius: 10,
+                      border: '1px solid #e8eaed', outline: 'none', background: '#fafafa',
+                      fontSize: 13, color: '#202124', fontFamily: 'system-ui, sans-serif',
+                    }}
+                  />
                 )}
               </div>
 
-              <CoordSection
-                lat={lat} lng={lng}
-                geocoding={geocoding}
-                coordEdit={coordEdit} setCoordEdit={setCoordEdit}
-                coordInput={coordInput} setCoordInput={setCoordInput}
-                onApply={(la, lo) => { setLat(la); setLng(lo); setCoordEdit(false); setCoordInput(''); }}
-                onPickOnMap={onPickOnMap}
-              />
+              {/* Separator */}
+              <div style={{ height: 1, background: '#f1f3f4', margin: '0 -16px' }} />
 
-              {/* Meta chips */}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {extracted.statybos_metai && <Chip icon={<Calendar size={11} />}>{extracted.statybos_metai} m.</Chip>}
-                {extracted.plotas_sklypas  && <Chip icon={<Ruler size={11} />}>{extracted.plotas_sklypas}</Chip>}
-                {extracted.kambariai       && <Chip icon={<Home size={11} />}>{extracted.kambariai} kamb.</Chip>}
-                {extracted.vardas          && <Chip icon={<User size={11} />}>{extracted.vardas}</Chip>}
-                {extracted.tel             && <Chip icon={<Phone size={11} />}>{extracted.tel}</Chip>}
-              </div>
-
-              {/* Attr toggles */}
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#5f6368', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Požymiai</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-                  {VIETA_ATTRS.map(({ key, label }) => {
-                    const Icon = ATTR_ICONS[key];
-                    const active = !!attrs[key];
-                    return (
-                      <button key={key} onClick={() => setAttrs(a => ({ ...a, [key]: !a[key] }))} style={{
-                        padding: '6px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
-                        border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
-                        background: active ? '#e8f0fe' : '#fafafa',
-                        color: active ? '#1a73e8' : '#5f6368', fontWeight: active ? 600 : 400,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                        transition: 'all 0.12s',
-                      }}>
-                        {Icon && <Icon size={12} />}{label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <Field label="Komentaras" icon={<MessageSquare size={13} color="#9aa0a6" />}>
-                <textarea value={komentaras} onChange={e => setKomentaras(e.target.value)} rows={3} style={{ ...field, resize: 'none' }} />
-              </Field>
-
+              {/* Actions */}
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setStep('url')} style={btnSec}>← Atgal</button>
-                <button onClick={handleSave} disabled={step === 'saving'} style={{ ...btnPri, opacity: step === 'saving' ? 0.6 : 1 }}>
+                <button onClick={() => setStep('url')} style={{ ...btnSec, flex: 1 }}>← Atgal</button>
+                <button onClick={handleSave} disabled={step === 'saving'} style={{ ...btnPri, flex: 2, borderRadius: 10, padding: '10px', opacity: step === 'saving' ? 0.6 : 1 }}>
                   {step === 'saving' ? <><Loader /> Saugoma…</> : <><Check size={14} /> Išsaugoti sodybą</>}
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </>
+  );
+}
+
+function ImportBadge({ color, bg, children }) {
+  return (
+    <span style={{ fontSize: 11, fontWeight: 600, color, background: bg, borderRadius: 20, padding: '3px 10px', fontFamily: 'system-ui, sans-serif' }}>
+      {children}
+    </span>
   );
 }
 

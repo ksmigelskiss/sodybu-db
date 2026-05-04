@@ -304,7 +304,7 @@ export default function App() {
           <div style={{ position: 'fixed', right: 12, bottom: 116, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <FabBtn onClick={locateMe} title="Mano vieta"><Navigation size={18} /></FabBtn>
             <FabBtn onClick={() => { setAddMode(true); setSheetOpen(false); }} title="Žymėti sodybą" primary><MapPin size={18} /></FabBtn>
-            <FabBtn onClick={() => { setShowImport(true); setSheetOpen(false); }} title="Importuoti iš skelbimo"><Sparkles size={18} /></FabBtn>
+            <FabBtn onClick={() => { setImportInitial({ url: '', text: '' }); setImportExtracted(null); setShowImport(true); setSheetOpen(false); }} title="Importuoti iš skelbimo"><Sparkles size={18} /></FabBtn>
           </div>
         )}
 
@@ -493,7 +493,7 @@ export default function App() {
       <div style={{ position: 'absolute', bottom: 24, right: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <FabBtn onClick={locateMe} title="Mano vieta"><Navigation size={18} /></FabBtn>
         <FabBtn onClick={() => setAddMode(true)} title="Žymėti sodybą žemėlapyje" primary><MapPin size={18} /></FabBtn>
-        <FabBtn onClick={() => { setShowImport(true); setActiveTab('sodybos'); }} title="Importuoti iš skelbimo"><Sparkles size={18} /></FabBtn>
+        <FabBtn onClick={() => { setImportInitial({ url: '', text: '' }); setImportExtracted(null); setShowImport(true); setActiveTab('sodybos'); }} title="Importuoti iš skelbimo"><Sparkles size={18} /></FabBtn>
       </div>
 
       {showImport && <SkelbimosImport onSave={async (data) => { await handleAddSkelbimas(data); setShowImport(false); setImportExtracted(null); }} onCancel={() => { setShowImport(false); setImportPickingMap(false); setAddMode(false); setImportExtracted(null); }} onPickOnMap={handleImportPickOnMap} initialUrl={importInitial.url} initialText={importInitial.text} initialExtracted={importExtracted} />}

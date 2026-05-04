@@ -31,7 +31,6 @@ export const VIETA_ATTRS = [
 ];
 
 export const TABS = [
-  { id: 'atrinktos', label: 'Atrinktos' },
+  { id: 'korteles',  label: 'Sodybos' },
   { id: 'browse',    label: 'Vietovės' },
-  { id: 'korteles',  label: 'Kortelės' },
 ];

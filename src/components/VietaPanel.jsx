@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
 import PhotoStrip from './PhotoStrip.jsx';
@@ -25,6 +25,9 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const [saving,      setSaving]      = useState(false);
   const [ogImage,     setOgImage]     = useState(null);
   const [noteOpen,    setNoteOpen]    = useState(!!(vieta.komentaras));
+  const [coordEdit,   setCoordEdit]   = useState(!vieta.lat); // auto-open if no location
+  const [coordInput,  setCoordInput]  = useState('');
+  const [geocoding,   setGeocoding]   = useState(false);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -33,6 +36,8 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     setTel(vieta.tel                || '');
     setPavadinimas(vieta.zonaPavadinimas || '');
     setNoteOpen(!!(vieta.komentaras));
+    setCoordEdit(!vieta.lat);
+    setCoordInput('');
   }, [vieta.id]);
 
   useEffect(() => {
@@ -126,14 +131,61 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
         </div>
 
         {/* Coordinates row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-          <span style={{ ...T.micro, display: 'flex', alignItems: 'center', gap: 3 }}>
-            <MapPin size={11} color="#9aa0a6" />
-            {vieta.lat ? `${vieta.lat.toFixed(5)},  ${vieta.lng.toFixed(5)}` : 'Vieta nepridėta'}
-          </span>
-          <button onClick={() => onLocate?.(vieta)} style={relocateBtn}>
-            <Navigation size={11} />{vieta.lat ? 'Perkelti' : 'Žymėti'}
-          </button>
+        <div style={{ marginTop: 8 }}>
+          {/* Compact display when coords set and not editing */}
+          {vieta.lat && !coordEdit && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ ...T.micro, display: 'flex', alignItems: 'center', gap: 3 }}>
+                <MapPin size={11} color="#34a853" />
+                {vieta.lat.toFixed(5)}, {vieta.lng.toFixed(5)}
+              </span>
+              <div style={{ display: 'flex', gap: 5 }}>
+                <button onClick={() => setCoordEdit(true)} style={relocateBtn}>
+                  Keisti
+                </button>
+                <button onClick={() => onLocate?.(vieta)} style={relocateBtn}>
+                  <Navigation size={11} />Perkelti
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Edit / no-coords mode */}
+          {coordEdit && (
+            <CoordInput
+              coordInput={coordInput}
+              setCoordInput={setCoordInput}
+              geocoding={geocoding}
+              hasExisting={!!vieta.lat}
+              onCancel={() => { setCoordEdit(false); setCoordInput(''); }}
+              onPickMap={() => { setCoordEdit(false); onLocate?.(vieta); }}
+              onApply={async (raw) => {
+                // Try parse as coordinates first
+                const parsed = parseCoords(raw);
+                if (parsed) {
+                  await save('lat', parsed.lat); await save('lng', parsed.lng);
+                  setCoordEdit(false); setCoordInput('');
+                  return;
+                }
+                // Otherwise geocode as address
+                if (raw.trim().length < 3) return;
+                setGeocoding(true);
+                try {
+                  const res = await fetch(`/api/geocode-proxy?q=${encodeURIComponent(raw + ' Lietuva')}`);
+                  const data = await res.json();
+                  if (data?.[0]) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    await onUpdate(vieta.id, { lat, lng });
+                    setCoordEdit(false); setCoordInput('');
+                  } else {
+                    alert('Adresas nerastas. Bandyk tiksliau arba naudok koordinates.');
+                  }
+                } catch { alert('Klaida ieškant adreso.'); }
+                finally { setGeocoding(false); }
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -361,3 +413,77 @@ const relocateBtn = {
   border: '1px solid #e8eaed', background: 'white', color: '#5f6368', fontWeight: 500,
   fontFamily: 'system-ui, sans-serif',
 };
+
+// ── Coordinate parser (same logic as SkelbimosImport) ────────────────────────
+function parseCoords(raw) {
+  const s = raw.trim();
+  // Google Maps URL
+  let m = s.match(/@(5[3456]\.\d+),(2[0-6]\.\d+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  m = s.match(/[?&]q=(5[3456]\.\d+),(2[0-6]\.\d+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  // Decimal pair
+  const clean = s.replace(/[()[\]]/g, '');
+  const parts = clean.split(/[\s,]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    const a = parseFloat(parts[0]), b = parseFloat(parts[1]);
+    if (a >= 53.8 && a <= 56.5 && b >= 20.9 && b <= 26.9) return { lat: a, lng: b };
+    if (b >= 53.8 && b <= 56.5 && a >= 20.9 && a <= 26.9) return { lat: b, lng: a };
+  }
+  return null;
+}
+
+function CoordInput({ coordInput, setCoordInput, geocoding, hasExisting, onCancel, onPickMap, onApply }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', gap: 6,
+          border: '1px solid #e8eaed', borderRadius: 8, padding: '0 10px', background: '#fafafa',
+        }}>
+          <Search size={12} color="#c4c7cc" />
+          <input
+            value={coordInput}
+            onChange={e => setCoordInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && coordInput.trim() && onApply(coordInput)}
+            placeholder="Adresas arba 55.1234, 24.5678…"
+            autoFocus
+            style={{
+              flex: 1, border: 'none', outline: 'none', background: 'transparent',
+              padding: '8px 0', fontSize: 12, color: '#202124',
+              fontFamily: 'system-ui, sans-serif',
+            }}
+          />
+          {geocoding && <span style={{ fontSize: 11, color: '#9aa0a6' }}>…</span>}
+        </div>
+        <button
+          onClick={() => coordInput.trim() && onApply(coordInput)}
+          disabled={!coordInput.trim() || geocoding}
+          style={{
+            padding: '0 12px', borderRadius: 8, border: 'none',
+            background: '#1a73e8', color: 'white', fontSize: 12, fontWeight: 600,
+            cursor: 'pointer', opacity: coordInput.trim() && !geocoding ? 1 : 0.4,
+            fontFamily: 'system-ui, sans-serif', whiteSpace: 'nowrap',
+          }}
+        >OK</button>
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={onPickMap} style={{
+          flex: 1, padding: '5px', borderRadius: 7, fontSize: 11, cursor: 'pointer',
+          border: '1.5px dashed #e8eaed', background: 'white', color: '#5f6368',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+          fontFamily: 'system-ui, sans-serif',
+        }}>
+          <Navigation size={11} color="#1a73e8" />Žymėti žemėlapyje
+        </button>
+        {hasExisting && (
+          <button onClick={onCancel} style={{
+            padding: '5px 10px', borderRadius: 7, fontSize: 11, cursor: 'pointer',
+            border: '1px solid #e8eaed', background: 'white', color: '#9aa0a6',
+            fontFamily: 'system-ui, sans-serif',
+          }}>Atšaukti</button>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -55,6 +55,9 @@ export default function App() {
   const [locateVieta, setLocateVieta]     = useState(null);
   const [vietaStatusFilter, setVietaStatusFilter] = useState('aktyvios');
   const swipeStartY = useRef(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const pullStartY = useRef(null);
+  const pullDist = useRef(0);
 
   // Deep-link handlers
   useEffect(() => {
@@ -108,7 +111,7 @@ export default function App() {
   }, []);
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
-  const { vietos, addVieta, updateVieta, deleteVieta } = useVietos();
+  const { vietos, loading: vietosLoading, addVieta, updateVieta, deleteVieta, refresh: refreshVietos } = useVietos();
 
   const displayZones = useMemo(() => {
     if (activeTab !== 'vietoves' || !selectedApskritis) return [];
@@ -225,7 +228,35 @@ export default function App() {
     const showForm  = !!newVietaPos;
 
     return (
-      <div style={{ height: '100dvh', position: 'relative', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}>
+      <div
+        style={{ height: '100dvh', position: 'relative', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}
+        onTouchStart={e => { pullStartY.current = e.touches[0].clientY; pullDist.current = 0; }}
+        onTouchMove={e => {
+          if (pullStartY.current === null || sheetOpen || showPanel || showForm) return;
+          pullDist.current = e.touches[0].clientY - pullStartY.current;
+        }}
+        onTouchEnd={async () => {
+          if (pullDist.current > 80 && !refreshing) {
+            setRefreshing(true);
+            await refreshVietos();
+            setRefreshing(false);
+          }
+          pullStartY.current = null; pullDist.current = 0;
+        }}
+      >
+        {/* Pull-to-refresh indicator */}
+        {refreshing && (
+          <div style={{
+            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 1300, background: 'white', borderRadius: 20,
+            padding: '6px 14px', fontSize: 12, color: '#5f6368', fontWeight: 500,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <span style={{ display: 'inline-block', animation: 'spin 0.8s linear infinite' }}>↻</span>
+            Atnaujinama…
+          </div>
+        )}
         <SodybaMap
           items={[]}
           selected={null}

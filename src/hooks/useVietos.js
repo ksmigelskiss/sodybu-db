@@ -8,16 +8,17 @@ export function useVietos() {
   const [vietos, setVietos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const snap = await getDocs(collection(db, COL));
-        setVietos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const fetchVietos = useCallback(async () => {
+    setLoading(true);
+    try {
+      const snap = await getDocs(collection(db, COL));
+      setVietos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { fetchVietos(); }, [fetchVietos]);
 
   const addVieta = useCallback(async ({ lat, lng, statusas, komentaras, gyv_kodas, zonaPavadinimas, ...rest }) => {
     const data = {
@@ -44,5 +45,5 @@ export function useVietos() {
     setVietos(prev => prev.filter(v => v.id !== id));
   }, []);
 
-  return { vietos, loading, addVieta, updateVieta, deleteVieta };
+  return { vietos, loading, addVieta, updateVieta, deleteVieta, refresh: fetchVietos };
 }

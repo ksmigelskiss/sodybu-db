@@ -1,25 +1,38 @@
-import { useState, useEffect } from 'react';
-import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
 import PhotoStrip from './PhotoStrip.jsx';
 
-const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
+const ATTR_ICONS   = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
 const STATUS_ICONS = { nuvaziuoti: Car, aplankyta: Eye, atmesta: XCircle };
 
+// ── Typography scale ──────────────────────────────────────────────────────────
+const T = {
+  title:   { fontSize: 18, fontWeight: 700, color: '#202124', lineHeight: 1.2, fontFamily: 'system-ui, sans-serif' },
+  price:   { fontSize: 22, fontWeight: 800, color: '#b45309', letterSpacing: '-0.5px', fontFamily: 'system-ui, sans-serif' },
+  body:    { fontSize: 13, color: '#3c4043', lineHeight: 1.45, fontFamily: 'system-ui, sans-serif' },
+  caption: { fontSize: 12, color: '#5f6368', fontFamily: 'system-ui, sans-serif' },
+  micro:   { fontSize: 11, color: '#9aa0a6', fontFamily: 'system-ui, sans-serif' },
+  input:   { fontSize: 13, color: '#202124', fontFamily: 'system-ui, sans-serif' },
+};
+
 export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocate, mobile }) {
-  const [komentaras, setKomentaras] = useState(vieta.komentaras || '');
-  const [vardas, setVardas]         = useState(vieta.vardas || '');
-  const [tel, setTel]               = useState(vieta.tel || '');
+  const [komentaras,  setKomentaras]  = useState(vieta.komentaras  || '');
+  const [vardas,      setVardas]      = useState(vieta.vardas       || '');
+  const [tel,         setTel]         = useState(vieta.tel          || '');
   const [pavadinimas, setPavadinimas] = useState(vieta.zonaPavadinimas || '');
-  const [saving, setSaving]         = useState(false);
-  const [ogImage, setOgImage]       = useState(null);
+  const [saving,      setSaving]      = useState(false);
+  const [ogImage,     setOgImage]     = useState(null);
+  const [noteOpen,    setNoteOpen]    = useState(!!(vieta.komentaras));
+  const textareaRef = useRef(null);
 
   useEffect(() => {
-    setKomentaras(vieta.komentaras || '');
-    setVardas(vieta.vardas || '');
-    setTel(vieta.tel || '');
+    setKomentaras(vieta.komentaras  || '');
+    setVardas(vieta.vardas          || '');
+    setTel(vieta.tel                || '');
     setPavadinimas(vieta.zonaPavadinimas || '');
+    setNoteOpen(!!(vieta.komentaras));
   }, [vieta.id]);
 
   useEffect(() => {
@@ -31,8 +44,18 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
       .catch(() => {});
   }, [vieta.url]);
 
-  const th = vietaTheme(vieta.statusas);
+  // Auto-grow textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [komentaras, noteOpen]);
+
+  const th          = vietaTheme(vieta.statusas);
   const isSkelbimas = vieta.saltinis === 'skelbimas';
+  const heroPhoto   = vieta.nuotraukos?.[0] ?? ogImage ?? null;
+  const hasContact  = !isSkelbimas; // skelbimas shows contact in info block, not editable fields
 
   const handleStatus = async (key) => {
     const next = vieta.statusas === key ? null : key;
@@ -42,86 +65,124 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   };
 
   const toggleAttr = (key) => onUpdate(vieta.id, { [key]: !vieta[key] });
-  const save = (field, val) => onUpdate(vieta.id, { [field]: val || null });
+  const save       = (field, val) => onUpdate(vieta.id, { [field]: val || null });
 
-  const containerStyle = mobile ? {
+  const wrap = mobile ? {
     position: 'fixed', bottom: 0, left: 0, right: 0,
-    background: 'white', borderRadius: '16px 16px 0 0',
-    boxShadow: '0 -2px 16px rgba(0,0,0,0.12)',
-    zIndex: 1200, maxHeight: '82dvh', overflowY: 'auto',
+    background: 'white', borderRadius: '20px 20px 0 0',
+    boxShadow: '0 -4px 32px rgba(0,0,0,0.16)',
+    zIndex: 1200, maxHeight: '92dvh', overflowY: 'auto',
+    display: 'flex', flexDirection: 'column',
   } : {
     position: 'absolute', bottom: 16, right: 16,
-    background: 'white', borderRadius: 12,
-    boxShadow: '0 2px 10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
-    width: 340, zIndex: 1000, maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+    background: 'white', borderRadius: 16,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)',
+    width: 360, zIndex: 1000, maxHeight: 'calc(100vh - 80px)',
+    overflowY: 'auto', display: 'flex', flexDirection: 'column',
   };
 
   return (
-    <div style={containerStyle} className={mobile ? 'sheet-slide-up' : undefined}>
-      {mobile && <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2, margin: '10px auto 0' }} />}
+    <div style={wrap} className={mobile ? 'sheet-slide-up' : undefined}>
+      {mobile && <div style={{ width: 40, height: 4, background: '#dadce0', borderRadius: 2, margin: '12px auto 0', flexShrink: 0 }} />}
 
-      {/* Header */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f3f4' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ flex: 1, marginRight: 8 }}>
-            <input
-              value={pavadinimas}
-              onChange={e => setPavadinimas(e.target.value)}
-              onBlur={() => save('zonaPavadinimas', pavadinimas.trim())}
-              placeholder={vieta.lat ? `${vieta.lat.toFixed(4)}, ${vieta.lng.toFixed(4)}` : 'Pavadinimas...'}
-              style={{
-                width: '100%', border: 'none', outline: 'none', background: 'transparent',
-                fontWeight: 600, fontSize: 14, color: '#202124', lineHeight: 1.3,
-                padding: 0, borderBottom: '1.5px solid transparent',
-                borderRadius: 0, cursor: 'text',
-              }}
-              onFocus={e => e.target.style.borderBottomColor = '#1a73e8'}
-              onBlurCapture={e => e.target.style.borderBottomColor = 'transparent'}
-            />
-            <div style={{ display: 'flex', gap: 6, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: th.color, fontWeight: 500, background: th.bg, borderRadius: 12, padding: '2px 8px' }}>
-                {th.label}
-              </span>
-              {isSkelbimas && (
-                <span style={{ fontSize: 11, color: '#e37400', fontWeight: 500, background: '#fef3c7', borderRadius: 12, padding: '2px 8px' }}>
-                  Skelbimas
-                </span>
-              )}
-            </div>
-          </div>
-          <button onClick={onClose} style={iconBtn}><X size={16} color="#5f6368" /></button>
+      {/* ── Hero ── */}
+      <div style={{ position: 'relative', flexShrink: 0, height: heroPhoto ? 200 : undefined }}>
+        {heroPhoto
+          ? <img src={heroPhoto} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
+          : <div style={{ height: 8 }} />
+        }
+        <button onClick={onClose} style={{
+          position: 'absolute', top: heroPhoto ? 12 : (mobile ? 6 : 12), right: 12,
+          background: heroPhoto ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.06)',
+          border: 'none', borderRadius: '50%',
+          width: 32, height: 32, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <X size={15} color={heroPhoto ? 'white' : '#5f6368'} />
+        </button>
+      </div>
+
+      {/* ── Header ── */}
+      <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
+        {/* Editable title */}
+        <input
+          value={pavadinimas}
+          onChange={e => setPavadinimas(e.target.value)}
+          onBlur={() => save('zonaPavadinimas', pavadinimas.trim())}
+          placeholder={vieta.lat ? `${vieta.lat.toFixed(4)}, ${vieta.lng.toFixed(4)}` : 'Pavadinimas…'}
+          style={{
+            width: '100%', border: 'none', outline: 'none', background: 'transparent',
+            borderBottom: '2px solid transparent', borderRadius: 0, padding: '0 0 2px',
+            ...T.title,
+          }}
+          onFocus={e => e.target.style.borderBottomColor = '#1a73e8'}
+          onBlurCapture={e => e.target.style.borderBottomColor = 'transparent'}
+        />
+
+        {/* Status badges */}
+        <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Badge color={th.color} bg={th.bg}>{th.label}</Badge>
+          {isSkelbimas && <Badge color="#b45309" bg="#fef3c7">Skelbimas</Badge>}
         </div>
 
+        {/* Coordinates row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-          <span style={{ fontSize: 11, color: '#9aa0a6', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <MapPin size={11} />
-            {vieta.lat ? `${vieta.lat.toFixed(5)}, ${vieta.lng.toFixed(5)}` : 'Vieta nepridėta'}
+          <span style={{ ...T.micro, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <MapPin size={11} color="#9aa0a6" />
+            {vieta.lat ? `${vieta.lat.toFixed(5)},  ${vieta.lng.toFixed(5)}` : 'Vieta nepridėta'}
           </span>
-          <button onClick={() => onLocate?.(vieta)} style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '3px 8px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
-            border: '1px solid #dadce0', background: 'white', color: '#5f6368', fontWeight: 500,
-          }}>
-            <Navigation size={11} />
-            {vieta.lat ? 'Perkelti' : 'Žymėti'}
+          <button onClick={() => onLocate?.(vieta)} style={relocateBtn}>
+            <Navigation size={11} />{vieta.lat ? 'Perkelti' : 'Žymėti'}
           </button>
         </div>
       </div>
 
-      {/* Skelbimas info */}
-      {isSkelbimas && (vieta.url || vieta.kaina || vieta.tel || vieta.vardas) && (
-        <div style={{ borderBottom: '1px solid #f1f3f4', overflow: 'hidden' }}>
-          {ogImage && <img src={ogImage} alt="" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />}
-          <div style={{ padding: '10px 16px', background: '#fffbf0', display: 'flex', flexDirection: 'column', gap: 5 }}>
-            {vieta.kaina && <span style={{ fontSize: 14, fontWeight: 700, color: '#e37400' }}>{vieta.kaina.toLocaleString('lt-LT')} €</span>}
-            {vieta.vardas && <span style={{ fontSize: 12, color: '#202124', display: 'flex', alignItems: 'center', gap: 6 }}><User size={12} color="#9aa0a6" />{vieta.vardas}</span>}
-            {vieta.tel && <a href={`tel:${vieta.tel}`} style={{ fontSize: 12, color: '#202124', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}><Phone size={12} color="#9aa0a6" />{vieta.tel}</a>}
-            {vieta.url && <a href={vieta.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}><ExternalLink size={12} />Atidaryti skelbimą</a>}
+      {/* ── Skelbimas info block ── */}
+      {isSkelbimas && (vieta.kaina || vieta.tel || vieta.vardas || vieta.url) && (
+        <div style={{ padding: '12px 16px', background: '#fffbf0', borderBottom: '1px solid #f1f3f4', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+          {vieta.kaina && (
+            <span style={T.price}>{vieta.kaina.toLocaleString('lt-LT')} €</span>
+          )}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 20px' }}>
+            {vieta.vardas && (
+              <span style={{ ...T.caption, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <User size={12} color="#9aa0a6" />{vieta.vardas}
+              </span>
+            )}
+            {vieta.tel && (
+              <a href={`tel:${vieta.tel}`} style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Phone size={12} color="#9aa0a6" />{vieta.tel}
+              </a>
+            )}
+            {vieta.url && (
+              <a href={vieta.url} target="_blank" rel="noreferrer" style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <ExternalLink size={12} />Atidaryti skelbimą
+              </a>
+            )}
           </div>
         </div>
       )}
 
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* ── Body ── */}
+      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+        {/* Navigate CTA — top of body if has location */}
+        {vieta.lat && (
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${vieta.lat},${vieta.lng}`}
+            target="_blank" rel="noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              padding: '12px', borderRadius: 12,
+              background: '#1a73e8', color: 'white',
+              textDecoration: 'none', fontSize: 14, fontWeight: 700,
+              letterSpacing: '0.1px',
+            }}
+          >
+            <Navigation size={16} />Važiuoti
+          </a>
+        )}
+
         {/* Status buttons */}
         <div style={{ display: 'flex', gap: 6 }}>
           {VIETA_KEYS.map(key => {
@@ -130,112 +191,173 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
             const Icon = STATUS_ICONS[key];
             return (
               <button key={key} disabled={saving} onClick={() => handleStatus(key)} style={{
-                flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 500,
-                border: `1.5px solid ${active ? t.color : '#dadce0'}`,
-                background: active ? t.bg : 'white',
+                flex: 1, height: 40, borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                border: `1.5px solid ${active ? t.color : '#e8eaed'}`,
+                background: active ? t.bg : '#fafafa',
                 color: active ? t.color : '#5f6368',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+                transition: 'all 0.12s',
+                fontFamily: 'system-ui, sans-serif',
               }}>
-                <Icon size={12} />{t.label}
+                <Icon size={14} />
+                <span style={{ fontSize: 10, fontWeight: 600 }}>{t.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Attrs */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {/* Nature attrs — 2×2 grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
           {VIETA_ATTRS.map(({ key, label }) => {
             const Icon = ATTR_ICONS[key];
             const active = vieta[key];
             return (
               <button key={key} onClick={() => toggleAttr(key)} style={{
-                padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
-                border: `1.5px solid ${active ? '#1a73e8' : '#dadce0'}`,
-                background: active ? '#e8f0fe' : 'white',
+                padding: '7px 10px', borderRadius: 10, fontSize: 12, cursor: 'pointer',
+                border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
+                background: active ? '#e8f0fe' : '#fafafa',
                 color: active ? '#1a73e8' : '#5f6368',
                 fontWeight: active ? 600 : 400,
-                display: 'flex', alignItems: 'center', gap: 5,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all 0.12s',
+                fontFamily: 'system-ui, sans-serif',
               }}>
-                {Icon && <Icon size={11} />}{label}
+                {Icon && <Icon size={13} />}{label}
               </button>
             );
           })}
         </div>
 
-        {/* Contact */}
-        <div style={{ display: 'flex', gap: 6 }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <User size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input value={vardas} onChange={e => setVardas(e.target.value)} onBlur={() => save('vardas', vardas.trim())} placeholder="Vardas" style={{ ...field, paddingLeft: 28 }} />
+        {/* Contact fields — only for non-skelbimas */}
+        {hasContact && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <InputField icon={<User size={13} color="#c4c7cc" />} placeholder="Vardas"
+              value={vardas} onChange={setVardas} onBlur={() => save('vardas', vardas.trim())} />
+            <InputField icon={<Phone size={13} color="#c4c7cc" />} placeholder="Tel." type="tel"
+              value={tel} onChange={setTel} onBlur={() => save('tel', tel.trim())} />
           </div>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Phone size={13} color="#9aa0a6" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input value={tel} onChange={e => setTel(e.target.value)} onBlur={() => save('tel', tel.trim())} placeholder="Tel." type="tel" style={{ ...field, paddingLeft: 28 }} />
-          </div>
+        )}
+
+        {/* Notes — collapsible, auto-grow */}
+        <div>
+          <button
+            onClick={() => setNoteOpen(o => !o)}
+            style={{
+              width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '4px 0', marginBottom: noteOpen ? 6 : 0,
+            }}
+          >
+            <span style={{ ...T.micro, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: komentaras ? '#3c4043' : '#9aa0a6' }}>
+              {komentaras ? 'Komentaras' : 'Pridėti komentarą'}
+            </span>
+            {noteOpen ? <ChevronUp size={14} color="#9aa0a6" /> : <ChevronDown size={14} color="#9aa0a6" />}
+          </button>
+          {noteOpen && (
+            <textarea
+              ref={textareaRef}
+              value={komentaras}
+              onChange={e => { setKomentaras(e.target.value); }}
+              onBlur={() => save('komentaras', komentaras)}
+              placeholder="Komentaras…"
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box', resize: 'none', overflow: 'hidden',
+                padding: '10px 12px', lineHeight: 1.55, borderRadius: 10,
+                border: '1px solid #e8eaed', outline: 'none', background: '#fafafa',
+                ...T.input,
+              }}
+            />
+          )}
         </div>
 
-        {/* Komentaras */}
-        <textarea value={komentaras} onChange={e => setKomentaras(e.target.value)} onBlur={() => save('komentaras', komentaras)} placeholder="Komentaras..." rows={2} style={{ ...field, width: '100%', resize: 'vertical' }} />
+        {/* Separator */}
+        <div style={{ height: 1, background: '#f1f3f4', margin: '0 -16px' }} />
 
-        {/* Geo links */}
-        {vieta.lat && (
-          <>
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${vieta.lat},${vieta.lng}`}
-              target="_blank" rel="noreferrer"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                width: '100%', padding: '9px', borderRadius: 8,
-                background: '#1a73e8', color: 'white',
-                textDecoration: 'none', fontSize: 13, fontWeight: 600,
-              }}
-            >
-              <Navigation size={14} />Važiuoti
-            </a>
-            <div style={{ display: 'flex', gap: 6 }}>
+        {/* Geo links + delete in one clean row */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {vieta.lat && (
+            <>
               <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} label="Geoportal" />
               <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} label="Etomesto" />
-            </div>
-          </>
-        )}
+            </>
+          )}
+          {!vieta.lat && <div style={{ flex: 1 }} />}
+          <button
+            onClick={() => { if (window.confirm('Ištrinti šią sodybą?')) onDelete(vieta.id); }}
+            style={{
+              padding: '6px 10px', borderRadius: 8, flexShrink: 0,
+              border: '1px solid #fad2cf', background: '#fce8e6', color: '#c5221f',
+              fontSize: 12, cursor: 'pointer', fontWeight: 500,
+              display: 'flex', alignItems: 'center', gap: 5,
+              fontFamily: 'system-ui, sans-serif',
+            }}
+          >
+            <Trash2 size={12} />Ištrinti
+          </button>
+        </div>
 
         {/* Photos */}
         <PhotoStrip vieta={vieta} onUpdate={onUpdate} />
-
-        {/* Delete */}
-        <button onClick={() => { if (window.confirm('Ištrinti šią sodybą?')) onDelete(vieta.id); }} style={{
-          width: '100%', padding: '8px', borderRadius: 8,
-          border: '1px solid #fad2cf', background: '#fce8e6', color: '#c5221f',
-          fontSize: 12, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}>
-          <Trash2 size={13} />Ištrinti
-        </button>
       </div>
     </div>
   );
 }
 
-const iconBtn = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  flexShrink: 0,
-};
+/* ── Sub-components ── */
 
-const field = {
-  width: '100%', boxSizing: 'border-box',
-  border: '1px solid #dadce0', borderRadius: 8, padding: '8px 10px',
-  fontSize: 16, color: '#202124', background: 'white', outline: 'none',
-};
+function Badge({ color, bg, children }) {
+  return (
+    <span style={{
+      fontSize: 11, fontWeight: 600, color, background: bg,
+      borderRadius: 20, padding: '3px 10px',
+      fontFamily: 'system-ui, sans-serif',
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function InputField({ icon, placeholder, value, onChange, onBlur, type }) {
+  return (
+    <div style={{
+      flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+      border: '1px solid #e8eaed', borderRadius: 10, padding: '0 12px',
+      background: '#fafafa', minHeight: 40,
+    }}>
+      {icon}
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        type={type}
+        style={{
+          flex: 1, border: 'none', outline: 'none', background: 'transparent',
+          padding: '10px 0', fontSize: 13, color: '#202124',
+          fontFamily: 'system-ui, sans-serif',
+        }}
+      />
+    </div>
+  );
+}
 
 function GeoLink({ href, label }) {
   return (
     <a href={href} target="_blank" rel="noreferrer" style={{
       flex: 1, textAlign: 'center', background: '#f8f9fa', borderRadius: 8,
-      padding: '7px', textDecoration: 'none', color: '#5f6368', fontSize: 11, fontWeight: 500,
+      padding: '7px 4px', textDecoration: 'none', color: '#5f6368', fontSize: 11, fontWeight: 500,
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+      fontFamily: 'system-ui, sans-serif',
     }}>
-      <ExternalLink size={11} />{label}
+      <ExternalLink size={10} />{label}
     </a>
   );
 }
+
+const relocateBtn = {
+  display: 'flex', alignItems: 'center', gap: 4,
+  padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
+  border: '1px solid #e8eaed', background: 'white', color: '#5f6368', fontWeight: 500,
+  fontFamily: 'system-ui, sans-serif',
+};

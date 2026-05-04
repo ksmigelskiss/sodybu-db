@@ -1,0 +1,21 @@
+{
+  "name": "Sodybų paieška",
+  "short_name": "Sodybos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
+  "icons": [
+    { "src": "/app_icon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/app_icon.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "url": "share_url",
+      "text": "share_text",
+      "title": "share_title"
+    }
+  }
+}

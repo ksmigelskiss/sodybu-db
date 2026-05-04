@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, X, MapPin, Check, AlertCircle, Euro, Home, Ruler, Calendar, Phone, User, MessageSquare, Droplets, Waves, Apple, Trees } from 'lucide-react';
+import { Sparkles, X, MapPin, Check, AlertCircle, Euro, Home, Ruler, Calendar, Phone, User, MessageSquare, Droplets, Waves, Apple, Trees, ClipboardPaste, BookMarked } from 'lucide-react';
 import { VIETA_ATTRS } from '../lib/theme.js';
 
 const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
@@ -27,6 +27,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
   const [step, setStep]       = useState(() => initialExtracted ? 'preview' : initialText.length > 100 ? 'analyzing' : 'url');
   // 'url' → 'analyzing' → 'blocked' → 'preview' | 'saving'
   const [url]                 = useState(initialUrl);
+  const [urlInput, setUrlInput] = useState(initialUrl || '');
   const [error, setError]     = useState(null);
   const [geocoding, setGeocoding]   = useState(false);
 
@@ -46,6 +47,10 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
   const [nuotrauka, setNuotrauka]     = useState(initialExtracted?._nuotrauka ?? '');
   const [coordEdit, setCoordEdit]     = useState(false);
   const [coordInput, setCoordInput]   = useState('');
+  const [pastedText, setPastedText]   = useState('');
+  const [showBm, setShowBm]           = useState(false);
+
+  const handleAnalyzeText = () => analyze(urlInput, pastedText);
 
   // Auto-start if we arrived with text from bookmarklet
   useEffect(() => {
@@ -104,7 +109,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
     setStep('saving');
     await onSave({
       saltinis: 'skelbimas',
-      url: url.trim() || null,
+      url: urlInput.trim() || null,
       kaina: kaina ? Number(kaina) : null,
       vardas: extracted?.vardas || null,
       tel: extracted?.tel || null,
@@ -150,10 +155,51 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
 
         <div style={{ padding: '16px' }}>
 
-          {/* ── STEP: url — setup guide ── */}
+          {/* ── STEP: url ── */}
           {step === 'url' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+              {/* Primary: paste URL */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#202124' }}>
+                  Įklijuok skelbimo nuorodą:
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    value={urlInput}
+                    onChange={e => setUrlInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && urlInput.trim() && analyze(urlInput, '')}
+                    placeholder="https://www.aruodas.lt/..."
+                    autoFocus
+                    style={{
+                      flex: 1, border: '1.5px solid #e8eaed', borderRadius: 10,
+                      padding: '10px 12px', fontSize: 13, color: '#202124',
+                      outline: 'none', background: 'white', fontFamily: 'system-ui, sans-serif',
+                    }}
+                    onFocus={e => e.target.style.borderColor = '#1a73e8'}
+                    onBlur={e => e.target.style.borderColor = '#e8eaed'}
+                  />
+                  <button
+                    onClick={() => urlInput.trim() && analyze(urlInput, '')}
+                    disabled={!urlInput.trim()}
+                    style={{ ...btnPri, flex: 'none', padding: '0 16px', opacity: urlInput.trim() ? 1 : 0.4 }}
+                  >
+                    <Sparkles size={14} />AI
+                  </button>
+                </div>
+                {error && <div style={{ fontSize: 12, color: '#c5221f' }}>{error}</div>}
+              </div>
+
+              {/* Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ flex: 1, height: 1, background: '#f1f3f4' }} />
+                <span style={{ fontSize: 11, color: '#9aa0a6' }}>arba naudok automatinį sprendimą</span>
+                <div style={{ flex: 1, height: 1, background: '#f1f3f4' }} />
+              </div>
+
+              {/* Secondary: bookmarklet / shortcut */}
               {mobile ? <IosShortcutGuide /> : <BookmarkletGuide bm={BOOKMARKLET} />}
+
               <button onClick={onCancel} style={btnSec}>Uždaryti</button>
             </div>
           )}

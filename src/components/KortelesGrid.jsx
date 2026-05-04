@@ -36,7 +36,8 @@ export default function KortelesGrid({ vietos, selectedId, onSelect }) {
 function KortelesCard({ vieta, selected, onClick }) {
   const th = vietaTheme(vieta.statusas);
   const cover = vieta.nuotraukos?.[0] ?? null;
-  const label = apskritisLabel(vieta.lat, vieta.lng) ?? 'Vieta?';
+  const hasLocation = !!(vieta.lat && vieta.lng);
+  const label = hasLocation ? (apskritisLabel(vieta.lat, vieta.lng) ?? 'Lietuva') : null;
   const activeAttrs = VIETA_ATTRS.filter(a => vieta[a.key]).map(a => a.label);
 
   return (
@@ -78,8 +79,13 @@ function KortelesCard({ vieta, selected, onClick }) {
       {/* Info */}
       <div style={{ padding: '7px 8px 8px' }}>
         <div style={{ fontWeight: 600, fontSize: 12, color: '#202124', lineHeight: 1.3 }}>
-          {vieta.zonaPavadinimas || `${label} apskr.`}
+          {vieta.zonaPavadinimas || (label ? `${label} apskr.` : '')}
         </div>
+        {!hasLocation && (
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#e37400', marginTop: 2 }}>
+            📍 Vieta nepridėta
+          </div>
+        )}
 
         <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
           <span style={{

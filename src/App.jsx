@@ -345,15 +345,14 @@ export default function App() {
                   </div>
                 </div>
               )}
-              {sheetOpen && (
-                <div style={{ overflowY: 'auto', flex: 1 }}>
-                  {displayVietos.length === 0
-                    ? <EmptyState primary={vietos.length === 0} />
-                    : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id}
-                        onSelect={v => { handleSelectVieta(v); setSheetOpen(false); }} />
-                  }
-                </div>
-              )}
+              {/* Always mounted — overflow:hidden on parent hides when sheet closed */}
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {displayVietos.length === 0
+                  ? <EmptyState primary={vietos.length === 0} />
+                  : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id}
+                      onSelect={v => { handleSelectVieta(v); setSheetOpen(false); }} />
+                }
+              </div>
             </div>
           </>
         )}
@@ -463,29 +462,30 @@ export default function App() {
           <ZonuFilters filters={filters} onChange={setFilters} />
         )}
 
-        {/* List */}
+        {/* List — KortelesGrid stays mounted (display:none) to avoid image reload */}
         <div style={{ overflowY: 'auto', flex: 1 }}>
-          {activeTab === 'sodybos' && (
-            displayVietos.length === 0
+          <div style={{ display: activeTab === 'sodybos' ? undefined : 'none' }}>
+            {displayVietos.length === 0
               ? <EmptyState primary={vietos.length === 0} />
-              : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id} onSelect={handleSelectVieta} />
-          )}
-          {activeTab === 'vietoves' && selectedApskritis && (
-            <>
-              {loading && <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>Kraunama...</div>}
-              {!loading && displayZones.length === 0 && (
-                <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>Visos vietovės peržiūrėtos.</div>
-              )}
-              {displayZones.map(s => (
-                <SodybaCard key={s.id} sodyba={s} selected={selected?.id === s.id} onClick={() => handleSelectZone(s)} />
-              ))}
-            </>
-          )}
-          {activeTab === 'vietoves' && !selectedApskritis && (
-            <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>
-              Spustelėkite apskritį žemėlapyje
-            </div>
-          )}
+              : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id} onSelect={handleSelectVieta} />}
+          </div>
+          <div style={{ display: activeTab === 'vietoves' ? undefined : 'none' }}>
+            {selectedApskritis ? (
+              <>
+                {loading && <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>Kraunama...</div>}
+                {!loading && displayZones.length === 0 && (
+                  <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>Visos vietovės peržiūrėtos.</div>
+                )}
+                {displayZones.map(s => (
+                  <SodybaCard key={s.id} sodyba={s} selected={selected?.id === s.id} onClick={() => handleSelectZone(s)} />
+                ))}
+              </>
+            ) : (
+              <div style={{ padding: 24, textAlign: 'center', color: C.textTer, fontSize: 13 }}>
+                Spustelėkite apskritį žemėlapyje
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

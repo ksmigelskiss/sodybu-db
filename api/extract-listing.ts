@@ -67,10 +67,37 @@ function mode(arr: string[]): string {
   return Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
 }
 
-function extractOgImage(html: string): string | null {
-  return html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
-    ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
-    ?? null;
+function resolveUrl(src: string, base?: string): string {
+  if (!base || src.startsWith('http') || src.startsWith('//')) return src;
+  try { return new URL(src, base).href; } catch { return src; }
+}
+
+/** Tries og:image → twitter:image → first real <img> src (resolved to absolute). */
+function extractOgImage(html: string, base?: string): string | null {
+  // 1. og:image meta
+  const og =
+    html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1];
+  if (og) return resolveUrl(og, base);
+
+  // 2. twitter:image meta
+  const tw =
+    html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i)?.[1];
+  if (tw) return resolveUrl(tw, base);
+
+  // 3. First <img> that looks like a real photo (not logo/icon/pixel/sprite)
+  const SKIP = /logo|icon|avatar|pixel|1x1|sprite|track|banner|button|arrow|blank/i;
+  const imgRe = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = imgRe.exec(html)) !== null) {
+    const src = m[1];
+    if (SKIP.test(src)) continue;
+    if (!/\.(jpe?g|png|webp)(\?|$)/i.test(src) && !src.includes('/photos/') && !src.includes('/images/') && !src.includes('/img/')) continue;
+    return resolveUrl(src, base);
+  }
+
+  return null;
 }
 
 /** Strips HTML tags and collapses whitespace, but preserves coord hint at top */
@@ -114,7 +141,7 @@ async function fetchUrl(url: string): Promise<{ text: string; nuotrauka: string 
       return { blocked: true };
     }
 
-    return { text: htmlToText(html), nuotrauka: extractOgImage(html) };
+    return { text: htmlToText(html), nuotrauka: extractOgImage(html, url) };
   } catch {
     return { blocked: true };
   }
@@ -207,7 +234,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // The page is already loaded in the user's real browser — Cloudflare already passed.
   if (html && html.length > 200) {
     const truncated = html.slice(0, 300_000); // ~300KB max
-    nuotrauka = extractOgImage(truncated);
+    nuotrauka = extractOgImage(truncated, url);
     sourceText = htmlToText(truncated);
   }
 

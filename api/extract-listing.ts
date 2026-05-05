@@ -86,14 +86,30 @@ function extractOgImage(html: string, base?: string): string | null {
     html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i)?.[1];
   if (tw) return resolveUrl(tw, base);
 
-  // 3. First <img> that looks like a real photo (not logo/icon/pixel/sprite)
+  // 3. First <img> that looks like a real photo.
+  //    Many sites lazy-load: raw HTML has src=placeholder, real URL in data-src / data-lazy-src.
+  //    Check data-* attrs first, fall back to src.
   const SKIP = /logo|icon|avatar|pixel|1x1|sprite|track|banner|button|arrow|blank/i;
-  const imgRe = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = imgRe.exec(html)) !== null) {
-    const src = m[1];
+  const IS_PHOTO = /\.(jpe?g|png|webp)(\?|$)/i;
+  const IS_USEFUL_PATH = /\/(photos?|images?|img|uploads?|media|files?|gallery|listings?)\//i;
+
+  const imgTagRe = /<img([^>]+)>/gi;
+  let tagM: RegExpExecArray | null;
+  while ((tagM = imgTagRe.exec(html)) !== null) {
+    const attrs = tagM[1];
+    // Prefer lazy-load attributes over src (src is often a placeholder in raw HTML)
+    const srcMatch =
+      attrs.match(/\bdata-src=["']([^"']{8,})["']/i) ??
+      attrs.match(/\bdata-lazy(?:-src)?=["']([^"']{8,})["']/i) ??
+      attrs.match(/\bdata-original=["']([^"']{8,})["']/i) ??
+      attrs.match(/\bdata-url=["']([^"']{8,})["']/i) ??
+      attrs.match(/\bsrc=["']([^"']{8,})["']/i);
+    if (!srcMatch) continue;
+    const src = srcMatch[1];
+    // Skip obviously bad sources
+    if (src.startsWith('data:')) continue;
     if (SKIP.test(src)) continue;
-    if (!/\.(jpe?g|png|webp)(\?|$)/i.test(src) && !src.includes('/photos/') && !src.includes('/images/') && !src.includes('/img/')) continue;
+    if (!IS_PHOTO.test(src) && !IS_USEFUL_PATH.test(src)) continue;
     return resolveUrl(src, base);
   }
 

@@ -47,6 +47,7 @@ export default function SodybaMap({
   sidebarOpen,
   ctrlOffset = 0,
   onZoomChange,
+  onCenterChange,
   ltFlyTrigger = 0,
 }) {
   const containerRef         = useRef(null);
@@ -63,21 +64,25 @@ export default function SodybaMap({
   const featureLayersRef     = useRef([]);
   const featureCacheRef      = useRef(new Map());
   const onZoomChangeRef      = useRef(onZoomChange);
+  const onCenterChangeRef    = useRef(onCenterChange);
 
   const [isSatellite, setIsSatellite]           = useState(false);
   const [isCadastre, setIsCadastre]             = useState(false);
   const [featuresLoading, setFeaturesLoading]   = useState(false);
   const [featuresCount, setFeaturesCount]       = useState(null);
 
-  // Keep zoom callback ref fresh without re-subscribing
+  // Keep callbacks fresh without re-subscribing
   useEffect(() => { onZoomChangeRef.current = onZoomChange; }, [onZoomChange]);
+  useEffect(() => { onCenterChangeRef.current = onCenterChange; }, [onCenterChange]);
 
   // Init map
   useEffect(() => {
     if (mapRef.current) return;
     const map = L.map(containerRef.current, { zoomControl: false }).setView([55.3, 23.9], 7);
     LAYERS.map.addTo(map);
-    map.on('zoomend', () => onZoomChangeRef.current?.(map.getZoom()));
+    const fireCenter = () => { const c = map.getCenter(); onCenterChangeRef.current?.({ lat: c.lat, lng: c.lng }); };
+    map.on('zoomend', () => { onZoomChangeRef.current?.(map.getZoom()); fireCenter(); });
+    map.on('moveend', fireCenter);
     mapRef.current = map;
   }, []);
 
@@ -299,7 +304,7 @@ export default function SodybaMap({
     userMarkerRef.current = L.circleMarker([userPos.lat, userPos.lng], {
       radius: 8, color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.8,
     }).addTo(mapRef.current).bindTooltip('Jūs čia');
-    mapRef.current.flyTo([userPos.lat, userPos.lng], 11, { duration: 1 });
+    mapRef.current.flyTo([userPos.lat, userPos.lng], Math.max(mapRef.current.getZoom(), 15), { duration: 1 });
   }, [userPos]);
 
   return (

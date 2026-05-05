@@ -41,6 +41,7 @@ export default function App() {
   const [filters, setFilters]             = useState({ tipas: 'Viensėdis' });
   const [sidebarOpen, setSidebarOpen]     = useState(true);
   const [mapZoom, setMapZoom]             = useState(7);
+  const [mapCenter, setMapCenter]         = useState({ lat: 55.3, lng: 23.9 });
   const [ltFlyTrigger, setLtFlyTrigger]  = useState(0);
   const [sheetOpen, setSheetOpen]         = useState(false);
   const isMobile = useIsMobile();
@@ -426,12 +427,12 @@ export default function App() {
         sidebarOpen={sidebarOpen}
         ctrlOffset={sidebarOpen ? PANEL_W : 0}
         onZoomChange={setMapZoom}
+        onCenterChange={setMapCenter}
         ltFlyTrigger={ltFlyTrigger}
       />
 
-      {!isMobile && (() => {
-        const pos = selectedVieta?.lat ? selectedVieta : selected?.lat ? selected : null;
-        if (!pos || mapZoom <= 7) return null;
+      {!isMobile && mapZoom > 7 && (() => {
+        const pos = selectedVieta?.lat ? selectedVieta : selected?.lat ? selected : mapCenter;
         return (
           <LithuaniaMiniMap
             lat={pos.lat} lng={pos.lng}

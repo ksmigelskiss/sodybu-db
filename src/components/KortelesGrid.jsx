@@ -1,4 +1,4 @@
-import { House } from 'lucide-react';
+import { House, Star } from 'lucide-react';
 import { vietaTheme, VIETA_ATTRS } from '../lib/theme.js';
 import { APSKRITYS } from '../lib/apskritys.js';
 
@@ -12,7 +12,7 @@ function apskritisLabel(lat, lng) {
   return best?.label ?? null;
 }
 
-export default function KortelesGrid({ vietos, selectedId, onSelect }) {
+export default function KortelesGrid({ vietos, selectedId, onSelect, onToggleStar }) {
   if (vietos.length === 0) {
     return (
       <div style={{ padding: 24, textAlign: 'center', color: '#9aa0a6', fontSize: 13 }}>
@@ -28,12 +28,12 @@ export default function KortelesGrid({ vietos, selectedId, onSelect }) {
       gap: 8,
       padding: 8,
     }}>
-      {vietos.map(v => <KortelesCard key={v.id} vieta={v} selected={selectedId === v.id} onClick={() => onSelect(v)} />)}
+      {vietos.map(v => <KortelesCard key={v.id} vieta={v} selected={selectedId === v.id} onClick={() => onSelect(v)} onToggleStar={onToggleStar} />)}
     </div>
   );
 }
 
-function KortelesCard({ vieta, selected, onClick }) {
+function KortelesCard({ vieta, selected, onClick, onToggleStar }) {
   const th = vietaTheme(vieta.statusas);
   const cover = vieta.nuotraukos?.[0] ?? null;
   const hasLocation = !!(vieta.lat && vieta.lng);
@@ -73,6 +73,22 @@ function KortelesCard({ vieta, selected, onClick }) {
           }}>
             +{vieta.nuotraukos.length - 1}
           </span>
+        )}
+        {onToggleStar && (
+          <button
+            onClick={e => { e.stopPropagation(); onToggleStar(vieta); }}
+            title={vieta.zvaigzdute ? 'Pašalinti žvaigždutę' : 'Pažymėti žvaigždute'}
+            style={{
+              position: 'absolute', top: 4, left: 4,
+              background: vieta.zvaigzdute ? 'rgba(251,191,36,0.92)' : 'rgba(0,0,0,0.28)',
+              border: 'none', borderRadius: '50%',
+              width: 26, height: 26, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.15s',
+            }}
+          >
+            <Star size={13} color="white" fill={vieta.zvaigzdute ? 'white' : 'none'} />
+          </button>
         )}
       </div>
 

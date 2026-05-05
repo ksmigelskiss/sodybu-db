@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation, ChevronDown, ChevronUp, Search, Star } from 'lucide-react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
 import PhotoStrip from './PhotoStrip.jsx';
@@ -104,6 +104,20 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <X size={15} color={heroPhoto ? 'white' : '#5f6368'} />
+        </button>
+        <button
+          onClick={() => onUpdate(vieta.id, { zvaigzdute: !vieta.zvaigzdute })}
+          title={vieta.zvaigzdute ? 'Pašalinti žvaigždutę' : 'Pažymėti žvaigždute'}
+          style={{
+            position: 'absolute', top: heroPhoto ? 12 : (mobile ? 6 : 12), right: 52,
+            background: vieta.zvaigzdute ? 'rgba(251,191,36,0.92)' : heroPhoto ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.06)',
+            border: 'none', borderRadius: '50%',
+            width: 32, height: 32, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.15s',
+          }}
+        >
+          <Star size={15} color="white" fill={vieta.zvaigzdute ? 'white' : 'none'} />
         </button>
       </div>
 

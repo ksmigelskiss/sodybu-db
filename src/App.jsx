@@ -117,16 +117,22 @@ export default function App() {
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, loading: vietosLoading, addVieta, updateVieta, deleteVieta, refresh: refreshVietos } = useVietos();
-  const { portalai, addPortalas, updatePortalas, deletePortalas, ensurePortal } = usePortalai();
+  const { portalai, loading: portalaiLoading, addPortalas, updatePortalas, deletePortalas, ensurePortal } = usePortalai();
 
-  // One-time seed: scan all existing vietos and ensure their domains are in portalai
+  // One-time seed: wait for BOTH vietos and portalai to finish loading,
+  // then only create portals for domains that aren't already in the collection.
+  // This avoids the race condition where fetchAll() overwrites state mid-seed.
   const seededRef = useRef(false);
   useEffect(() => {
-    if (seededRef.current || vietosLoading || vietos.length === 0) return;
+    if (seededRef.current || vietosLoading || portalaiLoading) return;
+    if (vietos.length === 0) return;
     seededRef.current = true;
-    const domains = [...new Set(vietos.filter(v => v.url).map(v => extractDomain(v.url)).filter(Boolean))];
-    domains.forEach(d => ensurePortal(`https://${d}`));
-  }, [vietos, vietosLoading, ensurePortal]);
+    const existingDomains = new Set(portalai.map(p => p.domain));
+    const missing = [...new Set(
+      vietos.filter(v => v.url).map(v => extractDomain(v.url)).filter(Boolean)
+    )].filter(d => !existingDomains.has(d));
+    missing.forEach(d => ensurePortal(`https://${d}`));
+  }, [vietos, vietosLoading, portalai, portalaiLoading, ensurePortal]);
 
   const portalCounts = useMemo(() => {
     const c = {};
@@ -150,7 +156,15 @@ export default function App() {
     else if (vietaStatusFilter === 'rasta')     list = list.filter(v => !v.statusas && v.saltinis !== 'skelbimas');
     else if (vietaStatusFilter === 'skelbimas') list = list.filter(v => v.saltinis === 'skelbimas');
     else if (vietaStatusFilter)                 list = list.filter(v => v.statusas === vietaStatusFilter);
-    return list;
+    const toMs = v => v?.toMillis?.() ?? (v instanceof Date ? v.getTime() : 0);
+    return [...list].sort((a, b) => {
+      if (a.zvaigzdute && !b.zvaigzdute) return -1;
+      if (!a.zvaigzdute && b.zvaigzdute) return 1;
+      const aS = a.saltinis === 'skelbimas', bS = b.saltinis === 'skelbimas';
+      if (aS && !bS) return -1;
+      if (!aS && bS) return 1;
+      return toMs(b.created_at) - toMs(a.created_at);
+    });
   }, [vietos, vietaStatusFilter]);
 
   const locateMe = useCallback(() => {
@@ -375,7 +389,8 @@ export default function App() {
                 {displayVietos.length === 0
                   ? <EmptyState primary={vietos.length === 0} />
                   : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id}
-                      onSelect={v => { handleSelectVieta(v); setSheetOpen(false); }} />
+                      onSelect={v => { handleSelectVieta(v); setSheetOpen(false); }}
+                      onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })} />
                 }
               </div>
             </div>
@@ -515,7 +530,8 @@ export default function App() {
           <div style={{ display: activeTab === 'sodybos' ? undefined : 'none' }}>
             {displayVietos.length === 0
               ? <EmptyState primary={vietos.length === 0} />
-              : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id} onSelect={handleSelectVieta} />}
+              : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id} onSelect={handleSelectVieta}
+                  onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })} />}
           </div>
           <div style={{ display: activeTab === 'vietoves' ? undefined : 'none' }}>
             {selectedApskritis ? (

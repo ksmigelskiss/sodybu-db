@@ -23,6 +23,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const [tel,         setTel]         = useState(vieta.tel          || '');
   const [pavadinimas, setPavadinimas] = useState(vieta.zonaPavadinimas || '');
   const [saving,      setSaving]      = useState(false);
+  const [navOpen,     setNavOpen]     = useState(false);
   const [ogImage,     setOgImage]     = useState(null);
   const [noteOpen,    setNoteOpen]    = useState(!!(vieta.komentaras));
   const [coordEdit,   setCoordEdit]   = useState(!vieta.lat); // auto-open if no location
@@ -249,21 +250,56 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
       {/* ── Body ── */}
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-        {/* Navigate CTA — top of body if has location */}
+        {/* Navigate CTA */}
         {vieta.lat && (
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${vieta.lat},${vieta.lng}`}
-            target="_blank" rel="noreferrer"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              padding: '12px', borderRadius: 12,
-              background: '#1a73e8', color: 'white',
-              textDecoration: 'none', fontSize: 14, fontWeight: 700,
-              letterSpacing: '0.1px',
-            }}
-          >
-            <Navigation size={16} />Važiuoti
-          </a>
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setNavOpen(o => !o)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '12px', borderRadius: 12, border: 'none',
+                background: '#1a73e8', color: 'white',
+                fontSize: 14, fontWeight: 700, letterSpacing: '0.1px', cursor: 'pointer',
+              }}
+            >
+              <Navigation size={16} />Važiuoti
+            </button>
+            {navOpen && (
+              <>
+                <div onClick={() => setNavOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 100 }} />
+                <div style={{
+                  position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, right: 0,
+                  background: 'white', borderRadius: 12, zIndex: 101,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)',
+                  overflow: 'hidden',
+                }}>
+                  {[
+                    { label: 'Google Maps', emoji: '🗺️', url: `https://www.google.com/maps/dir/?api=1&destination=${vieta.lat},${vieta.lng}` },
+                    { label: 'Waze',        emoji: '🚗', url: `https://waze.com/ul?ll=${vieta.lat},${vieta.lng}&navigate=yes` },
+                    { label: 'Apple Maps',  emoji: '🍎', url: `https://maps.apple.com/?daddr=${vieta.lat},${vieta.lng}` },
+                  ].map((opt, i, arr) => (
+                    <a
+                      key={opt.label}
+                      href={opt.url} target="_blank" rel="noreferrer"
+                      onClick={() => setNavOpen(false)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '13px 16px', textDecoration: 'none',
+                        borderBottom: i < arr.length - 1 ? '1px solid #f1f3f4' : 'none',
+                        color: '#202124', fontSize: 14, fontWeight: 500,
+                        fontFamily: 'system-ui, sans-serif',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f8f9fa'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                    >
+                      <span style={{ fontSize: 18 }}>{opt.emoji}</span>
+                      {opt.label}
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         )}
 
         {/* Status buttons */}

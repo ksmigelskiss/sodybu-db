@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, X, MapPin, Check, AlertCircle, Euro, Home, Ruler, Calendar, Phone, User, MessageSquare, Droplets, Waves, Apple, Trees, ClipboardPaste, BookMarked, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, X, MapPin, Check, AlertCircle, Euro, Home, Ruler, Calendar, Phone, User, MessageSquare, Droplets, Waves, Apple, Trees, Anchor, Mountain, Sun, ClipboardPaste, BookMarked, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { VIETA_ATTRS, UZSIENIS_ATTRS } from '../lib/theme.js';
 import { detectSalis, SALYS } from '../lib/salis.js';
 
 const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees,
-                     prie_juros: Waves, gamtoje: Trees, baseinas: Droplets, kaimas: Home };
-
+                     prie_juros: Anchor, gamtoje: Mountain, baseinas: Sun, kaimas: Home };
 
 const T = {
   title:   { fontSize: 18, fontWeight: 700, color: '#202124', lineHeight: 1.2, fontFamily: 'system-ui, sans-serif' },

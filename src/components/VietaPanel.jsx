@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Home, Navigation, ChevronDown, ChevronUp, Search, Star } from 'lucide-react';
+import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Home, Anchor, Mountain, Sun, Navigation, ChevronDown, ChevronUp, Search, Star } from 'lucide-react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, UZSIENIS_ATTRS, vietaTheme } from '../lib/theme.js';
 import { SALYS, salisInfo } from '../lib/salis.js';
 import { geoportalUrl } from '../lib/coords.js';
 import PhotoStrip from './PhotoStrip.jsx';
 
 const ATTR_ICONS   = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees,
-                       prie_juros: Waves, gamtoje: Trees, baseinas: Droplets, kaimas: Home };
+                       prie_juros: Anchor, gamtoje: Mountain, baseinas: Sun, kaimas: Home };
 const STATUS_ICONS = { nuvaziuoti: Car, aplankyta: Eye, atmesta: XCircle };
 
 // ── Typography scale ──────────────────────────────────────────────────────────

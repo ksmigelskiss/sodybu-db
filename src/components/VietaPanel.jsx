@@ -114,7 +114,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           value={pavadinimas}
           onChange={e => setPavadinimas(e.target.value)}
           onBlur={() => save('zonaPavadinimas', pavadinimas.trim())}
-          placeholder={vieta.lat ? `${vieta.lat.toFixed(4)}, ${vieta.lng.toFixed(4)}` : 'Pavadinimas…'}
+          placeholder={vieta.lat && vieta.lng ? `${vieta.lat.toFixed(4)}, ${vieta.lng.toFixed(4)}` : 'Pavadinimas…'}
           style={{
             width: '100%', border: 'none', outline: 'none', background: 'transparent',
             borderBottom: '2px solid transparent', borderRadius: 0, padding: '0 0 2px',
@@ -133,7 +133,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
         {/* Coordinates row */}
         <div style={{ marginTop: 8 }}>
           {/* Compact display when coords set and not editing */}
-          {vieta.lat && !coordEdit && (
+          {vieta.lat && vieta.lng && !coordEdit && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ ...T.micro, display: 'flex', alignItems: 'center', gap: 3 }}>
                 <MapPin size={11} color="#34a853" />
@@ -163,7 +163,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
                 // Try parse as coordinates first
                 const parsed = parseCoords(raw);
                 if (parsed) {
-                  await save('lat', parsed.lat); await save('lng', parsed.lng);
+                  await onUpdate(vieta.id, { lat: parsed.lat, lng: parsed.lng });
                   setCoordEdit(false); setCoordInput('');
                   return;
                 }

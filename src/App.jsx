@@ -389,7 +389,7 @@ export default function App() {
 
       {!isMobile && (() => {
         const pos = selectedVieta?.lat ? selectedVieta : selected?.lat ? selected : null;
-        return pos ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} /> : null;
+        return pos ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} leftOffset={sidebarOpen ? PANEL_W + 12 : 12} /> : null;
       })()}
 
       {/* Left panel */}

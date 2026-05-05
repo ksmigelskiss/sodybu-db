@@ -327,24 +327,11 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           })}
         </div>
 
-        {/* Country selector */}
-        <div>
-          <div style={{ fontSize: 11, color: '#9aa0a6', marginBottom: 5, fontFamily: 'system-ui, sans-serif' }}>Šalis</div>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {SALYS.map(s => {
-              const active = (vieta.salis ?? 'lt') === s.code;
-              return (
-                <button key={s.code} onClick={() => onUpdate(vieta.id, { salis: s.code })} title={s.label} style={{
-                  padding: '4px 7px', borderRadius: 8, border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
-                  background: active ? '#e8f0fe' : 'white', cursor: 'pointer', fontSize: 15, lineHeight: 1,
-                  transition: 'all 0.12s',
-                }}>
-                  {s.flag}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Country selector — single flag, dropdown on click */}
+        <SalisDropdown
+          value={vieta.salis ?? 'lt'}
+          onChange={code => onUpdate(vieta.id, { salis: code })}
+        />
 
         {/* Attrs — LT or foreign depending on salis */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
@@ -445,6 +432,60 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
 }
 
 /* ── Sub-components ── */
+
+function SalisDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const current = SALYS.find(s => s.code === value) ?? SALYS[0];
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontSize: 11, color: '#9aa0a6', fontFamily: 'system-ui, sans-serif' }}>Šalis</span>
+      <button
+        onClick={() => setOpen(o => !o)}
+        title={current.label}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '4px 8px', borderRadius: 8,
+          border: '1.5px solid #e8eaed', background: 'white',
+          cursor: 'pointer', fontSize: 15, lineHeight: 1,
+          fontFamily: 'system-ui, sans-serif',
+        }}
+      >
+        {current.flag}
+        <span style={{ fontSize: 11, color: '#5f6368' }}>{current.label}</span>
+        <ChevronDown size={11} color="#9aa0a6" />
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 200 }} />
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 201,
+            background: 'white', borderRadius: 12,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)',
+            overflow: 'hidden', minWidth: 180,
+          }}>
+            {SALYS.map((s, i) => (
+              <button key={s.code} onClick={() => { onChange(s.code); setOpen(false); }} style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
+                background: s.code === value ? '#e8f0fe' : 'white',
+                borderBottom: i < SALYS.length - 1 ? '1px solid #f1f3f4' : 'none',
+                fontFamily: 'system-ui, sans-serif',
+              }}
+              onMouseEnter={e => { if (s.code !== value) e.currentTarget.style.background = '#f8f9fa'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = s.code === value ? '#e8f0fe' : 'white'; }}
+              >
+                <span style={{ fontSize: 18 }}>{s.flag}</span>
+                <span style={{ fontSize: 13, color: s.code === value ? '#1a73e8' : '#202124', fontWeight: s.code === value ? 600 : 400 }}>
+                  {s.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function Badge({ color, bg, children }) {
   return (

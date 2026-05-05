@@ -11,6 +11,7 @@ import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
 import { usePortalai, extractDomain } from './hooks/usePortalai.js';
 import PortalaiTab from './components/PortalaiTab.jsx';
+import { isLt, isForeign, salisInfo, SALYS } from './lib/salis.js';
 import { useIsMobile } from './hooks/useIsMobile.js';
 import { getApskritis } from './lib/apskritys.js';
 import { VIETA_THEME, VIETA_KEYS } from './lib/theme.js';
@@ -20,9 +21,10 @@ import LithuaniaMiniMap from './components/LithuaniaMiniMap.jsx';
 const PANEL_W = 380;
 
 const TABS = [
-  { id: 'sodybos',   label: 'Sodybos',   icon: LayoutGrid },
-  { id: 'vietoves',  label: 'Vietovės',  icon: MapPin },
-  { id: 'portalai',  label: 'Šaltiniai', icon: Globe },
+  { id: 'lietuva',   label: 'Lietuva',    flag: '🇱🇹' },
+  { id: 'uzsienis',  label: 'Užsienyje',  flag: '🌍' },
+  { id: 'vietoves',  label: 'Vietovės',   icon: MapPin },
+  { id: 'portalai',  label: 'Šaltiniai',  icon: Globe },
 ];
 
 const C = {
@@ -43,13 +45,15 @@ export default function App() {
   const [mapZoom, setMapZoom]             = useState(7);
   const [mapCenter, setMapCenter]         = useState({ lat: 55.3, lng: 23.9 });
   const [ltFlyTrigger, setLtFlyTrigger]  = useState(0);
+  const [euFlyTrigger, setEuFlyTrigger]  = useState(0);
   const [sheetOpen, setSheetOpen]         = useState(false);
   const isMobile = useIsMobile();
   const [selected, setSelected]           = useState(null);
   const [selectedVieta, setSelectedVieta] = useState(null);
   const [selectedApskritis, setSelectedApskritis] = useState(null);
   const [userPos, setUserPos]             = useState(null);
-  const [activeTab, setActiveTab]         = useState('sodybos');
+  const [activeTab, setActiveTab]         = useState('lietuva');
+  const [salisFilter, setSalisFilter]     = useState(null); // for uzsienis tab
   const [addMode, setAddMode]             = useState(false);
   const [newVietaPos, setNewVietaPos]     = useState(null);
   const [searchPos, setSearchPos]         = useState(null);
@@ -75,7 +79,7 @@ export default function App() {
       if (bmUrl || bmText) {
         setImportInitial({ url: bmUrl, text: bmText });
         setShowImport(true);
-        setActiveTab('sodybos');
+        setActiveTab('lietuva');
         window.history.replaceState(null, '', window.location.pathname);
       }
       return;
@@ -86,7 +90,7 @@ export default function App() {
         setImportExtracted({ ...data, _nuotrauka: nuotrauka });
         setImportInitial({ url: srcUrl ?? '', text: '' });
         setShowImport(true);
-        setActiveTab('sodybos');
+        setActiveTab('lietuva');
         window.history.replaceState(null, '', window.location.pathname);
       } catch {}
       return;
@@ -100,7 +104,7 @@ export default function App() {
           setImportExtracted({ ...data, _nuotrauka: nuotrauka });
           setImportInitial({ url: srcUrl ?? '', text: '' });
           setShowImport(true);
-          setActiveTab('sodybos');
+          setActiveTab('lietuva');
           window.history.replaceState(null, '', window.location.pathname);
           return;
         }
@@ -111,7 +115,7 @@ export default function App() {
     if (shareUrl.startsWith('http')) {
       setImportInitial({ url: shareUrl, text: '' });
       setShowImport(true);
-      setActiveTab('sodybos');
+      setActiveTab('lietuva');
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
@@ -153,10 +157,18 @@ export default function App() {
 
   const displayVietos = useMemo(() => {
     let list = vietos;
-    if      (vietaStatusFilter === 'aktyvios')  list = list.filter(v => v.statusas !== 'atmesta');
-    else if (vietaStatusFilter === 'rasta')     list = list.filter(v => !v.statusas && v.saltinis !== 'skelbimas');
-    else if (vietaStatusFilter === 'skelbimas') list = list.filter(v => v.saltinis === 'skelbimas');
-    else if (vietaStatusFilter)                 list = list.filter(v => v.statusas === vietaStatusFilter);
+    // Country split
+    if      (activeTab === 'lietuva')  list = list.filter(isLt);
+    else if (activeTab === 'uzsienis') list = list.filter(isForeign);
+    // Status filter (LT only; for foreign just show all)
+    if (activeTab === 'lietuva') {
+      if      (vietaStatusFilter === 'aktyvios')  list = list.filter(v => v.statusas !== 'atmesta');
+      else if (vietaStatusFilter === 'rasta')     list = list.filter(v => !v.statusas && v.saltinis !== 'skelbimas');
+      else if (vietaStatusFilter === 'skelbimas') list = list.filter(v => v.saltinis === 'skelbimas');
+      else if (vietaStatusFilter)                 list = list.filter(v => v.statusas === vietaStatusFilter);
+    }
+    // Country filter (uzsienis tab)
+    if (activeTab === 'uzsienis' && salisFilter) list = list.filter(v => v.salis === salisFilter);
     const toMs = v => v?.toMillis?.() ?? (v instanceof Date ? v.getTime() : 0);
     return [...list].sort((a, b) => {
       if (a.zvaigzdute && !b.zvaigzdute) return -1;
@@ -166,7 +178,7 @@ export default function App() {
       if (!aS && bS) return 1;
       return toMs(b.created_at) - toMs(a.created_at);
     });
-  }, [vietos, vietaStatusFilter]);
+  }, [vietos, activeTab, vietaStatusFilter, salisFilter]);
 
   const locateMe = useCallback(() => {
     navigator.geolocation.getCurrentPosition(pos => {
@@ -231,10 +243,17 @@ export default function App() {
     setSelected(null);
   }, [addVieta, selected, handleStatusChange]);
 
+  const handleTabChange = useCallback((id) => {
+    setActiveTab(id);
+    if (id === 'uzsienis') setEuFlyTrigger(n => n + 1);
+    if (id === 'lietuva')  setLtFlyTrigger(n => n + 1);
+  }, []);
+
   const handleAddSkelbimas = useCallback(async (data) => {
     const vieta = await addVieta(data);
-    if (data.url) ensurePortal(data.url); // fire-and-forget, no await needed
-    setActiveTab('sodybos');
+    if (data.url) ensurePortal(data.url);
+    const tab = isLt(data) ? 'lietuva' : 'uzsienis';
+    setActiveTab(tab);
     setSelectedVieta(vieta);
   }, [addVieta, ensurePortal]);
 
@@ -429,6 +448,7 @@ export default function App() {
         onZoomChange={setMapZoom}
         onCenterChange={setMapCenter}
         ltFlyTrigger={ltFlyTrigger}
+        euFlyTrigger={euFlyTrigger}
       />
 
       {!isMobile && mapZoom > 7 && (() => {
@@ -480,20 +500,24 @@ export default function App() {
           {TABS.map(tab => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const count = tab.id === 'sodybos'
-              ? vietos.filter(v => v.statusas !== 'atmesta').length
+            const count = tab.id === 'lietuva'
+              ? vietos.filter(v => isLt(v) && v.statusas !== 'atmesta').length
+              : tab.id === 'uzsienis'
+              ? (vietos.filter(isForeign).length || null)
               : tab.id === 'portalai'
               ? (portalai.length || null)
               : (selectedApskritis ? displayZones.length : null);
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+              <button key={tab.id} onClick={() => handleTabChange(tab.id)} style={{
                 flex: 1, padding: '10px 4px', border: 'none', cursor: 'pointer', background: 'none',
                 color: isActive ? C.primary : C.textSec,
                 borderBottom: `2px solid ${isActive ? C.primary : 'transparent'}`,
                 fontSize: 12, fontWeight: isActive ? 600 : 400,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
               }}>
-                <Icon size={13} />
+                {tab.flag
+                  ? <span style={{ fontSize: 14, lineHeight: 1 }}>{tab.flag}</span>
+                  : <Icon size={13} />}
                 {tab.label}
                 {count != null && count > 0 && (
                   <span style={{ background: isActive ? '#e8f0fe' : C.surfaceVar, color: isActive ? C.primary : C.textSec, borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 600 }}>{count}</span>
@@ -504,8 +528,11 @@ export default function App() {
         </div>
 
         {/* Filters */}
-        {activeTab === 'sodybos' && (
-          <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} />
+        {activeTab === 'lietuva' && (
+          <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos.filter(isLt)} />
+        )}
+        {activeTab === 'uzsienis' && (
+          <SalisFilter vietos={vietos.filter(isForeign)} value={salisFilter} onChange={setSalisFilter} />
         )}
         {activeTab === 'vietoves' && (
           <ApskritisBar selectedApskritis={selectedApskritis} count={displayZones.length} onClear={clearApskritis} />
@@ -528,11 +555,12 @@ export default function App() {
               counts={portalCounts}
             />
           )}
-          <div style={{ display: activeTab === 'sodybos' ? undefined : 'none' }}>
+          <div style={{ display: (activeTab === 'lietuva' || activeTab === 'uzsienis') ? undefined : 'none' }}>
             {displayVietos.length === 0
-              ? <EmptyState primary={vietos.length === 0} />
+              ? <EmptyState primary={vietos.length === 0} foreign={activeTab === 'uzsienis'} />
               : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id} onSelect={handleSelectVieta}
-                  onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })} />}
+                  onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })}
+                  foreign={activeTab === 'uzsienis'} />}
           </div>
           <div style={{ display: activeTab === 'vietoves' ? undefined : 'none' }}>
             {selectedApskritis ? (
@@ -558,7 +586,7 @@ export default function App() {
       <div style={{ position: 'absolute', bottom: 24, right: 12, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <FabBtn onClick={locateMe} title="Mano vieta"><Navigation size={18} /></FabBtn>
         <FabBtn onClick={() => setAddMode(true)} title="Žymėti sodybą žemėlapyje" primary><MapPin size={18} /></FabBtn>
-        <FabBtn onClick={() => { setImportInitial({ url: '', text: '' }); setImportExtracted(null); setShowImport(true); setActiveTab('sodybos'); }} title="Importuoti iš skelbimo"><Sparkles size={18} /></FabBtn>
+        <FabBtn onClick={() => { setImportInitial({ url: '', text: '' }); setImportExtracted(null); setShowImport(true); setActiveTab('lietuva'); }} title="Importuoti iš skelbimo"><Sparkles size={18} /></FabBtn>
       </div>
 
       {showImport && <SkelbimosImport onSave={async (data) => { await handleAddSkelbimas(data); setShowImport(false); setImportExtracted(null); }} onCancel={() => { setShowImport(false); setImportPickingMap(false); setAddMode(false); setImportExtracted(null); }} onPickOnMap={handleImportPickOnMap} initialUrl={importInitial.url} initialText={importInitial.text} initialExtracted={importExtracted} />}
@@ -603,12 +631,42 @@ function FabBtn({ onClick, title, primary, children }) {
   );
 }
 
-function EmptyState({ primary }) {
+function EmptyState({ primary, foreign }) {
   return (
     <div style={{ padding: 32, textAlign: 'center', color: C.textTer, fontSize: 13, lineHeight: 1.6 }}>
       {primary
-        ? <>Dar nėra išsaugotų sodybų.<br />Spausk <MapPin size={12} style={{ display: 'inline' }} /> ant žemėlapio arba importuok iš skelbimo.</>
+        ? foreign
+          ? <>Dar nėra užsienio NT įrašų.<br />Importuok skelbimą iš užsienio portalo.</>
+          : <>Dar nėra išsaugotų sodybų.<br />Spausk <MapPin size={12} style={{ display: 'inline' }} /> ant žemėlapio arba importuok iš skelbimo.</>
         : 'Nėra pagal filtrą.'}
+    </div>
+  );
+}
+
+function SalisFilter({ vietos, value, onChange }) {
+  const available = [...new Set(vietos.map(v => v.salis).filter(Boolean))];
+  if (available.length === 0) return <div style={{ height: 4 }} />;
+  return (
+    <div style={{ display: 'flex', gap: 5, padding: '6px 10px', borderBottom: `1px solid ${C.outline}`, background: C.surfaceVar, flexWrap: 'wrap' }}>
+      <button onClick={() => onChange(null)} style={{
+        padding: '3px 8px', borderRadius: 8, border: `1.5px solid ${!value ? C.primary : C.outline}`,
+        background: !value ? '#e8f0fe' : 'white', color: !value ? C.primary : C.textSec,
+        fontSize: 11, fontWeight: !value ? 600 : 400, cursor: 'pointer', fontFamily: 'system-ui, sans-serif',
+      }}>Visos</button>
+      {SALYS.filter(s => available.includes(s.code)).map(s => {
+        const active = value === s.code;
+        return (
+          <button key={s.code} onClick={() => onChange(active ? null : s.code)} style={{
+            padding: '3px 8px', borderRadius: 8, border: `1.5px solid ${active ? C.primary : C.outline}`,
+            background: active ? '#e8f0fe' : 'white', color: active ? C.primary : C.textSec,
+            fontSize: 12, cursor: 'pointer', fontFamily: 'system-ui, sans-serif',
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            <span>{s.flag}</span>
+            <span style={{ fontSize: 11, fontWeight: active ? 600 : 400 }}>{s.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

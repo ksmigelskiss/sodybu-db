@@ -1,6 +1,7 @@
 import { House, Star } from 'lucide-react';
-import { vietaTheme, VIETA_ATTRS } from '../lib/theme.js';
+import { vietaTheme, VIETA_ATTRS, UZSIENIS_ATTRS } from '../lib/theme.js';
 import { APSKRITYS } from '../lib/apskritys.js';
+import { salisInfo } from '../lib/salis.js';
 
 function apskritisLabel(lat, lng) {
   if (!lat) return null;
@@ -12,7 +13,7 @@ function apskritisLabel(lat, lng) {
   return best?.label ?? null;
 }
 
-export default function KortelesGrid({ vietos, selectedId, onSelect, onToggleStar }) {
+export default function KortelesGrid({ vietos, selectedId, onSelect, onToggleStar, foreign = false }) {
   if (vietos.length === 0) {
     return (
       <div style={{ padding: 24, textAlign: 'center', color: '#9aa0a6', fontSize: 13 }}>
@@ -28,17 +29,19 @@ export default function KortelesGrid({ vietos, selectedId, onSelect, onToggleSta
       gap: 8,
       padding: 8,
     }}>
-      {vietos.map(v => <KortelesCard key={v.id} vieta={v} selected={selectedId === v.id} onClick={() => onSelect(v)} onToggleStar={onToggleStar} />)}
+      {vietos.map(v => <KortelesCard key={v.id} vieta={v} selected={selectedId === v.id} onClick={() => onSelect(v)} onToggleStar={onToggleStar} foreign={foreign} />)}
     </div>
   );
 }
 
-function KortelesCard({ vieta, selected, onClick, onToggleStar }) {
+function KortelesCard({ vieta, selected, onClick, onToggleStar, foreign }) {
   const th = vietaTheme(vieta.statusas);
   const cover = vieta.nuotraukos?.[0] ?? null;
   const hasLocation = !!(vieta.lat && vieta.lng);
   const label = hasLocation ? (apskritisLabel(vieta.lat, vieta.lng) ?? 'Lietuva') : null;
-  const activeAttrs = VIETA_ATTRS.filter(a => vieta[a.key]).map(a => a.label);
+  const attrs = foreign ? UZSIENIS_ATTRS : VIETA_ATTRS;
+  const activeAttrs = attrs.filter(a => vieta[a.key]).map(a => a.label);
+  const salis = foreign ? salisInfo(vieta.salis) : null;
 
   return (
     <div
@@ -94,8 +97,9 @@ function KortelesCard({ vieta, selected, onClick, onToggleStar }) {
 
       {/* Info */}
       <div style={{ padding: '7px 8px 8px' }}>
-        <div style={{ fontWeight: 600, fontSize: 12, color: '#202124', lineHeight: 1.3 }}>
-          {vieta.zonaPavadinimas || (label ? `${label} apskr.` : '')}
+        <div style={{ fontWeight: 600, fontSize: 12, color: '#202124', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 4 }}>
+          {salis && <span style={{ fontSize: 14 }}>{salis.flag}</span>}
+          {vieta.zonaPavadinimas || (foreign ? (vieta.adresas || salis?.label || '') : (label ? `${label} apskr.` : ''))}
         </div>
         {!hasLocation && (
           <div style={{ fontSize: 10, fontWeight: 600, color: '#e37400', marginTop: 2 }}>

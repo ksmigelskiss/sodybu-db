@@ -30,6 +30,13 @@ export const VIETA_ATTRS = [
   { key: 'medziai',   label: 'Medžiai' },
 ];
 
+export const UZSIENIS_ATTRS = [
+  { key: 'prie_juros', label: 'Prie jūros' },
+  { key: 'gamtoje',    label: 'Gamtoje'    },
+  { key: 'baseinas',   label: 'Baseinas'   },
+  { key: 'kaimas',     label: 'Kaimas'     },
+];
+
 export const TABS = [
   { id: 'korteles',  label: 'Sodybos' },
   { id: 'browse',    label: 'Vietovės' },

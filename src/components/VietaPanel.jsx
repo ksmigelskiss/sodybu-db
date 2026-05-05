@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Navigation, ChevronDown, ChevronUp, Search, Star } from 'lucide-react';
-import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, vietaTheme } from '../lib/theme.js';
+import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Home, Navigation, ChevronDown, ChevronUp, Search, Star } from 'lucide-react';
+import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, UZSIENIS_ATTRS, vietaTheme } from '../lib/theme.js';
+import { SALYS, salisInfo } from '../lib/salis.js';
 import { geoportalUrl } from '../lib/coords.js';
 import PhotoStrip from './PhotoStrip.jsx';
 
-const ATTR_ICONS   = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
+const ATTR_ICONS   = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees,
+                       prie_juros: Waves, gamtoje: Trees, baseinas: Droplets, kaimas: Home };
 const STATUS_ICONS = { nuvaziuoti: Car, aplankyta: Eye, atmesta: XCircle };
 
 // ── Typography scale ──────────────────────────────────────────────────────────
@@ -325,9 +327,28 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           })}
         </div>
 
-        {/* Nature attrs — 2×2 grid */}
+        {/* Country selector */}
+        <div>
+          <div style={{ fontSize: 11, color: '#9aa0a6', marginBottom: 5, fontFamily: 'system-ui, sans-serif' }}>Šalis</div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {SALYS.map(s => {
+              const active = (vieta.salis ?? 'lt') === s.code;
+              return (
+                <button key={s.code} onClick={() => onUpdate(vieta.id, { salis: s.code })} title={s.label} style={{
+                  padding: '4px 7px', borderRadius: 8, border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
+                  background: active ? '#e8f0fe' : 'white', cursor: 'pointer', fontSize: 15, lineHeight: 1,
+                  transition: 'all 0.12s',
+                }}>
+                  {s.flag}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Attrs — LT or foreign depending on salis */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-          {VIETA_ATTRS.map(({ key, label }) => {
+          {((!vieta.salis || vieta.salis === 'lt') ? VIETA_ATTRS : UZSIENIS_ATTRS).map(({ key, label }) => {
             const Icon = ATTR_ICONS[key];
             const active = vieta[key];
             return (

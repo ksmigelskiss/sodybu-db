@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, X, MapPin, Check, AlertCircle, Euro, Home, Ruler, Calendar, Phone, User, MessageSquare, Droplets, Waves, Apple, Trees, ClipboardPaste, BookMarked, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
-import { VIETA_ATTRS } from '../lib/theme.js';
+import { VIETA_ATTRS, UZSIENIS_ATTRS } from '../lib/theme.js';
+import { detectSalis, SALYS } from '../lib/salis.js';
 
-const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
+const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees,
+                     prie_juros: Waves, gamtoje: Trees, baseinas: Droplets, kaimas: Home };
+
 
 const T = {
   title:   { fontSize: 18, fontWeight: 700, color: '#202124', lineHeight: 1.2, fontFamily: 'system-ui, sans-serif' },
@@ -47,6 +50,12 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
   const [komentaras, setKomentaras]   = useState(ie?.komentaras ?? '');
   const [lat, setLat]                 = useState(ie?.lat != null ? String(ie.lat) : '');
   const [lng, setLng]                 = useState(ie?.lng != null ? String(ie.lng) : '');
+  const [salis, setSalis]             = useState(() => {
+    const domain = initialUrl ? (() => { try { return new URL(initialUrl).hostname.replace(/^(www|m|mobile)\./,''); } catch { return null; } })() : null;
+    return domain ? detectSalis(domain) : 'lt';
+  });
+  const isLtSalis = salis === 'lt';
+  const activeAttrs = isLtSalis ? VIETA_ATTRS : UZSIENIS_ATTRS;
   const [attrs, setAttrs]             = useState(() => {
     const a = {};
     if (initialExtracted) VIETA_ATTRS.forEach(({ key }) => { if (initialExtracted[key]) a[key] = true; });
@@ -100,6 +109,13 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
       const a = {};
       VIETA_ATTRS.forEach(({ key }) => { if (d[key]) a[key] = true; });
       setAttrs(a);
+      // Auto-detect country from URL
+      if (useUrl) {
+        try {
+          const domain = new URL(useUrl).hostname.replace(/^(www|m|mobile)\./, '');
+          setSalis(detectSalis(domain));
+        } catch {}
+      }
       setStep('preview');
 
       if ((d.lat == null || d.lng == null) && d.adresas) {
@@ -119,6 +135,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
     setStep('saving');
     await onSave({
       saltinis: 'skelbimas',
+      salis,
       url: urlInput.trim() || null,
       kaina: kaina ? Number(kaina) : null,
       vardas: extracted?.vardas || null,
@@ -354,24 +371,42 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
               )}
             </div>
 
-            {/* Attr toggles — fixed strip above scroll, 4 columns */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5, padding: '8px 12px', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
-              {VIETA_ATTRS.map(({ key, label }) => {
-                const Icon = ATTR_ICONS[key];
-                const active = !!attrs[key];
-                return (
-                  <button key={key} onClick={() => setAttrs(a => ({ ...a, [key]: !a[key] }))} style={{
-                    padding: '6px 4px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
-                    border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
-                    background: active ? '#e8f0fe' : '#fafafa',
-                    color: active ? '#1a73e8' : '#5f6368', fontWeight: active ? 600 : 400,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                    transition: 'all 0.12s', fontFamily: 'system-ui, sans-serif',
-                  }}>
-                    {Icon && <Icon size={12} />}{label}
-                  </button>
-                );
-              })}
+            {/* Salis + Attr strip */}
+            <div style={{ borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
+              {/* Country selector */}
+              <div style={{ display: 'flex', gap: 3, padding: '6px 12px 4px', overflowX: 'auto' }}>
+                {SALYS.map(s => {
+                  const active = salis === s.code;
+                  return (
+                    <button key={s.code} onClick={() => setSalis(s.code)} title={s.label} style={{
+                      padding: '3px 6px', borderRadius: 7, border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
+                      background: active ? '#e8f0fe' : 'white', cursor: 'pointer', fontSize: 14, lineHeight: 1,
+                      flexShrink: 0, transition: 'all 0.12s',
+                    }}>
+                      {s.flag}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Attr toggles */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5, padding: '4px 12px 8px' }}>
+                {activeAttrs.map(({ key, label }) => {
+                  const Icon = ATTR_ICONS[key];
+                  const active = !!attrs[key];
+                  return (
+                    <button key={key} onClick={() => setAttrs(a => ({ ...a, [key]: !a[key] }))} style={{
+                      padding: '6px 4px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
+                      border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
+                      background: active ? '#e8f0fe' : '#fafafa',
+                      color: active ? '#1a73e8' : '#5f6368', fontWeight: active ? 600 : 400,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      transition: 'all 0.12s', fontFamily: 'system-ui, sans-serif',
+                    }}>
+                      {Icon && <Icon size={12} />}{label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Scrollable body — only secondary/editable details */}

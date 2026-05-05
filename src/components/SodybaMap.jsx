@@ -49,6 +49,7 @@ export default function SodybaMap({
   onZoomChange,
   onCenterChange,
   ltFlyTrigger = 0,
+  euFlyTrigger = 0,
 }) {
   const containerRef         = useRef(null);
   const mapRef               = useRef(null);
@@ -91,6 +92,12 @@ export default function SodybaMap({
     if (!ltFlyTrigger || !mapRef.current) return;
     mapRef.current.flyTo([55.3, 23.9], 7, { duration: 1.2 });
   }, [ltFlyTrigger]);
+
+  // Fly to Europe overview when switching to foreign tab
+  useEffect(() => {
+    if (!euFlyTrigger || !mapRef.current) return;
+    mapRef.current.flyTo([47, 10], 4, { duration: 1.2 });
+  }, [euFlyTrigger]);
 
   // Invalidate size after sidebar CSS transition (200ms)
   useEffect(() => {

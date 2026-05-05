@@ -601,7 +601,7 @@ function IosShortcutGuide() {
     {
       nr: 9,
       what: 'Add Action → "Open URL"',
-      result: 'Palikt kaip yra',
+      result: <>Spausti ant <strong>Open URL</strong> žodžių (ne URL reikšmę) → atsidarys papildomi nustatymai → <strong>Browser: Safari</strong> (ne Default Browser). Taip app visada atidarys Safari, ne Brave/Chrome.</>,
     },
     {
       nr: 10,
@@ -633,7 +633,10 @@ function IosShortcutGuide() {
       </div>
 
       <div style={{ fontSize: 12, color: '#1a73e8', fontWeight: 600, borderTop: '1px solid #ffe082', paddingTop: 8, lineHeight: 1.6 }}>
-        ✅ Naudojimas: Safari → skelbimas → Share ↑ → <em>Importuoti sodybą</em> → app atsidaro su duomenimis
+        ✅ Naudojimas: Safari → skelbimas → Share ↑ → <em>Importuoti sodybą</em> → atsidaro Safari su duomenimis
+      </div>
+      <div style={{ fontSize: 11, color: '#9aa0a6', lineHeight: 1.6 }}>
+        💡 Jei įsidiegeisi kaip home screen app — po importo galima perjungti į ją rankiniu būdu. iOS neleidžia shortcut'ams tiesiogiai atidaryti web app'ų.
       </div>
 
       {/* Manual steps collapsible */}

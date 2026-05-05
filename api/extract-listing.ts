@@ -279,9 +279,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const parsed = await callClaude(apiKey, url ?? '', sourceText);
-    // appUrl: deep-link back into the app with pre-filled data (used by iOS Shortcut)
+    // appUrl: deep-link back into the app with pre-filled data (used by iOS Shortcut).
+    // Uses x-safari-https:// scheme so iOS opens it in Safari regardless of the
+    // user's default browser (Brave, Chrome, etc.) — x-safari-https is a registered
+    // iOS URI scheme that routes to Safari.app.
     const payload = encodeURIComponent(JSON.stringify({ data: parsed, nuotrauka, url: url ?? '' }));
-    const appUrl = `https://sodybu-db.vercel.app/#shortcut/${payload}`;
+    const appUrl = `x-safari-https://sodybu-db.vercel.app/#shortcut/${payload}`;
     return res.json({ ok: true, data: parsed, nuotrauka, appUrl });
   } catch (e: any) {
     return res.status(500).json({ error: e.message });

@@ -123,12 +123,17 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
       kaina: kaina ? Number(kaina) : null,
       vardas: extracted?.vardas || null,
       tel: extracted?.tel || null,
+      adresas: adresas || null,
       komentaras: komentaras || null,
       lat: parseFloat(lat) || null,
       lng: parseFloat(lng) || null,
       statusas: null,
       pavadinimas: pavadinimas || null,
       nuotraukos: nuotrauka ? [nuotrauka] : [],
+      statybos_metai: extracted?.statybos_metai || null,
+      plotas_sklypas: extracted?.plotas_sklypas || null,
+      plotas_namas: extracted?.plotas_namas || null,
+      kambariai: extracted?.kambariai || null,
       ...attrs,
     });
   };
@@ -234,7 +239,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
           </>
         )}
 
-        {/* ── PREVIEW step: VietaPanel-style layout ── */}
+        {/* ── PREVIEW step ── */}
         {isPreview && extracted && (
           <>
             {mobile && <div style={{ width: 40, height: 4, background: '#dadce0', borderRadius: 2, margin: '12px auto 0', flexShrink: 0 }} />}
@@ -255,7 +260,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
               </button>
             </div>
 
-            {/* Header: editable title + badge + coords */}
+            {/* Header: title + badge row + coords */}
             <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
               <input
                 value={pavadinimas}
@@ -269,25 +274,47 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
                 onFocus={e => e.target.style.borderBottomColor = '#1a73e8'}
                 onBlur={e => e.target.style.borderBottomColor = 'transparent'}
               />
-              <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Badge + inline coords when found */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, gap: 8 }}>
                 <ImportBadge color="#b45309" bg="#fef3c7">Skelbimas</ImportBadge>
+                {lat && lng && !coordEdit && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {geocoding
+                      ? <span style={{ ...T.micro, color: '#1a73e8' }}>⏳ ieškoma…</span>
+                      : <>
+                          <MapPin size={11} color="#34a853" />
+                          <span style={{ ...T.micro, fontVariantNumeric: 'tabular-nums' }}>
+                            {parseFloat(lat).toFixed(5)}, {parseFloat(lng).toFixed(5)}
+                          </span>
+                          <button
+                            onClick={() => { setCoordEdit(true); setCoordInput(`${lat}, ${lng}`); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1a73e8', fontSize: 12, fontWeight: 600, padding: '2px 4px' }}
+                          >Keisti</button>
+                        </>
+                    }
+                  </div>
+                )}
+                {geocoding && (!lat || !lng) && <span style={{ ...T.micro, color: '#1a73e8' }}>⏳ ieškoma…</span>}
               </div>
-              <div style={{ marginTop: 8 }}>
-                <CoordSection
-                  lat={lat} lng={lng}
-                  geocoding={geocoding}
-                  coordEdit={coordEdit} setCoordEdit={setCoordEdit}
-                  coordInput={coordInput} setCoordInput={setCoordInput}
-                  onApply={(la, lo) => { setLat(la); setLng(lo); setCoordEdit(false); setCoordInput(''); }}
-                  onPickOnMap={onPickOnMap}
-                />
-              </div>
+              {/* Coord edit / add form — only when needed */}
+              {(!lat || !lng || coordEdit) && (
+                <div style={{ marginTop: 8 }}>
+                  <CoordSection
+                    lat={lat} lng={lng}
+                    geocoding={geocoding}
+                    coordEdit={coordEdit} setCoordEdit={setCoordEdit}
+                    coordInput={coordInput} setCoordInput={setCoordInput}
+                    onApply={(la, lo) => { setLat(la); setLng(lo); setCoordEdit(false); setCoordInput(''); }}
+                    onPickOnMap={onPickOnMap}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* fffbf0 price / contact strip */}
-            {(kaina || extracted.tel || extracted.vardas || urlInput) && (
-              <div style={{ padding: '12px 16px', background: '#fffbf0', borderBottom: '1px solid #f1f3f4', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                {kaina && (
+            {/* Cream strip: price + meta chips + contact */}
+            <div style={{ padding: '10px 16px 12px', background: '#fffbf0', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                {kaina ? (
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
                     <input
                       value={kaina}
@@ -296,8 +323,18 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
                     />
                     <span style={T.price}>€</span>
                   </div>
+                ) : <div />}
+                {(extracted.statybos_metai || extracted.plotas_sklypas || extracted.plotas_namas || extracted.kambariai) && (
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {extracted.statybos_metai && <Chip icon={<Calendar size={11} />}>{extracted.statybos_metai} m.</Chip>}
+                    {extracted.plotas_sklypas  && <Chip icon={<Ruler size={11} />}>{extracted.plotas_sklypas}</Chip>}
+                    {extracted.plotas_namas    && <Chip icon={<Home size={11} />}>{extracted.plotas_namas} m²</Chip>}
+                    {extracted.kambariai       && <Chip icon={<Home size={11} />}>{extracted.kambariai} kamb.</Chip>}
+                  </div>
                 )}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px' }}>
+              </div>
+              {(extracted.vardas || extracted.tel || urlInput) && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', marginTop: 8 }}>
                   {extracted.vardas && (
                     <span style={{ ...T.caption, display: 'flex', alignItems: 'center', gap: 5 }}>
                       <User size={12} color="#9aa0a6" />{extracted.vardas}
@@ -314,11 +351,31 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
                     </a>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {/* Body */}
-            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', flex: 1 }}>
+            {/* Attr toggles — fixed strip above scroll, 4 columns */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5, padding: '8px 12px', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
+              {VIETA_ATTRS.map(({ key, label }) => {
+                const Icon = ATTR_ICONS[key];
+                const active = !!attrs[key];
+                return (
+                  <button key={key} onClick={() => setAttrs(a => ({ ...a, [key]: !a[key] }))} style={{
+                    padding: '6px 4px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
+                    border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
+                    background: active ? '#e8f0fe' : '#fafafa',
+                    color: active ? '#1a73e8' : '#5f6368', fontWeight: active ? 600 : 400,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    transition: 'all 0.12s', fontFamily: 'system-ui, sans-serif',
+                  }}>
+                    {Icon && <Icon size={12} />}{label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Scrollable body — only secondary/editable details */}
+            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', flex: 1 }}>
 
               {/* Adresas */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid #e8eaed', borderRadius: 10, padding: '0 12px', background: '#fafafa', minHeight: 40 }}>
@@ -331,37 +388,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
                 />
               </div>
 
-              {/* Attr grid 2×2 — identical to VietaPanel */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {VIETA_ATTRS.map(({ key, label }) => {
-                  const Icon = ATTR_ICONS[key];
-                  const active = !!attrs[key];
-                  return (
-                    <button key={key} onClick={() => setAttrs(a => ({ ...a, [key]: !a[key] }))} style={{
-                      padding: '7px 10px', borderRadius: 10, fontSize: 12, cursor: 'pointer',
-                      border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
-                      background: active ? '#e8f0fe' : '#fafafa',
-                      color: active ? '#1a73e8' : '#5f6368', fontWeight: active ? 600 : 400,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      transition: 'all 0.12s', fontFamily: 'system-ui, sans-serif',
-                    }}>
-                      {Icon && <Icon size={13} />}{label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Meta chips: plotas, kambariai, statybos_metai */}
-              {(extracted.statybos_metai || extracted.plotas_sklypas || extracted.plotas_namas || extracted.kambariai) && (
-                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                  {extracted.statybos_metai && <Chip icon={<Calendar size={11} />}>{extracted.statybos_metai} m.</Chip>}
-                  {extracted.plotas_sklypas  && <Chip icon={<Ruler size={11} />}>{extracted.plotas_sklypas}</Chip>}
-                  {extracted.plotas_namas    && <Chip icon={<Home size={11} />}>{extracted.plotas_namas} m²</Chip>}
-                  {extracted.kambariai       && <Chip icon={<Home size={11} />}>{extracted.kambariai} kamb.</Chip>}
-                </div>
-              )}
-
-              {/* Komentaras — collapsible, identical to VietaPanel */}
+              {/* Komentaras — collapsible */}
               <div>
                 <button onClick={() => setNoteOpen(o => !o)} style={{
                   width: '100%', background: 'none', border: 'none', cursor: 'pointer',

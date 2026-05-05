@@ -190,28 +190,45 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
       </div>
 
       {/* ── Skelbimas info block ── */}
-      {isSkelbimas && (vieta.kaina || vieta.tel || vieta.vardas || vieta.url) && (
-        <div style={{ padding: '12px 16px', background: '#fffbf0', borderBottom: '1px solid #f1f3f4', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-          {vieta.kaina && (
-            <span style={T.price}>{vieta.kaina.toLocaleString('lt-LT')} €</span>
-          )}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 20px' }}>
-            {vieta.vardas && (
-              <span style={{ ...T.caption, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <User size={12} color="#9aa0a6" />{vieta.vardas}
-              </span>
-            )}
-            {vieta.tel && (
-              <a href={`tel:${vieta.tel}`} style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Phone size={12} color="#9aa0a6" />{vieta.tel}
-              </a>
-            )}
-            {vieta.url && (
-              <a href={vieta.url} target="_blank" rel="noreferrer" style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <ExternalLink size={12} />Atidaryti skelbimą
-              </a>
+      {isSkelbimas && (vieta.kaina || vieta.tel || vieta.vardas || vieta.url || vieta.statybos_metai || vieta.plotas_sklypas || vieta.plotas_namas) && (
+        <div style={{ padding: '10px 16px 12px', background: '#fffbf0', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+            {vieta.kaina
+              ? <span style={T.price}>{vieta.kaina.toLocaleString('lt-LT')} €</span>
+              : <div />}
+            {(vieta.statybos_metai || vieta.plotas_sklypas || vieta.plotas_namas || vieta.kambariai) && (
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                {vieta.statybos_metai && <MetaChip>{vieta.statybos_metai} m.</MetaChip>}
+                {vieta.plotas_sklypas  && <MetaChip>{vieta.plotas_sklypas}</MetaChip>}
+                {vieta.plotas_namas    && <MetaChip>{vieta.plotas_namas} m²</MetaChip>}
+                {vieta.kambariai       && <MetaChip>{vieta.kambariai} kamb.</MetaChip>}
+              </div>
             )}
           </div>
+          {(vieta.vardas || vieta.tel || vieta.url) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', marginTop: 8 }}>
+              {vieta.vardas && (
+                <span style={{ ...T.caption, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <User size={12} color="#9aa0a6" />{vieta.vardas}
+                </span>
+              )}
+              {vieta.tel && (
+                <a href={`tel:${vieta.tel}`} style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Phone size={12} color="#9aa0a6" />{vieta.tel}
+                </a>
+              )}
+              {vieta.url && (
+                <a href={vieta.url} target="_blank" rel="noreferrer" style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <ExternalLink size={12} />Atidaryti skelbimą
+                </a>
+              )}
+            </div>
+          )}
+          {vieta.adresas && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8, ...T.caption }}>
+              <MapPin size={11} color="#c4c7cc" />{vieta.adresas}
+            </div>
+          )}
         </div>
       )}
 
@@ -391,6 +408,19 @@ function InputField({ icon, placeholder, value, onChange, onBlur, type }) {
         }}
       />
     </div>
+  );
+}
+
+function MetaChip({ children }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      background: 'rgba(180,83,9,0.08)', borderRadius: 20,
+      padding: '2px 8px', fontSize: 11, color: '#92400e',
+      fontFamily: 'system-ui, sans-serif',
+    }}>
+      {children}
+    </span>
   );
 }
 

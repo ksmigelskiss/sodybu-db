@@ -20,7 +20,14 @@ const KNOWN = {
 
 export function extractDomain(url) {
   if (!url) return null;
-  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return null; }
+  try {
+    const parts = new URL(url).hostname.split('.');
+    // Strip known mobile/www subdomains only when a real domain remains (≥2 parts left)
+    if (parts.length >= 3 && /^(www|m|mobile|wap)$/i.test(parts[0])) {
+      return parts.slice(1).join('.');
+    }
+    return parts.join('.');
+  } catch { return null; }
 }
 
 export function usePortalai() {

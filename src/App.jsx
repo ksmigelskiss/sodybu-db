@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Search, MapPin, Navigation, X, ChevronLeft, ChevronRight, ChevronDown, House, LayoutGrid, Sparkles } from 'lucide-react';
+import { Search, MapPin, Navigation, X, ChevronLeft, ChevronRight, ChevronDown, House, LayoutGrid, Sparkles, Globe } from 'lucide-react';
 import SodybaMap from './components/SodybaMap.jsx';
 import SodybaCard from './components/SodybaCard.jsx';
 
@@ -9,6 +9,8 @@ import DetailPanel from './components/DetailPanel.jsx';
 import SkelbimosImport from './components/SkelbimosImport.jsx';
 import { useSodybaList, updateSodybaStatus } from './hooks/useSodyba.js';
 import { useVietos } from './hooks/useVietos.js';
+import { usePortalai, extractDomain } from './hooks/usePortalai.js';
+import PortalaiTab from './components/PortalaiTab.jsx';
 import { useIsMobile } from './hooks/useIsMobile.js';
 import { getApskritis } from './lib/apskritys.js';
 import { VIETA_THEME, VIETA_KEYS } from './lib/theme.js';
@@ -20,6 +22,7 @@ const PANEL_W = 380;
 const TABS = [
   { id: 'sodybos',   label: 'Sodybos',   icon: LayoutGrid },
   { id: 'vietoves',  label: 'Vietovės',  icon: MapPin },
+  { id: 'portalai',  label: 'Šaltiniai', icon: Globe },
 ];
 
 const C = {
@@ -114,6 +117,16 @@ export default function App() {
 
   const { items, loading, error, updateItem } = useSodybaList(filters);
   const { vietos, loading: vietosLoading, addVieta, updateVieta, deleteVieta, refresh: refreshVietos } = useVietos();
+  const { portalai, addPortalas, updatePortalas, deletePortalas, ensurePortal } = usePortalai();
+
+  const portalCounts = useMemo(() => {
+    const c = {};
+    vietos.filter(v => v.url).forEach(v => {
+      const d = extractDomain(v.url);
+      if (d) c[d] = (c[d] ?? 0) + 1;
+    });
+    return c;
+  }, [vietos]);
 
   const displayZones = useMemo(() => {
     if (activeTab !== 'vietoves' || !selectedApskritis) return [];
@@ -196,9 +209,10 @@ export default function App() {
 
   const handleAddSkelbimas = useCallback(async (data) => {
     const vieta = await addVieta(data);
+    if (data.url) ensurePortal(data.url); // fire-and-forget, no await needed
     setActiveTab('sodybos');
     setSelectedVieta(vieta);
-  }, [addVieta]);
+  }, [addVieta, ensurePortal]);
 
   const handleApskritisSelect = useCallback((a) => {
     setSelectedApskritis(a); setSelected(null); setSelectedVieta(null);
@@ -443,6 +457,8 @@ export default function App() {
             const Icon = tab.icon;
             const count = tab.id === 'sodybos'
               ? vietos.filter(v => v.statusas !== 'atmesta').length
+              : tab.id === 'portalai'
+              ? (portalai.length || null)
               : (selectedApskritis ? displayZones.length : null);
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
@@ -473,8 +489,20 @@ export default function App() {
           <ZonuFilters filters={filters} onChange={setFilters} />
         )}
 
+        {/* Portalai tab — filters row placeholder */}
+        {activeTab === 'portalai' && <div style={{ height: 4 }} />}
+
         {/* List — KortelesGrid stays mounted (display:none) to avoid image reload */}
         <div style={{ overflowY: 'auto', flex: 1 }}>
+          {activeTab === 'portalai' && (
+            <PortalaiTab
+              portalai={portalai}
+              onAdd={addPortalas}
+              onUpdate={updatePortalas}
+              onDelete={deletePortalas}
+              counts={portalCounts}
+            />
+          )}
           <div style={{ display: activeTab === 'sodybos' ? undefined : 'none' }}>
             {displayVietos.length === 0
               ? <EmptyState primary={vietos.length === 0} />

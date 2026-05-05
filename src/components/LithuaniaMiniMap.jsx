@@ -36,21 +36,25 @@ function proj(lat, lng) {
   return [x, y];
 }
 
-export default function LithuaniaMiniMap({ lat, lng, topOffset = 12, leftOffset = 12 }) {
+export default function LithuaniaMiniMap({ lat, lng, topOffset = 12, leftOffset = 12, onClick }) {
   if (!lat || !lng) return null;
 
   const points = LT_OUTLINE.map(([la, lo]) => proj(la, lo).join(',')).join(' ');
   const [cx, cy] = proj(lat, lng);
 
   return (
-    <div style={{
-      position: 'absolute', top: topOffset, left: leftOffset, zIndex: 900,
-      transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)',
-      background: 'white', borderRadius: 10,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)',
-      padding: '4px 4px 2px',
-      pointerEvents: 'none',
-    }}>
+    <div
+      onClick={onClick}
+      title={onClick ? 'Rodyti visą Lietuvą' : undefined}
+      style={{
+        position: 'absolute', top: topOffset, left: leftOffset, zIndex: 900,
+        transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)',
+        background: 'white', borderRadius: 10,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)',
+        padding: '4px 4px 2px',
+        pointerEvents: onClick ? 'auto' : 'none',
+        cursor: onClick ? 'pointer' : 'default',
+      }}>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
         <polygon points={points} fill="#e8f0fe" stroke="#aec8f5" strokeWidth="1.2" />
         <circle cx={cx} cy={cy} r={8} fill="rgba(26,115,232,0.18)" />

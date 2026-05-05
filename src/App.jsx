@@ -37,6 +37,8 @@ const C = {
 export default function App() {
   const [filters, setFilters]             = useState({ tipas: 'Viensėdis' });
   const [sidebarOpen, setSidebarOpen]     = useState(true);
+  const [mapZoom, setMapZoom]             = useState(7);
+  const [ltFlyTrigger, setLtFlyTrigger]  = useState(0);
   const [sheetOpen, setSheetOpen]         = useState(false);
   const isMobile = useIsMobile();
   const [selected, setSelected]           = useState(null);
@@ -385,11 +387,20 @@ export default function App() {
         newVietaPos={newVietaPos}
         sidebarOpen={sidebarOpen}
         ctrlOffset={sidebarOpen ? PANEL_W : 0}
+        onZoomChange={setMapZoom}
+        ltFlyTrigger={ltFlyTrigger}
       />
 
       {!isMobile && (() => {
         const pos = selectedVieta?.lat ? selectedVieta : selected?.lat ? selected : null;
-        return pos ? <LithuaniaMiniMap lat={pos.lat} lng={pos.lng} leftOffset={sidebarOpen ? PANEL_W + 12 : 12} /> : null;
+        if (!pos || mapZoom <= 7) return null;
+        return (
+          <LithuaniaMiniMap
+            lat={pos.lat} lng={pos.lng}
+            leftOffset={sidebarOpen ? PANEL_W + 12 : 12}
+            onClick={() => setLtFlyTrigger(n => n + 1)}
+          />
+        );
       })()}
 
       {/* Left panel */}

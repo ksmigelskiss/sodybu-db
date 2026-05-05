@@ -46,6 +46,8 @@ export default function SodybaMap({
   bottomOffset = 24,
   sidebarOpen,
   ctrlOffset = 0,
+  onZoomChange,
+  ltFlyTrigger = 0,
 }) {
   const containerRef         = useRef(null);
   const mapRef               = useRef(null);
@@ -60,18 +62,30 @@ export default function SodybaMap({
   const polygonRef           = useRef(null);
   const featureLayersRef     = useRef([]);
   const featureCacheRef      = useRef(new Map());
+  const onZoomChangeRef      = useRef(onZoomChange);
 
   const [isSatellite, setIsSatellite]           = useState(false);
   const [isCadastre, setIsCadastre]             = useState(false);
   const [featuresLoading, setFeaturesLoading]   = useState(false);
   const [featuresCount, setFeaturesCount]       = useState(null);
 
-  // Init map + custom pane for waterways (below overlay, above tiles)
+  // Keep zoom callback ref fresh without re-subscribing
+  useEffect(() => { onZoomChangeRef.current = onZoomChange; }, [onZoomChange]);
+
+  // Init map
   useEffect(() => {
     if (mapRef.current) return;
-    mapRef.current = L.map(containerRef.current, { zoomControl: false }).setView([55.3, 23.9], 7);
-    LAYERS.map.addTo(mapRef.current);
+    const map = L.map(containerRef.current, { zoomControl: false }).setView([55.3, 23.9], 7);
+    LAYERS.map.addTo(map);
+    map.on('zoomend', () => onZoomChangeRef.current?.(map.getZoom()));
+    mapRef.current = map;
   }, []);
+
+  // Fly to Lithuania overview when triggered (minimap click)
+  useEffect(() => {
+    if (!ltFlyTrigger || !mapRef.current) return;
+    mapRef.current.flyTo([55.3, 23.9], 7, { duration: 1.2 });
+  }, [ltFlyTrigger]);
 
   // Invalidate size after sidebar CSS transition (200ms)
   useEffect(() => {
@@ -151,9 +165,9 @@ export default function SodybaMap({
     const map = mapRef.current;
     if (!map) return;
     if (!selectedApskritis) {
-      map.setView([55.3, 23.9], 7);
+      map.flyTo([55.3, 23.9], 7, { duration: 1.2 });
     } else {
-      map.fitBounds(selectedApskritis.bounds, { padding: [30, 30] });
+      map.flyToBounds(selectedApskritis.bounds, { padding: [30, 30], maxZoom: 10, duration: 1.2 });
     }
   }, [selectedApskritis?.id]);
 
@@ -212,18 +226,18 @@ export default function SodybaMap({
     setFeaturesCount(null);
 
     if (!selected?.gyv_kodas) {
-      if (selected) map.setView([selected.lat, selected.lng], 13);
+      if (selected) map.flyTo([selected.lat, selected.lng], 13, { duration: 1 });
       return;
     }
 
-    map.setView([selected.lat, selected.lng], 13);
+    map.flyTo([selected.lat, selected.lng], 13, { duration: 0.8 });
 
     fetchPolygon(selected.gyv_kodas).then(coords => {
       if (!coords || !mapRef.current) return;
       polygonRef.current = L.polygon(coords, {
         color: '#eab308', weight: 2.5, fillColor: '#eab308', fillOpacity: 0.08,
       }).addTo(mapRef.current);
-      mapRef.current.fitBounds(polygonRef.current.getBounds(), { padding: [40, 40], maxZoom: 15 });
+      mapRef.current.flyToBounds(polygonRef.current.getBounds(), { padding: [40, 40], maxZoom: 15, duration: 1 });
 
       const bbox = polygonBbox(coords);
       const gk = selected.gyv_kodas;
@@ -245,7 +259,7 @@ export default function SodybaMap({
   // Selected vieta — zoom (skip if no location, e.g. skelbimas without pin)
   useEffect(() => {
     if (!selectedVieta?.lat || !selectedVieta?.lng || !mapRef.current) return;
-    mapRef.current.setView([selectedVieta.lat, selectedVieta.lng], 15);
+    mapRef.current.flyTo([selectedVieta.lat, selectedVieta.lng], 15, { duration: 1 });
   }, [selectedVieta?.id]);
 
   // Search position — pan + drop pin
@@ -253,7 +267,7 @@ export default function SodybaMap({
     searchMarkerRef.current?.remove();
     searchMarkerRef.current = null;
     if (!searchPos || !mapRef.current) return;
-    mapRef.current.setView([searchPos.lat, searchPos.lng], 15);
+    mapRef.current.flyTo([searchPos.lat, searchPos.lng], 15, { duration: 0.8 });
     searchMarkerRef.current = L.circleMarker([searchPos.lat, searchPos.lng], {
       radius: 7, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.9, weight: 2,
     }).addTo(mapRef.current).bindTooltip('Paieškos rezultatas', { permanent: false });
@@ -265,7 +279,7 @@ export default function SodybaMap({
     const pts = (vietos ?? []).filter(v => v.lat && v.lng);
     if (pts.length === 0) return;
     const bounds = L.latLngBounds(pts.map(v => [v.lat, v.lng]));
-    if (bounds.isValid()) mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+    if (bounds.isValid()) mapRef.current.flyToBounds(bounds, { padding: [60, 60], maxZoom: 14, duration: 1.2 });
   }, [activeTab]);
 
   // New vieta pin marker
@@ -285,7 +299,7 @@ export default function SodybaMap({
     userMarkerRef.current = L.circleMarker([userPos.lat, userPos.lng], {
       radius: 8, color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.8,
     }).addTo(mapRef.current).bindTooltip('Jūs čia');
-    mapRef.current.setView([userPos.lat, userPos.lng], 11);
+    mapRef.current.flyTo([userPos.lat, userPos.lng], 11, { duration: 1 });
   }, [userPos]);
 
   return (

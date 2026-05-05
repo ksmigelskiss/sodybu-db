@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase.js';
 
@@ -26,12 +26,26 @@ export function extractDomain(url) {
 export function usePortalai() {
   const [portalai, setPortalai] = useState([]);
   const [loading, setLoading]   = useState(true);
+  // Ref to current portalai for synchronous checks inside async callbacks
+  const portalaiRef = useRef([]);
+
+  const setPortalaiAndRef = useCallback((updater) => {
+    setPortalai(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      portalaiRef.current = next;
+      return next;
+    });
+  }, []);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
       const snap = await getDocs(collection(db, COL));
-      setPortalai(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      portalaiRef.current = list;
+      setPortalai(list);
+    } catch (e) {
+      console.error('[portalai] fetchAll failed:', e);
     } finally {
       setLoading(false);
     }
@@ -42,56 +56,70 @@ export function usePortalai() {
   const addPortalas = useCallback(async (data) => {
     const ref = await addDoc(collection(db, COL), { ...data, created_at: serverTimestamp() });
     const p = { id: ref.id, ...data, created_at: new Date() };
-    setPortalai(prev => [...prev, p]);
+    setPortalaiAndRef(prev => [...prev, p]);
     return p;
-  }, []);
+  }, [setPortalaiAndRef]);
 
   const updatePortalas = useCallback(async (id, updates) => {
     await updateDoc(doc(db, COL, id), updates);
-    setPortalai(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-  }, []);
+    setPortalaiAndRef(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  }, [setPortalaiAndRef]);
 
   const deletePortalas = useCallback(async (id) => {
     await deleteDoc(doc(db, COL, id));
-    setPortalai(prev => prev.filter(p => p.id !== id));
-  }, []);
+    setPortalaiAndRef(prev => prev.filter(p => p.id !== id));
+  }, [setPortalaiAndRef]);
 
   // Called automatically when a listing with a URL is saved.
-  // Checks Firestore (not just local state) to avoid race conditions on first load.
+  // Uses portalaiRef for a synchronous local check before hitting Firestore.
   const ensurePortal = useCallback(async (url) => {
     const domain = extractDomain(url);
     if (!domain) return;
 
-    // Fast local check first
-    setPortalai(prev => {
-      if (prev.some(p => p.domain === domain)) return prev; // already exists
-      return prev; // will check Firestore below
-    });
+    // Fast synchronous check via ref — skip if already tracked locally
+    if (portalaiRef.current.some(p => p.domain === domain)) return;
 
-    // Authoritative Firestore check
-    const snap = await getDocs(query(collection(db, COL), where('domain', '==', domain)));
-    if (!snap.empty) {
-      const p = { id: snap.docs[0].id, ...snap.docs[0].data() };
-      setPortalai(prev => prev.some(x => x.id === p.id) ? prev : [...prev, p]);
-      return;
+    try {
+      // Authoritative Firestore check (handles multi-tab / race conditions)
+      const snap = await getDocs(query(collection(db, COL), where('domain', '==', domain)));
+      if (!snap.empty) {
+        const p = { id: snap.docs[0].id, ...snap.docs[0].data() };
+        setPortalaiAndRef(prev => prev.some(x => x.id === p.id) ? prev : [...prev, p]);
+        return;
+      }
+
+      // New portal — create with known metadata if available
+      const meta = KNOWN[domain] ?? {};
+      const docData = {
+        domain,
+        pavadinimas: meta.pavadinimas ?? domain,
+        aprasymas:   meta.aprasymas   ?? null,
+        regionas:    meta.regionas    ?? 'other',
+        saltinis:    'auto',
+        searchUrl:   null,
+        pastaba:     null,
+        logo:        `https://${domain}/favicon.ico`,
+        created_at:  serverTimestamp(),
+      };
+      const ref = await addDoc(collection(db, COL), docData);
+      const p = {
+        id: ref.id,
+        domain,
+        pavadinimas: meta.pavadinimas ?? domain,
+        aprasymas:   meta.aprasymas   ?? null,
+        regionas:    meta.regionas    ?? 'other',
+        saltinis:    'auto',
+        searchUrl:   null,
+        pastaba:     null,
+        logo:        `https://${domain}/favicon.ico`,
+        created_at:  new Date(),
+      };
+      setPortalaiAndRef(prev => [...prev, p]);
+      console.log('[portalai] created:', domain);
+    } catch (e) {
+      console.error('[portalai] ensurePortal failed for', domain, ':', e);
     }
-
-    // New portal — create with known metadata if available, otherwise minimal entry
-    const meta = KNOWN[domain] ?? {};
-    const ref = await addDoc(collection(db, COL), {
-      domain,
-      pavadinimas: meta.pavadinimas ?? domain,
-      aprasymas:   meta.aprasymas   ?? null,
-      regionas:    meta.regionas    ?? 'other',
-      saltinis:    'auto',
-      searchUrl:   null,
-      pastaba:     null,
-      logo:        `https://${domain}/favicon.ico`,
-      created_at:  serverTimestamp(),
-    });
-    const p = { id: ref.id, domain, pavadinimas: meta.pavadinimas ?? domain, aprasymas: meta.aprasymas ?? null, regionas: meta.regionas ?? 'other', saltinis: 'auto', searchUrl: null, pastaba: null, logo: `https://${domain}/favicon.ico`, created_at: new Date() };
-    setPortalai(prev => [...prev, p]);
-  }, []);
+  }, [setPortalaiAndRef]);
 
   return { portalai, loading, addPortalas, updatePortalas, deletePortalas, ensurePortal, refresh: fetchAll };
 }

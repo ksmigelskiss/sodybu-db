@@ -119,6 +119,15 @@ export default function App() {
   const { vietos, loading: vietosLoading, addVieta, updateVieta, deleteVieta, refresh: refreshVietos } = useVietos();
   const { portalai, addPortalas, updatePortalas, deletePortalas, ensurePortal } = usePortalai();
 
+  // One-time seed: scan all existing vietos and ensure their domains are in portalai
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current || vietosLoading || vietos.length === 0) return;
+    seededRef.current = true;
+    const domains = [...new Set(vietos.filter(v => v.url).map(v => extractDomain(v.url)).filter(Boolean))];
+    domains.forEach(d => ensurePortal(`https://${d}`));
+  }, [vietos, vietosLoading, ensurePortal]);
+
   const portalCounts = useMemo(() => {
     const c = {};
     vietos.filter(v => v.url).forEach(v => {

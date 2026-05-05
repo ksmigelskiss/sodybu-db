@@ -149,6 +149,10 @@ function PortalCard({ portal, count, onUpdate, onDelete }) {
     if ((val || null) !== (cur || null)) onUpdate(portal.id, { [field]: val.trim() || null });
   };
 
+  const setRegionas = (r) => {
+    if (r !== (portal.regionas ?? 'other')) onUpdate(portal.id, { regionas: r });
+  };
+
   return (
     <div style={{ margin: '0 12px 6px', borderRadius: 12, border: '1px solid #e8eaed', background: 'white', overflow: 'hidden' }}>
       {/* Main row */}
@@ -210,6 +214,22 @@ function PortalCard({ portal, count, onUpdate, onDelete }) {
               <ExternalLink size={12} /> Atidaryti paiešką
             </a>
           )}
+          <div style={{ display: 'flex', gap: 5 }}>
+            {REGIONAI.map(r => {
+              const active = (portal.regionas ?? 'other') === r.id;
+              return (
+                <button key={r.id} onClick={() => setRegionas(r.id)} style={{
+                  flex: 1, padding: '5px 4px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
+                  border: `1.5px solid ${active ? '#1a73e8' : '#e8eaed'}`,
+                  background: active ? '#e8f0fe' : 'white',
+                  color: active ? '#1a73e8' : '#5f6368',
+                  fontFamily: 'system-ui, sans-serif',
+                }}>
+                  {r.id === 'lt' ? '🇱🇹 LT' : r.id === 'eu' ? '🌍 EU' : '🔗 Kita'}
+                </button>
+              );
+            })}
+          </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
             <span style={{ fontSize: 11, color: '#c4c7cc', fontFamily: 'system-ui, sans-serif' }}>
               {portal.saltinis === 'auto' ? 'Aptikta automatiškai' : 'Pridėta rankiniu būdu'} · {portal.domain}

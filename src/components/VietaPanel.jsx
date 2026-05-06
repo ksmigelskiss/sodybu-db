@@ -692,6 +692,35 @@ const relocateBtn = {
   fontFamily: 'system-ui, sans-serif',
 };
 
+// ── Detalesnė analizė (expandable) ───────────────────────────────────────────
+function VertinimasAnalize({ text }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderTop: '1px solid #f1f3f4', paddingTop: 8 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+          display: 'flex', alignItems: 'center', gap: 4,
+          color: '#1a73e8', fontSize: 11, fontWeight: 500,
+          fontFamily: 'system-ui, sans-serif',
+        }}
+      >
+        {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        {open ? 'Slėpti analizę' : 'Rodyti išsamią analizę'}
+      </button>
+      {open && (
+        <div style={{
+          marginTop: 8, fontSize: 12, color: '#3c4043', lineHeight: 1.6,
+          fontFamily: 'system-ui, sans-serif', whiteSpace: 'pre-wrap',
+        }}>
+          {text}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Rinkos vertės blokas ──────────────────────────────────────────────────────
 const PALYGINIMAS_CONFIG = {
   brangu:    { color: '#b45309', bg: '#fef3c7', icon: TrendingUp,   label: 'Brangoka'  },
@@ -800,7 +829,7 @@ function VertinimasBlock({ v, onRetry }) {
         </div>
       )}
 
-      {/* AI comment */}
+      {/* Short comment */}
       {v.komentaras && (
         <div style={{
           ...T.micro, lineHeight: 1.5, color: '#5f6368',
@@ -809,6 +838,9 @@ function VertinimasBlock({ v, onRetry }) {
           {v.komentaras}
         </div>
       )}
+
+      {/* Detailed analysis — expandable */}
+      {v.analize && <VertinimasAnalize text={v.analize} />}
 
       {/* Confidence + date */}
       <div style={{ ...T.micro, color: '#c4c7cc' }}>

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const MODEL = 'claude-haiku-4-5';
+const MODEL = 'claude-sonnet-4-5';
 const MAX_LISTING_TEXT = 12000; // chars sent to Claude from full listing
 
 // ── Fetch listing text server-side (same bot-bypass as extract-listing) ──────
@@ -234,18 +234,21 @@ Grąžink JSON (tik JSON, be markdown):
   "diapazonasMax": <maksimali tikėtina vertė €>,
   "palyginimas": "brangu" | "teisinga" | "pigi" | "nežinoma",
   "procentas": <kiek % skelbimo kaina viršija/nusileidžia rinkos vertę — teigiamas=brangu, null jei kaina nežinoma>,
-  "veiksniai": ["+ Vanduo prie sklypo +8%", "- Senas pastatas (1975) -12%", ...],
-  "komentaras": "<2–3 sakiniai: rinkos situacija, patarimas>",
+  "veiksniai": ["+ Vanduo prie sklypo +8%", "- Senas pastatas (1957) -18%", "- Periferinė vieta -10%", ...],
+  "komentaras": "<3–5 sakiniai: kas iš tikrųjų parduodama, esminis vertinimas, praktinis patarimas>",
+  "analize": "<detalesnė analizė: sklypo vertė €/a × plotas, pastato reali vertė (gali būti neigiama), scenarijai pagal pirkimo tikslą (gyvenimui / savaitgaliams / investicijai), derybinis pasiūlymas jei tinka. Gali būti 150–400 žodžių.>",
   "confidence": "high" | "medium" | "low"
 }
 
 Taisyklės:
-- Lietuvos kaimo NT: sodybos paprastai 30 000–250 000 €, sklypai be namo 5 000–50 000 €
-- Vanduo prie sklypo paprastai prideda 10–20% vertės
-- Miškelis/medžiai paprastai +5–15%
-- Vilniaus/Kauno rajonai brangiausi, periferija pigesnė
-- Natura 2000 / saugoma teritorija riboja statybas — paprastai mažina rinkos vertę 10–25%, bet gali kelti gamtinę vertę
-- Vandens apsaugos zona riboja statybas šalia vandens — gali mažinti 5–15%
+- Realiai vertink: 1957 m. medinis namas dažnai turi 0 € arba neigiamą vertę (griovimas + šiukšlės)
+- Lietuvos kaimo žemė: 200–1500 €/a priklausomai nuo vietos, prie vandens +20–50%
+- Sodybos su namu: 30 000–250 000 €; sklypai be namo: 5 000–50 000 €
+- Vanduo prie sklypo paprastai prideda 10–20%, miškelis +5–15%
+- Vilniaus/Kauno rajonai brangiausi, Pakruojo/Rokiškio/Zarasų periferija pigiausia
+- Natura 2000 / saugoma teritorija: mažina rinkos vertę 10–25% (statybų apribojimai)
+- Vandens apsaugos zona: mažina 5–15% (statybų apribojimai)
+- analize lauke: būk praktiškas ir tiesus, įskaityk skaičiavimus (€/a × plotas), atskirk žemės ir pastato vertę, nurodyk derybinę kainą
 - confidence=high tik jei yra sandorių duomenų arba MVZ; medium jei tik vietovė žinoma; low jei labai mažai info
 - Jei kaina nežinoma, procentas=null, palyginimas="nežinoma"`;
 }
@@ -264,7 +267,7 @@ async function callClaude(apiKey: string, prompt: string) {
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 800,
+      max_tokens: 1800,
       messages: [{ role: 'user', content: prompt }],
     }),
     signal: AbortSignal.timeout(25000),

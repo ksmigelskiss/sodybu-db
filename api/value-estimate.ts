@@ -25,7 +25,7 @@ async function fetchListingText(url: string): Promise<string | null> {
   try {
     const r = await fetch(url, {
       headers: BOT_HEADERS,
-      signal: AbortSignal.timeout(9000),
+      signal: AbortSignal.timeout(5000), // fail fast — Cloudflare blocks anyway
       redirect: 'follow',
     });
     if (!r.ok) return null;
@@ -98,7 +98,7 @@ async function fetchMvz(lat: number, lng: number): Promise<{ eurHa: number | nul
       imageDisplay: '800,800,96',
     });
     const res = await fetch(`https://www.geoportal.lt/mapproxy/nzt_mvz/MapServer/identify?${params}`, {
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return { eurHa: null, zona: null };
     const d = await res.json() as { results?: any[] };
@@ -141,7 +141,7 @@ async function fetchRcSandoriai(apskritis: string): Promise<RcSandoris[]> {
 
     const res = await fetch(
       `https://data.gov.lt/api/3/action/datastore_search_sql?sql=${encodeURIComponent(sql)}`,
-      { signal: AbortSignal.timeout(8000) }
+      { signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return [];
     const json = await res.json() as any;
@@ -270,7 +270,7 @@ async function callClaude(apiKey: string, prompt: string) {
       max_tokens: 1800,
       messages: [{ role: 'user', content: prompt }],
     }),
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(50000),
   });
   if (!r.ok) throw new Error(`Claude: ${await r.text()}`);
   const data = await r.json() as any;

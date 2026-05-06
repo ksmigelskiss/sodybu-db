@@ -23,18 +23,32 @@ const LNG_RE  = /2[0-6]\.\d{4,}/g;
  * 3. Bare pairs:  most frequent LT lat/lng numbers in script blocks
  */
 function extractCoordsFromHtml(html: string): string {
-  // 1. URL query params (most reliable — Google Maps / DP Market links)
-  const urlParamRe = /\blat=(5[3456]\.\d{4,})(?:[^]*?(?:&(?:amp;)?|\?))?lng=(2[0-6]\.\d{4,})/i;
-  const urlMatch = urlParamRe.exec(html);
-  if (urlMatch) {
-    return `[GPS koordinatės rastos URL parametruose: lat=${urlMatch[1]}, lng=${urlMatch[2]}]\n`;
-  }
+  const LT_LAT = '(5[3456]\\.\\d{4,})';
+  const LT_LNG = '(2[0-6]\\.\\d{4,})';
+  const SEP    = '(?:%2C|,\\s*)';      // comma or URL-encoded comma
 
-  // Also try lng before lat order
-  const urlMatchRev = /\blng=(2[0-6]\.\d{4,})(?:[^]*?(?:&(?:amp;)?|\?))?lat=(5[3456]\.\d{4,})/i.exec(html);
-  if (urlMatchRev) {
-    return `[GPS koordinatės rastos URL parametruose: lat=${urlMatchRev[2]}, lng=${urlMatchRev[1]}]\n`;
-  }
+  // 1a. lat=X + lng=Y anywhere in URL (dp-market, aruodas, custom portals)
+  let m = new RegExp(`\\blat=${LT_LAT}[\\s\\S]{0,60}?\\blng=${LT_LNG}`, 'i').exec(html);
+  if (m) return `[GPS: lat=${m[1]}, lng=${m[2]}]\n`;
+
+  m = new RegExp(`\\blng=${LT_LNG}[\\s\\S]{0,60}?\\blat=${LT_LAT}`, 'i').exec(html);
+  if (m) return `[GPS: lat=${m[2]}, lng=${m[1]}]\n`;
+
+  // 1b. query=lat,lng  or  query=lat%2Clng  (Google Maps search URL)
+  m = new RegExp(`[?&]query=${LT_LAT}${SEP}${LT_LNG}`, 'i').exec(html);
+  if (m) return `[GPS: lat=${m[1]}, lng=${m[2]}]\n`;
+
+  // 1c. daddr=(lat, lng)  or  daddr=lat,lng  (Google Maps directions)
+  m = new RegExp(`\\bdaddr=\\(?${LT_LAT}${SEP}${LT_LNG}`, 'i').exec(html);
+  if (m) return `[GPS: lat=${m[1]}, lng=${m[2]}]\n`;
+
+  // 1d. center=lat,lng  or  ll=lat,lng
+  m = new RegExp(`\\b(?:center|ll)=${LT_LAT}${SEP}${LT_LNG}`, 'i').exec(html);
+  if (m) return `[GPS: lat=${m[1]}, lng=${m[2]}]\n`;
+
+  // 1e. Google Maps @lat,lng in URL (e.g. maps.google.com/@55.12,25.45)
+  m = new RegExp(`@${LT_LAT}${SEP}${LT_LNG}`).exec(html);
+  if (m) return `[GPS: lat=${m[1]}, lng=${m[2]}]\n`;
 
   // 2. JSON / JS variable patterns: "lat":54.xxx or lat:54.xxx or "latitude":54.xxx
   const scriptBlocks: string[] = [];
@@ -187,7 +201,7 @@ async function fetchUrl(url: string): Promise<{ text: string; nuotrauka: string 
 }
 
 const SYSTEM = `Tu esi NT skelbimų duomenų ekstraktorius. Iš lietuviško nekilnojamojo turto skelbimo teksto ištrauki duomenis tiksliai ir grąžini TIKTAI JSON objektą — be jokio papildomo teksto, be markdown žymų.
-SVARBU: Jei teksto pradžioje yra eilutė "[GPS: lat=XX.XXXX, lng=XX.XXXX]" arba "[GPS koordinatės rastos JS kode: lat=XX.XXXX, lng=XX.XXXX]" — naudok būtent TAS koordinates laukuose lat ir lng.`;
+SVARBU: Jei teksto pradžioje yra eilutė prasidedanti "[GPS:" — naudok būtent TAS koordinates laukuose lat ir lng. Pvz. "[GPS: lat=55.1234, lng=24.5678]".`;
 
 function buildPrompt(url: string, text: string): string {
   return `Skelbimo URL: ${url || '(nežinoma)'}

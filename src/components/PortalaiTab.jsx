@@ -32,6 +32,7 @@ export default function PortalaiTab({ portalai, onAdd, onUpdate, onDelete, count
   const [newApr, setNewApr]         = useState('');
   const [newRegionas, setNewRegionas] = useState('lt');
   const [adding, setAdding]         = useState(false);
+  const [collapsed, setCollapsed]   = useState({});
 
   const grouped = REGIONAI.map(r => ({
     ...r,
@@ -74,12 +75,23 @@ export default function PortalaiTab({ portalai, onAdd, onUpdate, onDelete, count
 
       {grouped.map(group => {
         if (group.items.length === 0) return null;
+        const isCollapsed = !!collapsed[group.id];
         return (
           <div key={group.id}>
-            <div style={{ padding: '12px 16px 4px', fontSize: 11, fontWeight: 700, color: '#9aa0a6', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'system-ui, sans-serif' }}>
-              {group.label}
-            </div>
-            {group.items.map(p => (
+            <button
+              onClick={() => setCollapsed(c => ({ ...c, [group.id]: !c[group.id] }))}
+              style={{
+                width: '100%', padding: '10px 16px 4px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: 'none', border: 'none', cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#9aa0a6', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'system-ui, sans-serif' }}>
+                {group.label} <span style={{ fontWeight: 400, opacity: 0.7 }}>({group.items.length})</span>
+              </span>
+              {isCollapsed ? <ChevronDown size={13} color="#c4c7cc" /> : <ChevronUp size={13} color="#c4c7cc" />}
+            </button>
+            {!isCollapsed && group.items.map(p => (
               <PortalCard key={p.id} portal={p} count={counts[p.domain] ?? 0} onUpdate={onUpdate} onDelete={onDelete} />
             ))}
           </div>

@@ -555,13 +555,36 @@ export default function App() {
               counts={portalCounts}
             />
           )}
-          <div style={{ display: (activeTab === 'lietuva' || activeTab === 'uzsienis') ? undefined : 'none' }}>
-            {displayVietos.length === 0
-              ? <EmptyState primary={vietos.length === 0} foreign={activeTab === 'uzsienis'} />
-              : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id} onSelect={handleSelectVieta}
-                  onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })}
-                  foreign={activeTab === 'uzsienis'} />}
-          </div>
+          {/* Both grids stay mounted (display:none) so images don't flicker on tab switch */}
+          {(['lietuva', 'uzsienis'] ).map(tabId => {
+            const isForeignTab = tabId === 'uzsienis';
+            const list = isForeignTab
+              ? [...vietos].filter(isForeign).filter(v => !salisFilter || v.salis === salisFilter)
+              : [...vietos].filter(isLt).filter(v => {
+                  if      (vietaStatusFilter === 'aktyvios')  return v.statusas !== 'atmesta';
+                  else if (vietaStatusFilter === 'rasta')     return !v.statusas && v.saltinis !== 'skelbimas';
+                  else if (vietaStatusFilter === 'skelbimas') return v.saltinis === 'skelbimas';
+                  else if (vietaStatusFilter)                 return v.statusas === vietaStatusFilter;
+                  return true;
+                });
+            const toMs = v => v?.toMillis?.() ?? (v instanceof Date ? v.getTime() : 0);
+            const sorted = [...list].sort((a, b) => {
+              if (a.zvaigzdute && !b.zvaigzdute) return -1;
+              if (!a.zvaigzdute && b.zvaigzdute) return 1;
+              const aS = a.saltinis === 'skelbimas', bS = b.saltinis === 'skelbimas';
+              if (aS && !bS) return -1; if (!aS && bS) return 1;
+              return toMs(b.created_at) - toMs(a.created_at);
+            });
+            return (
+              <div key={tabId} style={{ display: activeTab === tabId ? undefined : 'none' }}>
+                {sorted.length === 0
+                  ? <EmptyState primary={vietos.filter(isForeignTab ? isForeign : isLt).length === 0} foreign={isForeignTab} />
+                  : <KortelesGrid vietos={sorted} selectedId={selectedVieta?.id} onSelect={handleSelectVieta}
+                      onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })}
+                      foreign={isForeignTab} />}
+              </div>
+            );
+          })}
           <div style={{ display: activeTab === 'vietoves' ? undefined : 'none' }}>
             {selectedApskritis ? (
               <>

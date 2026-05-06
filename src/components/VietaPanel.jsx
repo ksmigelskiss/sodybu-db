@@ -44,13 +44,41 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   }, [vieta.id]);
 
   useEffect(() => {
+    const isStorageUrl = (u) => u?.includes('firebasestorage.app') || u?.includes('storage.googleapis.com');
+    const existing = vieta.nuotraukos?.[0] ?? null;
+
+    if (existing) {
+      setOgImage(null); // nuotraukos[0] shown directly via heroPhoto
+      // Already cached → nothing to do
+      if (isStorageUrl(existing)) return;
+      // External URL in nuotraukos → cache it in background
+      fetch(`/api/cache-photo?url=${encodeURIComponent(existing)}&vietaId=${vieta.id}`)
+        .then(r => r.json())
+        .then(d => { if (d.url && d.url !== existing) onUpdate(vieta.id, { nuotraukos: [d.url] }); })
+        .catch(() => {});
+      return;
+    }
+
+    // No photo yet → try og-fetch, then cache
     if (!vieta.url) { setOgImage(null); return; }
     setOgImage(null);
     fetch(`/api/og-fetch?url=${encodeURIComponent(vieta.url)}`)
       .then(r => r.json())
-      .then(d => setOgImage(d.image ?? null))
+      .then(async d => {
+        const imgUrl = d.image ?? null;
+        setOgImage(imgUrl);
+        if (!imgUrl) return;
+        try {
+          const cached = await fetch(`/api/cache-photo?url=${encodeURIComponent(imgUrl)}&vietaId=${vieta.id}`)
+            .then(r => r.json());
+          if (cached.url) {
+            onUpdate(vieta.id, { nuotraukos: [cached.url] });
+            setOgImage(cached.url);
+          }
+        } catch {}
+      })
       .catch(() => {});
-  }, [vieta.url]);
+  }, [vieta.id, vieta.url, vieta.nuotraukos?.[0]]);
 
   // Auto-grow textarea
   useEffect(() => {

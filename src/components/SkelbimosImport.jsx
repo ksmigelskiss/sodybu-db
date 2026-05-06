@@ -132,6 +132,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
 
   const handleSave = async () => {
     setStep('saving');
+    // Temporarily save with original photo URL; VietaPanel will cache it on first open
     await onSave({
       saltinis: 'skelbimas',
       salis,

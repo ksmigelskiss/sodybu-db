@@ -155,8 +155,9 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     position: 'fixed', bottom: 0, left: 0, right: 0,
     background: 'white', borderRadius: '20px 20px 0 0',
     boxShadow: '0 -4px 32px rgba(0,0,0,0.16)',
-    zIndex: 1200, maxHeight: '92dvh', overflowY: 'auto',
+    zIndex: 1200, maxHeight: '92dvh', overflowY: 'auto', overflowX: 'hidden',
     display: 'flex', flexDirection: 'column',
+    touchAction: 'pan-y',
   } : {
     position: 'absolute', bottom: 16, right: 16,
     background: 'white', borderRadius: 16,
@@ -351,7 +352,11 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
             </div>
           )}
           {vertError && (
-            <div style={{ fontSize: 11, color: '#c0392b', padding: '4px 0' }}>⚠ {vertError}</div>
+            <div style={{ fontSize: 12, color: '#92400e', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>⚠️</span>
+              <span style={{ flex: 1 }}>{vertError}</span>
+              <button onClick={fetchVertinimas} style={{ fontSize: 11, color: '#92400e', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0, textDecoration: 'underline' }}>Retry</button>
+            </div>
           )}
           {vertinimas && <VertinimasBlock v={vertinimas} onRetry={fetchVertinimas} />}
         </div>

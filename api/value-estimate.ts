@@ -272,11 +272,23 @@ async function callClaude(apiKey: string, prompt: string) {
     }),
     signal: AbortSignal.timeout(50000),
   });
-  if (!r.ok) throw new Error(`Claude: ${await r.text()}`);
+  if (!r.ok) {
+    const body = await r.text();
+    let friendlyMsg = 'Claude API klaida';
+    try {
+      const errJson = JSON.parse(body);
+      const errType = errJson?.error?.type ?? '';
+      if (errType === 'overloaded_error') friendlyMsg = 'Claude perkrautas — bandyk po minutės';
+      else if (errType === 'rate_limit_error') friendlyMsg = 'Pasiektas Claude limitas — palaukite';
+      else if (errType === 'invalid_api_key') friendlyMsg = 'Netinkamas API raktas';
+      else if (errJson?.error?.message) friendlyMsg = errJson.error.message;
+    } catch { /* use default */ }
+    throw new Error(friendlyMsg);
+  }
   const data = await r.json() as any;
   const raw = data.content?.[0]?.text ?? '';
   const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('JSON not found in response');
+  if (!match) throw new Error('Netikėtas Claude atsakymo formatas');
   return JSON.parse(match[0]);
 }
 

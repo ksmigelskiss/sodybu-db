@@ -65,6 +65,7 @@ export default function App() {
   const [locateVieta, setLocateVieta]     = useState(null);
   const [vietaStatusFilter, setVietaStatusFilter] = useState('aktyvios');
   const swipeStartY = useRef(null);
+  const swipeStartX = useRef(null);
   const [refreshing, setRefreshing] = useState(false);
   const pullStartY = useRef(null);
   const pullDist = useRef(0);
@@ -376,10 +377,11 @@ export default function App() {
               position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100,
               background: 'white', borderRadius: '14px 14px 0 0',
               boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
-              maxHeight: sheetOpen ? '62dvh' : 48,
+              maxHeight: sheetOpen ? '72dvh' : 52,
               transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)',
               display: 'flex', flexDirection: 'column', overflow: 'hidden',
             }}>
+              {/* Drag handle */}
               <div
                 onTouchStart={e => { swipeStartY.current = e.touches[0].clientY; }}
                 onTouchEnd={e => {
@@ -388,30 +390,93 @@ export default function App() {
                   swipeStartY.current = null;
                 }}
                 onClick={() => setSheetOpen(o => !o)}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0 6px', flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0 4px', flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}
               >
                 <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2 }} />
-                <ChevronDown size={15} color={C.textSec} style={{ marginTop: 3, transition: 'transform 0.2s', transform: sheetOpen ? 'rotate(0deg)' : 'rotate(180deg)' }} />
               </div>
-              {sheetOpen && (
-                <div style={{ padding: '0 16px 8px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                  <LayoutGrid size={13} color={C.primary} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                    Sodybos <span style={{ fontWeight: 400, color: C.textSec }}>({displayVietos.length})</span>
-                  </span>
-                  <div style={{ marginLeft: 'auto' }}>
-                    <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos} compact />
+
+              {/* Tab bar — always visible */}
+              {(() => {
+                const MOBILE_TABS = [
+                  { id: 'lietuva',  label: 'Lietuva',   icon: House,  count: vietos.filter(isLt).filter(v => v.statusas !== 'atmesta').length },
+                  { id: 'uzsienis', label: 'Užsienyje', icon: Globe,  count: vietos.filter(isForeign).length || null },
+                  { id: 'portalai', label: 'Šaltiniai', icon: Globe,  count: portalai.length || null },
+                ];
+                return (
+                  <div style={{ display: 'flex', borderBottom: `1px solid ${C.outline}`, flexShrink: 0 }}>
+                    {MOBILE_TABS.map(tab => {
+                      const active = activeTab === tab.id;
+                      const Icon = tab.icon;
+                      return (
+                        <button key={tab.id} onClick={() => { handleTabChange(tab.id); setSheetOpen(true); }} style={{
+                          flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer',
+                          color: active ? C.primary : C.textSec,
+                          borderBottom: `2px solid ${active ? C.primary : 'transparent'}`,
+                          fontSize: 11, fontWeight: active ? 600 : 400,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
+                          fontFamily: 'system-ui, sans-serif',
+                        }}>
+                          <Icon size={12} />
+                          {tab.label}
+                          {tab.count > 0 && (
+                            <span style={{ background: active ? '#e8f0fe' : C.surfaceVar, color: active ? C.primary : C.textSec, borderRadius: 8, padding: '0 4px', fontSize: 9, fontWeight: 600 }}>
+                              {tab.count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                );
+              })()}
+
+              {/* Filter row */}
+              {sheetOpen && activeTab === 'lietuva' && (
+                <div style={{ padding: '6px 12px', flexShrink: 0 }}>
+                  <VietaStatusFilter value={vietaStatusFilter} onChange={setVietaStatusFilter} vietos={vietos.filter(isLt)} compact />
                 </div>
               )}
-              {/* Always mounted — overflow:hidden on parent hides when sheet closed */}
-              <div style={{ overflowY: 'auto', flex: 1 }}>
-                {displayVietos.length === 0
-                  ? <EmptyState primary={vietos.length === 0} />
-                  : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id}
-                      onSelect={v => { handleSelectVieta(v); setSheetOpen(false); }}
-                      onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })} />
-                }
+              {sheetOpen && activeTab === 'uzsienis' && (
+                <SalisFilter vietos={vietos.filter(isForeign)} value={salisFilter} onChange={setSalisFilter} />
+              )}
+
+              {/* Scrollable content — swipe left/right to change tab */}
+              <div
+                style={{ overflowY: 'auto', flex: 1 }}
+                onTouchStart={e => { swipeStartX.current = e.touches[0].clientX; }}
+                onTouchEnd={e => {
+                  if (swipeStartX.current === null) return;
+                  const dx = e.changedTouches[0].clientX - swipeStartX.current;
+                  swipeStartX.current = null;
+                  if (Math.abs(dx) < 60) return;
+                  const order = ['lietuva', 'uzsienis', 'portalai'];
+                  const idx = order.indexOf(activeTab);
+                  const next = dx < 0 ? order[idx + 1] : order[idx - 1];
+                  if (next) handleTabChange(next);
+                }}
+              >
+                {activeTab === 'lietuva' && (
+                  displayVietos.length === 0
+                    ? <EmptyState primary={vietos.filter(isLt).length === 0} />
+                    : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id}
+                        onSelect={v => { handleSelectVieta(v); setSheetOpen(false); }}
+                        onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })} />
+                )}
+                {activeTab === 'uzsienis' && (
+                  displayVietos.length === 0
+                    ? <EmptyState primary={vietos.filter(isForeign).length === 0} foreign />
+                    : <KortelesGrid vietos={displayVietos} selectedId={selectedVieta?.id}
+                        onSelect={v => { handleSelectVieta(v); setSheetOpen(false); }}
+                        onToggleStar={v => handleUpdateVieta(v.id, { zvaigzdute: !v.zvaigzdute })}
+                        foreign />
+                )}
+                {activeTab === 'portalai' && (
+                  <PortalaiTab
+                    portalai={portalai} onAdd={addPortalas}
+                    onUpdate={updatePortalas} onDelete={deletePortalas}
+                    counts={portalCounts}
+                  />
+                )}
               </div>
             </div>
           </>

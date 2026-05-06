@@ -43,6 +43,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
 
   const ie = initialExtracted;
   const [extracted, setExtracted]     = useState(ie ?? null);
+  const [listingText, setListingText] = useState(ie?.listing_text ?? null);
   const [pavadinimas, setPavadinimas] = useState(ie?.pavadinimas ?? '');
   const [adresas, setAdresas]         = useState(ie?.adresas ?? '');
   const [kaina, setKaina]             = useState(ie?.kaina != null ? String(ie.kaina) : '');
@@ -108,6 +109,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
       setLat(d.lat != null ? String(d.lat) : '');
       setLng(d.lng != null ? String(d.lng) : '');
       setNuotrauka(json.nuotrauka || '');
+      setListingText(json.listing_text || null);
       const a = {};
       VIETA_ATTRS.forEach(({ key }) => { if (d[key]) a[key] = true; });
       setAttrs(a);
@@ -154,6 +156,7 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
       plotas_sklypas: extracted?.plotas_sklypas || null,
       plotas_namas: extracted?.plotas_namas || null,
       kambariai: extracted?.kambariai || null,
+      listing_text: listingText || null,
       ...attrs,
     });
   };

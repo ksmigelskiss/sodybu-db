@@ -293,25 +293,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
 
   const { lat, lng, kaina, plotas_namas, plotas_sklypas, statybos_metai,
-          atributai = [], zonaPavadinimas, salis, url, komentaras, apsaugos = [] } = req.body as any;
+          atributai = [], zonaPavadinimas, salis, url, komentaras, apsaugos = [],
+          listing_text } = req.body as any;
 
   if (!lat || !lng) return res.status(400).json({ error: 'lat/lng required' });
 
   const apskritis = getApskritis(lat, lng);
 
-  // Fire MVZ, RC, and listing fetch in parallel — all with graceful fallback
+  // Determine listing text source:
+  // 1. listing_text saved at import time (best — no extra fetch)
+  // 2. URL re-fetch (Cloudflare will often block, but try)
+  // 3. komentaras (300-char summary, last resort)
+  const needsFetch = !listing_text && !!url;
+
   const [mvzResult, sandoriaiResult, listingResult] = await Promise.allSettled([
     fetchMvz(lat, lng),
     fetchRcSandoriai(apskritis),
-    url ? fetchListingText(url) : Promise.resolve(null),
+    needsFetch ? fetchListingText(url) : Promise.resolve(null),
   ]);
 
   const mvz = mvzResult.status === 'fulfilled' ? mvzResult.value : { eurHa: null, zona: null };
   const sandoriai = sandoriaiResult.status === 'fulfilled' ? sandoriaiResult.value : [];
-  // Use full listing text if scraped successfully, otherwise fall back to komentaras
-  const listingText = (listingResult.status === 'fulfilled' && listingResult.value)
-    ? listingResult.value
-    : (komentaras || null);
+  const fetchedText = listingResult.status === 'fulfilled' ? listingResult.value : null;
+  const listingText = listing_text || fetchedText || komentaras || null;
+  const textSource = listing_text ? 'saved' : fetchedText ? 'fetched' : komentaras ? 'summary' : null;
 
   try {
     const prompt = buildPrompt({
@@ -330,7 +335,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         mvz: mvz.eurHa !== null,
         rc: sandoriai.length > 0,
         claude: true,
-        fullText: listingResult.status === 'fulfilled' && !!listingResult.value,
+        textSource,   // 'saved' | 'fetched' | 'summary' | null
       },
     });
   } catch (e: any) {

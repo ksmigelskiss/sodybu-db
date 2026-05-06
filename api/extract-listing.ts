@@ -291,7 +291,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // iOS URI scheme that routes to Safari.app.
     const payload = encodeURIComponent(JSON.stringify({ data: parsed, nuotrauka, url: url ?? '' }));
     const appUrl = `x-safari-https://sodybu-db.vercel.app/#shortcut/${payload}`;
-    return res.json({ ok: true, data: parsed, nuotrauka, appUrl });
+    // listing_text: full plain text for later use in value-estimate (no re-fetch needed)
+    const listing_text = sourceText.slice(0, 8000);
+    return res.json({ ok: true, data: parsed, nuotrauka, appUrl, listing_text });
   } catch (e: any) {
     return res.status(500).json({ error: e.message });
   }

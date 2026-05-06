@@ -32,7 +32,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const [coordEdit,   setCoordEdit]   = useState(!vieta.lat); // auto-open if no location
   const [coordInput,  setCoordInput]  = useState('');
   const [geocoding,   setGeocoding]   = useState(false);
-  const [vertinimas,  setVertinimas]  = useState(null);   // { vertinimasEur, ... }
+  const [vertinimas,  setVertinimas]  = useState(vieta.vertinimas ?? null);
   const [vertLoading, setVertLoading] = useState(false);
   const [vertError,   setVertError]   = useState(null);
   const textareaRef = useRef(null);
@@ -45,7 +45,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     setNoteOpen(!!(vieta.komentaras));
     setCoordEdit(!vieta.lat);
     setCoordInput('');
-    setVertinimas(null);
+    setVertinimas(vieta.vertinimas ?? null);
     setVertError(null);
     setVertLoading(false);
   }, [vieta.id]);
@@ -72,14 +72,18 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           atributai,
           zonaPavadinimas: vieta.zonaPavadinimas || undefined,
           salis: vieta.salis || undefined,
-          url: vieta.url || undefined,
-          komentaras: vieta.komentaras || undefined,
+          listing_text: vieta.listing_text || undefined,  // saved at import, skips re-fetch
+          url: vieta.url || undefined,                   // fallback: re-fetch if no saved text
+          komentaras: vieta.komentaras || undefined,     // last resort: 300-char summary
           apsaugos,
         }),
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'Klaida');
-      setVertinimas(json);
+      const result = { ...json, calculatedAt: new Date().toISOString() };
+      setVertinimas(result);
+      // Persist so next open shows cached result without re-calling Claude
+      onUpdate(vieta.id, { vertinimas: result });
     } catch (e) {
       setVertError(e.message || 'Nepavyko gauti vertinimo');
     } finally {
@@ -343,7 +347,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           {vertLoading && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9aa0a6', fontSize: 12, padding: '6px 0' }}>
               <Loader size={13} style={{ animation: 'spin 1s linear infinite' }} />
-              Analizuojama…
+              {vieta.listing_text ? 'Siunčiama Claude…' : vieta.url ? 'Nuskaitomas skelbimas…' : 'Analizuojama…'}
             </div>
           )}
           {vertError && (
@@ -708,9 +712,15 @@ function VertinimasBlock({ v, onRetry }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <TrendingUp size={13} color="#5f6368" />
           <span style={{ ...T.micro, fontWeight: 600, color: '#5f6368' }}>RINKOS VERTĖ</span>
-          {(v.dataSources?.mvz || v.dataSources?.rc || v.dataSources?.fullText) && (
+          {(v.dataSources?.textSource || v.dataSources?.rc || v.dataSources?.mvz) && (
             <span style={{ fontSize: 9, color: '#9aa0a6', background: '#f1f3f4', borderRadius: 3, padding: '1px 4px' }}>
-              {[v.dataSources.fullText && 'tekstas', v.dataSources.rc && 'RC', v.dataSources.mvz && 'MVZ'].filter(Boolean).join('+')}
+              {[
+                v.dataSources.textSource === 'saved'   && 'tekstas',
+                v.dataSources.textSource === 'fetched' && 'fetch',
+                v.dataSources.textSource === 'summary' && 'santrauka',
+                v.dataSources.rc  && 'RC',
+                v.dataSources.mvz && 'MVZ',
+              ].filter(Boolean).join('+')}
             </span>
           )}
         </div>
@@ -800,10 +810,13 @@ function VertinimasBlock({ v, onRetry }) {
         </div>
       )}
 
-      {/* Confidence */}
+      {/* Confidence + date */}
       <div style={{ ...T.micro, color: '#c4c7cc' }}>
         Tikslumas: {v.confidence === 'high' ? 'aukštas' : v.confidence === 'medium' ? 'vidutinis' : 'žemas'}
         {' · '}AI vertinimas
+        {v.calculatedAt && (
+          <> · {new Date(v.calculatedAt).toLocaleDateString('lt-LT', { month: 'short', day: 'numeric' })}</>
+        )}
       </div>
     </div>
   );

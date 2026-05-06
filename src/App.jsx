@@ -377,8 +377,8 @@ export default function App() {
               position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1100,
               background: 'white', borderRadius: '14px 14px 0 0',
               boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
-              maxHeight: sheetOpen ? '72dvh' : 52,
-              transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)',
+              height: sheetOpen ? '72dvh' : 52,
+              transition: 'height 0.25s cubic-bezier(0.4,0,0.2,1)',
               display: 'flex', flexDirection: 'column', overflow: 'hidden',
             }}>
               {/* Drag handle */}

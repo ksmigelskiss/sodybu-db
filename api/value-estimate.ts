@@ -1,6 +1,41 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const MODEL = 'claude-haiku-4-5';
+const MAX_LISTING_TEXT = 12000; // chars sent to Claude from full listing
+
+// ── Fetch listing text server-side (same bot-bypass as extract-listing) ──────
+const BOT_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'lt,en-US;q=0.7,en;q=0.3',
+  'Cache-Control': 'no-cache',
+};
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/\s{2,}/g, ' ').trim();
+}
+
+async function fetchListingText(url: string): Promise<string | null> {
+  try {
+    const r = await fetch(url, {
+      headers: BOT_HEADERS,
+      signal: AbortSignal.timeout(9000),
+      redirect: 'follow',
+    });
+    if (!r.ok) return null;
+    const html = await r.text();
+    if (html.includes('cf-challenge') || html.includes('Just a moment') || html.length < 2000) return null;
+    return htmlToText(html).slice(0, MAX_LISTING_TEXT);
+  } catch {
+    return null;
+  }
+}
 
 // ── LKS94 projection (reused from geo-proxy) ────────────────────────────────
 function lks94(lng: number, lat: number): [number, number] {
@@ -136,6 +171,8 @@ interface ValuationInput {
   mvz: { eurHa: number | null; zona: string | null };
   sandoriai: RcSandoris[];
   salis?: string;
+  listingText?: string | null;  // full scraped text or komentaras fallback
+  apsaugos?: string[];          // natura2000, saugoma_terit, vanduo_apsauga
 }
 
 function buildPrompt(inp: ValuationInput): string {
@@ -157,6 +194,13 @@ function buildPrompt(inp: ValuationInput): string {
   };
   const attrLabel = inp.atributai.map(a => attrMap[a] ?? a).join(', ') || '—';
 
+  const apsaugosMap: Record<string, string> = {
+    natura2000:    'Natura 2000 zona (riboja statybas)',
+    saugoma_terit: 'Saugoma teritorija (riboja statybas)',
+    vanduo_apsauga:'Vandens apsaugos zona (riboja statybas)',
+  };
+  const apsaugosLabel = (inp.apsaugos ?? []).map(a => apsaugosMap[a] ?? a);
+
   const mvzLine = inp.mvz.eurHa
     ? `Oficiali žemės MVZ zona: ~${Math.round(inp.mvz.eurHa).toLocaleString()} €/ha${inp.mvz.zona ? ` (zona ${inp.mvz.zona})` : ''}`
     : null;
@@ -171,14 +215,18 @@ function buildPrompt(inp: ValuationInput): string {
     ? `\nPROPERTY IS ABROAD (${inp.salis.toUpperCase()}) — evaluate using that country's rural market.`
     : '';
 
+  const listingSection = inp.listingText
+    ? `\nSKELBIMO TEKSTAS (pilnas):\n${inp.listingText}\n`
+    : '';
+
   return `Tu esi NT rinkos vertintojas. Įvertink šį nekilnojamąjį turtą ir grąžink TIKTAI JSON, be jokio papildomo teksto.${foreignNote}
 
 TURTO DUOMENYS:
 Vieta: ${vieta}
 Charakteristikos: ${specs || '(nenurodyta)'}
 Ypatybės: ${attrLabel}
-Skelbimo kaina: ${inp.kaina ? `${inp.kaina.toLocaleString()} €` : '(nenurodyta)'}
-${mvzLine ? mvzLine + '\n' : ''}${sandoriaiLines ? `Panašūs sandoriai regione:\n${sandoriaiLines}\n` : ''}
+${apsaugosLabel.length > 0 ? `Apsaugos zonos: ${apsaugosLabel.join(', ')}\n` : ''}Skelbimo kaina: ${inp.kaina ? `${inp.kaina.toLocaleString()} €` : '(nenurodyta)'}
+${mvzLine ? mvzLine + '\n' : ''}${sandoriaiLines ? `Panašūs sandoriai regione:\n${sandoriaiLines}\n` : ''}${listingSection}
 Grąžink JSON (tik JSON, be markdown):
 {
   "vertinimasEur": <skaičius — rinkos vertės vidurkis €, null jei neįmanoma įvertinti>,
@@ -196,6 +244,8 @@ Taisyklės:
 - Vanduo prie sklypo paprastai prideda 10–20% vertės
 - Miškelis/medžiai paprastai +5–15%
 - Vilniaus/Kauno rajonai brangiausi, periferija pigesnė
+- Natura 2000 / saugoma teritorija riboja statybas — paprastai mažina rinkos vertę 10–25%, bet gali kelti gamtinę vertę
+- Vandens apsaugos zona riboja statybas šalia vandens — gali mažinti 5–15%
 - confidence=high tik jei yra sandorių duomenų arba MVZ; medium jei tik vietovė žinoma; low jei labai mažai info
 - Jei kaina nežinoma, procentas=null, palyginimas="nežinoma"`;
 }
@@ -243,25 +293,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
 
   const { lat, lng, kaina, plotas_namas, plotas_sklypas, statybos_metai,
-          atributai = [], zonaPavadinimas, salis } = req.body as any;
+          atributai = [], zonaPavadinimas, salis, url, komentaras, apsaugos = [] } = req.body as any;
 
   if (!lat || !lng) return res.status(400).json({ error: 'lat/lng required' });
 
   const apskritis = getApskritis(lat, lng);
 
-  // Fire MVZ + RC in parallel, both with graceful fallback
-  const [mvzResult, sandoriaiResult] = await Promise.allSettled([
+  // Fire MVZ, RC, and listing fetch in parallel — all with graceful fallback
+  const [mvzResult, sandoriaiResult, listingResult] = await Promise.allSettled([
     fetchMvz(lat, lng),
     fetchRcSandoriai(apskritis),
+    url ? fetchListingText(url) : Promise.resolve(null),
   ]);
 
   const mvz = mvzResult.status === 'fulfilled' ? mvzResult.value : { eurHa: null, zona: null };
   const sandoriai = sandoriaiResult.status === 'fulfilled' ? sandoriaiResult.value : [];
+  // Use full listing text if scraped successfully, otherwise fall back to komentaras
+  const listingText = (listingResult.status === 'fulfilled' && listingResult.value)
+    ? listingResult.value
+    : (komentaras || null);
 
   try {
     const prompt = buildPrompt({
       lat, lng, apskritis, zonaPavadinimas, kaina, plotas_namas,
-      plotas_sklypas, statybos_metai, atributai, mvz, sandoriai, salis,
+      plotas_sklypas, statybos_metai, atributai, mvz, sandoriai, salis, listingText, apsaugos,
     });
     const result = await callClaude(apiKey, prompt);
 
@@ -275,6 +330,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         mvz: mvz.eurHa !== null,
         rc: sandoriai.length > 0,
         claude: true,
+        fullText: listingResult.status === 'fulfilled' && !!listingResult.value,
       },
     });
   } catch (e: any) {

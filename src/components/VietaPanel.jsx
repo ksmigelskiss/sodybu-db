@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Home, Anchor, Mountain, Sun, Navigation, ChevronDown, ChevronUp, Search, Star, TrendingUp, TrendingDown, Minus, Loader } from 'lucide-react';
-import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, UZSIENIS_ATTRS, vietaTheme } from '../lib/theme.js';
+import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, UZSIENIS_ATTRS, APSAUGOS_ZONOS, vietaTheme } from '../lib/theme.js';
 import { SALYS, salisInfo } from '../lib/salis.js';
 import { geoportalUrl } from '../lib/coords.js';
 import { openExternal } from '../lib/openExternal.js';
@@ -56,6 +56,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     setVertinimas(null);
     try {
       const atributai = ['upelis','tvenkinys','sodas','medziai','prie_juros','gamtoje','baseinas','kaimas'].filter(k => vieta[k]);
+      const apsaugos = ['natura2000','saugoma_terit','vanduo_apsauga'].filter(k => vieta[k]);
       const res = await fetch('/api/value-estimate', {
         method: 'POST',
         headers: {
@@ -71,6 +72,9 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           atributai,
           zonaPavadinimas: vieta.zonaPavadinimas || undefined,
           salis: vieta.salis || undefined,
+          url: vieta.url || undefined,
+          komentaras: vieta.komentaras || undefined,
+          apsaugos,
         }),
       });
       const json = await res.json();
@@ -455,6 +459,32 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           })}
         </div>
 
+        {/* Apsaugos zonos — LT only, manual input */}
+        {(!vieta.salis || vieta.salis === 'lt') && (
+          <div>
+            <div style={{ ...T.micro, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, color: '#9aa0a6' }}>
+              Apsaugos zonos
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {APSAUGOS_ZONOS.map(({ key, label }) => {
+                const active = vieta[key];
+                return (
+                  <button key={key} onClick={() => toggleAttr(key)} style={{
+                    padding: '5px 10px', borderRadius: 10, fontSize: 11, cursor: 'pointer',
+                    border: `1.5px solid ${active ? '#dc2626' : '#e8eaed'}`,
+                    background: active ? '#fee2e2' : '#fafafa',
+                    color: active ? '#dc2626' : '#9aa0a6',
+                    fontWeight: active ? 600 : 400,
+                    fontFamily: 'system-ui, sans-serif',
+                  }}>
+                    {active ? '⚠ ' : ''}{label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Contact fields — only for non-skelbimas */}
         {hasContact && (
           <div style={{ display: 'flex', gap: 8 }}>
@@ -678,9 +708,9 @@ function VertinimasBlock({ v, onRetry }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <TrendingUp size={13} color="#5f6368" />
           <span style={{ ...T.micro, fontWeight: 600, color: '#5f6368' }}>RINKOS VERTĖ</span>
-          {(v.dataSources?.mvz || v.dataSources?.rc) && (
+          {(v.dataSources?.mvz || v.dataSources?.rc || v.dataSources?.fullText) && (
             <span style={{ fontSize: 9, color: '#9aa0a6', background: '#f1f3f4', borderRadius: 3, padding: '1px 4px' }}>
-              {[v.dataSources.rc && 'RC', v.dataSources.mvz && 'MVZ'].filter(Boolean).join('+')}
+              {[v.dataSources.fullText && 'tekstas', v.dataSources.rc && 'RC', v.dataSources.mvz && 'MVZ'].filter(Boolean).join('+')}
             </span>
           )}
         </div>

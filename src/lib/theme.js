@@ -30,6 +30,14 @@ export const VIETA_ATTRS = [
   { key: 'medziai',   label: 'Medžiai' },
 ];
 
+// Apsaugos zonos — tik LT, rankinai suvedamos (Geoportal nepatikimas)
+// Dažniausiai riboja statybas → mažina vertę, bet rodo gamtinę kokybę
+export const APSAUGOS_ZONOS = [
+  { key: 'natura2000',    label: 'Natura 2000'   },
+  { key: 'saugoma_terit', label: 'Saugoma terit.' },
+  { key: 'vanduo_apsauga', label: 'Vandens apsauga' },
+];
+
 export const UZSIENIS_ATTRS = [
   { key: 'prie_juros', label: 'Prie jūros' },
   { key: 'gamtoje',    label: 'Gamtoje'    },

@@ -53,8 +53,8 @@ function extractCoordsFromHtml(html: string): string {
   // 2. JSON / JS variable patterns: "lat":54.xxx or lat:54.xxx or "latitude":54.xxx
   const scriptBlocks: string[] = [];
   const scriptRe = /<script[\s\S]*?>([\s\S]*?)<\/script>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = scriptRe.exec(html)) !== null) scriptBlocks.push(m[1]);
+  let sm: RegExpExecArray | null;
+  while ((sm = scriptRe.exec(html)) !== null) scriptBlocks.push(sm[1]);
 
   const jsonCoordRe = /["']?(?:lat(?:itude)?|y)["']?\s*[:=]\s*(5[3456]\.\d{4,})[\s\S]{0,80}?["']?(?:l(?:ng|on)(?:gitude)?|x)["']?\s*[:=]\s*(2[0-6]\.\d{4,})/i;
   for (const block of scriptBlocks) {

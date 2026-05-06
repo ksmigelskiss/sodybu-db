@@ -30,8 +30,6 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const [ogImage,     setOgImage]     = useState(null);
   const [noteOpen,    setNoteOpen]    = useState(!!(vieta.komentaras));
   const [coordEdit,   setCoordEdit]   = useState(!vieta.lat); // auto-open if no location
-  const [coordInput,  setCoordInput]  = useState('');
-  const [geocoding,   setGeocoding]   = useState(false);
   const [vertinimas,  setVertinimas]  = useState(vieta.vertinimas ?? null);
   const [vertLoading, setVertLoading] = useState(false);
   const [vertError,   setVertError]   = useState(null);
@@ -44,7 +42,6 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     setPavadinimas(vieta.zonaPavadinimas || '');
     setNoteOpen(!!(vieta.komentaras));
     setCoordEdit(!vieta.lat);
-    setCoordInput('');
     setVertinimas(vieta.vertinimas ?? null);
     setVertError(null);
     setVertLoading(false);
@@ -247,36 +244,12 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           {/* Edit / no-coords mode */}
           {coordEdit && (
             <CoordInput
-              coordInput={coordInput}
-              setCoordInput={setCoordInput}
-              geocoding={geocoding}
               hasExisting={!!vieta.lat}
-              onCancel={() => { setCoordEdit(false); setCoordInput(''); }}
+              onCancel={() => setCoordEdit(false)}
               onPickMap={() => { setCoordEdit(false); onLocate?.(vieta); }}
-              onApply={async (raw) => {
-                // Try parse as coordinates first
-                const parsed = parseCoords(raw);
-                if (parsed) {
-                  await onUpdate(vieta.id, { lat: parsed.lat, lng: parsed.lng });
-                  setCoordEdit(false); setCoordInput('');
-                  return;
-                }
-                // Otherwise geocode as address
-                if (raw.trim().length < 3) return;
-                setGeocoding(true);
-                try {
-                  const res = await fetch(`/api/geocode-proxy?q=${encodeURIComponent(raw + ' Lietuva')}`);
-                  const data = await res.json();
-                  if (data?.[0]) {
-                    const lat = parseFloat(data[0].lat);
-                    const lng = parseFloat(data[0].lon);
-                    await onUpdate(vieta.id, { lat, lng });
-                    setCoordEdit(false); setCoordInput('');
-                  } else {
-                    alert('Adresas nerastas. Bandyk tiksliau arba naudok koordinates.');
-                  }
-                } catch { alert('Klaida ieškant adreso.'); }
-                finally { setGeocoding(false); }
+              onApply={async (lat, lng) => {
+                await onUpdate(vieta.id, { lat, lng });
+                setCoordEdit(false);
               }}
             />
           )}
@@ -878,40 +851,117 @@ function parseCoords(raw) {
   return null;
 }
 
-function CoordInput({ coordInput, setCoordInput, geocoding, hasExisting, onCancel, onPickMap, onApply }) {
+function CoordInput({ hasExisting, onCancel, onPickMap, onApply }) {
+  const [query,    setQuery]    = useState('');
+  const [results,  setResults]  = useState([]);
+  const [loading,  setLoading]  = useState(false);
+  const [open,     setOpen]     = useState(false);
+  const debounceRef = useRef(null);
+  const abortRef    = useRef(null);
+  const wrapRef     = useRef(null);
+
+  useEffect(() => {
+    const handler = e => { if (!wrapRef.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const tryCoords = (raw) => parseCoords(raw);
+
+  const handleChange = (val) => {
+    setQuery(val);
+    setOpen(false);
+    clearTimeout(debounceRef.current);
+    if (tryCoords(val)) { setResults([]); return; }
+    if (val.trim().length < 2) { setResults([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/geocode-proxy?q=${encodeURIComponent(val)}`, { signal: abortRef.current.signal });
+        if (!res.ok) return;
+        const data = await res.json();
+        setResults(data); setOpen(data.length > 0);
+      } catch { /* aborted or error */ }
+      finally { setLoading(false); }
+    }, 350);
+  };
+
+  const getLabel = (r) => {
+    const a = r.address ?? {};
+    const name = a.house_number
+      ? [a.road, a.house_number].filter(Boolean).join(' ')
+      : r.name || a.road || a.village || a.hamlet || a.town || a.city || r.display_name.split(',')[0];
+    const city = a.city || a.town || a.village || a.municipality;
+    const parts = [city, a.county || a.state].filter(Boolean).join(', ');
+    return { name: name || r.display_name.split(',')[0], parts };
+  };
+
+  const apply = () => {
+    const coords = tryCoords(query);
+    if (coords) { onApply(coords.lat, coords.lng); return; }
+    // If there are results, pick the first
+    if (results.length > 0) pick(results[0]);
+  };
+
+  const pick = (r) => {
+    setOpen(false); setResults([]);
+    setQuery(r.display_name.split(',')[0]);
+    onApply(parseFloat(r.lat), parseFloat(r.lon));
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <div style={{ display: 'flex', gap: 6 }}>
+    <div ref={wrapRef} style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ position: 'relative' }}>
         <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', gap: 6,
+          display: 'flex', alignItems: 'center', gap: 6,
           border: '1px solid #e8eaed', borderRadius: 8, padding: '0 10px', background: '#fafafa',
         }}>
           <Search size={12} color="#c4c7cc" />
           <input
-            value={coordInput}
-            onChange={e => setCoordInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && coordInput.trim() && onApply(coordInput)}
+            value={query}
+            onChange={e => handleChange(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.preventDefault(); apply(); }
+              if (e.key === 'Escape') { setOpen(false); onCancel?.(); }
+              if (e.key === 'ArrowDown' && results.length > 0) { setOpen(true); }
+            }}
+            onFocus={() => results.length > 0 && setOpen(true)}
             placeholder="Adresas arba 55.1234, 24.5678…"
             autoFocus
-            style={{
-              flex: 1, border: 'none', outline: 'none', background: 'transparent',
-              padding: '8px 0', fontSize: 12, color: '#202124',
-              fontFamily: 'system-ui, sans-serif',
-            }}
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', padding: '8px 0', fontSize: 12, color: '#202124', fontFamily: 'system-ui, sans-serif' }}
           />
-          {geocoding && <span style={{ fontSize: 11, color: '#9aa0a6' }}>…</span>}
+          {loading && <span style={{ fontSize: 11, color: '#9aa0a6' }}>…</span>}
+          <button
+            onClick={apply}
+            disabled={!query.trim() || loading}
+            style={{ padding: '3px 10px', borderRadius: 6, border: 'none', background: '#1a73e8', color: 'white', fontSize: 11, fontWeight: 600, cursor: 'pointer', opacity: query.trim() && !loading ? 1 : 0.4, fontFamily: 'system-ui, sans-serif', whiteSpace: 'nowrap' }}
+          >OK</button>
         </div>
-        <button
-          onClick={() => coordInput.trim() && onApply(coordInput)}
-          disabled={!coordInput.trim() || geocoding}
-          style={{
-            padding: '0 12px', borderRadius: 8, border: 'none',
-            background: '#1a73e8', color: 'white', fontSize: 12, fontWeight: 600,
-            cursor: 'pointer', opacity: coordInput.trim() && !geocoding ? 1 : 0.4,
-            fontFamily: 'system-ui, sans-serif', whiteSpace: 'nowrap',
-          }}
-        >OK</button>
+
+        {open && results.length > 0 && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200,
+            background: 'white', borderRadius: 10, border: '1px solid #e8eaed',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)', overflow: 'hidden', maxHeight: 220, overflowY: 'auto',
+          }}>
+            {results.slice(0, 6).map((r, i) => {
+              const { name, parts } = getLabel(r);
+              return (
+                <div key={i} onMouseDown={() => pick(r)} style={{
+                  padding: '9px 12px', cursor: 'pointer', borderBottom: i < Math.min(results.length, 6) - 1 ? '1px solid #f1f3f4' : 'none',
+                  display: 'flex', flexDirection: 'column', gap: 1,
+                }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#202124', fontFamily: 'system-ui, sans-serif' }}>{name}</span>
+                  {parts && <span style={{ fontSize: 11, color: '#9aa0a6', fontFamily: 'system-ui, sans-serif' }}>{parts}</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
       <div style={{ display: 'flex', gap: 6 }}>
         <button onClick={onPickMap} style={{
           flex: 1, padding: '5px', borderRadius: 7, fontSize: 11, cursor: 'pointer',

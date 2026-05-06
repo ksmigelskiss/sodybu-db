@@ -72,41 +72,64 @@ function resolveUrl(src: string, base?: string): string {
   try { return new URL(src, base).href; } catch { return src; }
 }
 
-/** Tries og:image → twitter:image → first real <img> src (resolved to absolute). */
-function extractOgImage(html: string, base?: string): string | null {
-  // 1. og:image meta
-  const og =
-    html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
-    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1];
-  if (og) return resolveUrl(og, base);
+/** Tries og:image → twitter:image → JSON-LD → first real <img> src (resolved to absolute). */
+function extractOgImage(html: string, base?: string, isLiveDom = false): string | null {
+  // Helper: extract content= from a meta tag string, handles quoted and unquoted values
+  const metaContent = (tag: string) =>
+    tag.match(/\bcontent=["']([^"']+)["']/i)?.[1] ??
+    tag.match(/\bcontent=([^\s>]+)/i)?.[1];
 
-  // 2. twitter:image meta
-  const tw =
-    html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
-    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i)?.[1];
-  if (tw) return resolveUrl(tw, base);
+  // 1. og:image / og:image:url — scan all meta tags
+  const metaRe = /<meta\b[^>]+>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = metaRe.exec(html)) !== null) {
+    const tag = m[0];
+    if (/property=["']?og:image(?::url)?["']?/i.test(tag)) {
+      const v = metaContent(tag);
+      if (v && v.startsWith('http')) return resolveUrl(v, base);
+    }
+  }
 
-  // 3. First <img> that looks like a real photo.
-  //    Many sites lazy-load: raw HTML has src=placeholder, real URL in data-src / data-lazy-src.
-  //    Check data-* attrs first, fall back to src.
-  const SKIP = /logo|icon|avatar|pixel|1x1|sprite|track|banner|button|arrow|blank/i;
+  // 2. twitter:image
+  metaRe.lastIndex = 0;
+  while ((m = metaRe.exec(html)) !== null) {
+    const tag = m[0];
+    if (/name=["']?twitter:image["']?/i.test(tag)) {
+      const v = metaContent(tag);
+      if (v && v.startsWith('http')) return resolveUrl(v, base);
+    }
+  }
+
+  // 3. JSON-LD image
+  const ldMatch = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
+  if (ldMatch) {
+    try {
+      const ld = JSON.parse(ldMatch[1]);
+      const img = ld?.image?.url ?? ld?.image?.[0]?.url ?? ld?.image?.[0] ?? ld?.image;
+      if (typeof img === 'string' && img.startsWith('http')) return img;
+    } catch { /* ignore */ }
+  }
+
+  // 4. First <img> that looks like a real photo.
+  //    isLiveDom=true (iOS Shortcut): images are already loaded → src is real, data-src may be gone.
+  //    isLiveDom=false (server fetch): lazy-load → prefer data-src over placeholder src.
+  const SKIP = /logo|icon|avatar|pixel|1x1|sprite|track|banner|button|arrow|blank|spinner/i;
   const IS_PHOTO = /\.(jpe?g|png|webp)(\?|$)/i;
-  const IS_USEFUL_PATH = /\/(photos?|images?|img|uploads?|media|files?|gallery|listings?)\//i;
+  const IS_USEFUL_PATH = /\/(photos?|images?|img|uploads?|media|files?|gallery|listings?|thumbs?)\//i;
 
   const imgTagRe = /<img([^>]+)>/gi;
-  let tagM: RegExpExecArray | null;
-  while ((tagM = imgTagRe.exec(html)) !== null) {
-    const attrs = tagM[1];
-    // Prefer lazy-load attributes over src (src is often a placeholder in raw HTML)
-    const srcMatch =
-      attrs.match(/\bdata-src=["']([^"']{8,})["']/i) ??
-      attrs.match(/\bdata-lazy(?:-src)?=["']([^"']{8,})["']/i) ??
-      attrs.match(/\bdata-original=["']([^"']{8,})["']/i) ??
-      attrs.match(/\bdata-url=["']([^"']{8,})["']/i) ??
-      attrs.match(/\bsrc=["']([^"']{8,})["']/i);
+  while ((m = imgTagRe.exec(html)) !== null) {
+    const attrs = m[1];
+    const srcMatch = isLiveDom
+      ? (attrs.match(/\bsrc=["']([^"']{8,})["']/i) ??
+         attrs.match(/\bdata-src=["']([^"']{8,})["']/i))
+      : (attrs.match(/\bdata-src=["']([^"']{8,})["']/i) ??
+         attrs.match(/\bdata-lazy(?:-src)?=["']([^"']{8,})["']/i) ??
+         attrs.match(/\bdata-original=["']([^"']{8,})["']/i) ??
+         attrs.match(/\bdata-url=["']([^"']{8,})["']/i) ??
+         attrs.match(/\bsrc=["']([^"']{8,})["']/i));
     if (!srcMatch) continue;
     const src = srcMatch[1];
-    // Skip obviously bad sources
     if (src.startsWith('data:')) continue;
     if (SKIP.test(src)) continue;
     if (!IS_PHOTO.test(src) && !IS_USEFUL_PATH.test(src)) continue;
@@ -254,9 +277,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Mode 1: HTML from iOS Shortcut ("Get Details of Safari Web Page" → Page Source)
   // The page is already loaded in the user's real browser — Cloudflare already passed.
+  // isLiveDom=true: rendered DOM, images already loaded into src (no lazy-load data-src needed).
   if (html && html.length > 200) {
     const truncated = html.slice(0, 300_000); // ~300KB max
-    nuotrauka = extractOgImage(truncated, url);
+    nuotrauka = extractOgImage(truncated, url, true);
     sourceText = htmlToText(truncated);
   }
 

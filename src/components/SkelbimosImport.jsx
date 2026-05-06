@@ -82,7 +82,10 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
     try {
       const res = await fetch('/api/extract-listing', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Secret': import.meta.env.VITE_APP_SECRET ?? '',
+        },
         body: JSON.stringify({
           url: useUrl || undefined,
           text: useText || undefined,
@@ -610,6 +613,7 @@ function CoordSection({ lat, lng, geocoding, coordEdit, setCoordEdit, coordInput
 function IosShortcutGuide() {
   const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/add99da951dd48569a24ba5c61c0da8c';
   const apiUrl = 'https://sodybu-db.vercel.app/api/extract-listing';
+  const appSecret = import.meta.env.VITE_APP_SECRET ?? '';
   const steps = [
     {
       nr: 1,
@@ -648,7 +652,8 @@ function IosShortcutGuide() {
                • Method: <strong>POST</strong><br/>
                • Request Body: <strong>JSON</strong><br/>
                • Spausti <strong>+ Add new field</strong>: Text, key = <code>url</code>, value = pasirinkti Variable <em>listingUrl</em><br/>
-               • Dar kartą <strong>+ Add new field</strong>: Text, key = <code>html</code>, value = Variable <em>html</em></>,
+               • Dar kartą <strong>+ Add new field</strong>: Text, key = <code>html</code>, value = Variable <em>html</em><br/>
+               • <strong>Headers</strong> → <strong>Add new field</strong>: key = <code>X-App-Secret</code>, value = <code style={{fontSize:10,wordBreak:'break-all'}}>{appSecret}</code></>,
     },
     {
       nr: 7,

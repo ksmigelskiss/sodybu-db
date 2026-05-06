@@ -234,9 +234,15 @@ async function callClaude(apiKey: string, url: string, text: string) {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Secret');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+
+  // Prevent unauthorized use of Anthropic API credits
+  const appSecret = process.env.APP_SECRET;
+  if (appSecret && req.headers['x-app-secret'] !== appSecret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });

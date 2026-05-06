@@ -21,8 +21,8 @@ import LithuaniaMiniMap from './components/LithuaniaMiniMap.jsx';
 const PANEL_W = 380;
 
 const TABS = [
-  { id: 'lietuva',   label: 'Lietuva',    flag: '🇱🇹' },
-  { id: 'uzsienis',  label: 'Užsienyje',  flag: '🌍' },
+  { id: 'lietuva',   label: 'Lietuva',    icon: House },
+  { id: 'uzsienis',  label: 'Užsienyje',  icon: Globe },
   { id: 'vietoves',  label: 'Vietovės',   icon: MapPin },
   { id: 'portalai',  label: 'Šaltiniai',  icon: Globe },
 ];
@@ -515,9 +515,7 @@ export default function App() {
                 fontSize: 12, fontWeight: isActive ? 600 : 400,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
               }}>
-                {tab.flag
-                  ? <span style={{ fontSize: 14, lineHeight: 1 }}>{tab.flag}</span>
-                  : <Icon size={13} />}
+                <Icon size={13} />
                 {tab.label}
                 {count != null && count > 0 && (
                   <span style={{ background: isActive ? '#e8f0fe' : C.surfaceVar, color: isActive ? C.primary : C.textSec, borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 600 }}>{count}</span>

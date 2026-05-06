@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, ExternalLink, Trash2, ChevronDown, ChevronUp, Globe } from 'lucide-react';
+import { openExternal } from '../lib/openExternal.js';
 
 const REGIONAI = [
   { id: 'lt',    label: '🇱🇹 Lietuviški' },
@@ -176,7 +177,7 @@ function PortalCard({ portal, count, onUpdate, onDelete }) {
         {portal.searchUrl && !open && (
           <a
             href={portal.searchUrl} target="_blank" rel="noreferrer"
-            onClick={e => e.stopPropagation()}
+            onClick={e => { e.preventDefault(); e.stopPropagation(); openExternal(portal.searchUrl); }}
             style={{ color: '#9aa0a6', display: 'flex', flexShrink: 0, padding: 2 }}
             title="Atidaryti paiešką"
           >
@@ -208,9 +209,11 @@ function PortalCard({ portal, count, onUpdate, onDelete }) {
             style={inputStyle}
           />
           {editUrl && (
-            <a href={editUrl} target="_blank" rel="noreferrer" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#1a73e8', textDecoration: 'none',
-            }}>
+            <a href={editUrl} target="_blank" rel="noreferrer"
+              onClick={e => { e.preventDefault(); openExternal(editUrl); }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#1a73e8', textDecoration: 'none',
+              }}>
               <ExternalLink size={12} /> Atidaryti paiešką
             </a>
           )}

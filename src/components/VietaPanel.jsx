@@ -3,6 +3,7 @@ import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Drople
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, UZSIENIS_ATTRS, vietaTheme } from '../lib/theme.js';
 import { SALYS, salisInfo } from '../lib/salis.js';
 import { geoportalUrl } from '../lib/coords.js';
+import { openExternal } from '../lib/openExternal.js';
 import PhotoStrip from './PhotoStrip.jsx';
 
 const ATTR_ICONS   = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees,
@@ -263,7 +264,9 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
                 </a>
               )}
               {vieta.url && (
-                <a href={vieta.url} target="_blank" rel="noreferrer" style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <a href={vieta.url} target="_blank" rel="noreferrer"
+                  onClick={e => { e.preventDefault(); openExternal(vieta.url); }}
+                  style={{ ...T.caption, color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
                   <ExternalLink size={12} />Atidaryti skelbimą
                 </a>
               )}
@@ -311,7 +314,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
                     <a
                       key={opt.label}
                       href={opt.url} target="_blank" rel="noreferrer"
-                      onClick={() => setNavOpen(false)}
+                      onClick={e => { e.preventDefault(); setNavOpen(false); openExternal(opt.url); }}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         padding: '13px 16px', textDecoration: 'none',
@@ -566,12 +569,14 @@ function MetaChip({ children }) {
 
 function GeoLink({ href, label }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" style={{
-      flex: 1, textAlign: 'center', background: '#f8f9fa', borderRadius: 8,
-      padding: '7px 4px', textDecoration: 'none', color: '#5f6368', fontSize: 11, fontWeight: 500,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-      fontFamily: 'system-ui, sans-serif',
-    }}>
+    <a href={href} target="_blank" rel="noreferrer"
+      onClick={e => { e.preventDefault(); openExternal(href); }}
+      style={{
+        flex: 1, textAlign: 'center', background: '#f8f9fa', borderRadius: 8,
+        padding: '7px 4px', textDecoration: 'none', color: '#5f6368', fontSize: 11, fontWeight: 500,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+        fontFamily: 'system-ui, sans-serif',
+      }}>
       <ExternalLink size={10} />{label}
     </a>
   );

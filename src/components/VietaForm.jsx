@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MapPin, Link, Euro, ExternalLink, Droplets, Waves, Apple, Trees } from 'lucide-react';
 import { VIETA_ATTRS } from '../lib/theme.js';
 import { geoportalUrl } from '../lib/coords.js';
+import { openExternal } from '../lib/openExternal.js';
 
 const ATTR_ICONS = { upelis: Droplets, tvenkinys: Waves, sodas: Apple, medziai: Trees };
 
@@ -145,11 +146,13 @@ export default function VietaForm({ lat, lng, zonaPavadinimas, onSave, onCancel,
 
 function GeoLink({ href, label }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" style={{
-      flex: 1, textAlign: 'center', background: '#f8f9fa', borderRadius: 8,
-      padding: '6px 4px', textDecoration: 'none', color: '#5f6368', fontSize: 11, fontWeight: 500,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-    }}>
+    <a href={href} target="_blank" rel="noreferrer"
+      onClick={e => { e.preventDefault(); openExternal(href); }}
+      style={{
+        flex: 1, textAlign: 'center', background: '#f8f9fa', borderRadius: 8,
+        padding: '6px 4px', textDecoration: 'none', color: '#5f6368', fontSize: 11, fontWeight: 500,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+      }}>
       <ExternalLink size={10} />{label}
     </a>
   );

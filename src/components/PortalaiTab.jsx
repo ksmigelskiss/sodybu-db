@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, ExternalLink, Trash2, ChevronDown, ChevronUp, Globe } from 'lucide-react';
+import { Plus, ExternalLink, Trash2, ChevronDown, ChevronUp, Globe, Settings2 } from 'lucide-react';
 import { openExternal } from '../lib/openExternal.js';
 
 const REGIONAI = [
@@ -166,39 +166,41 @@ function PortalCard({ portal, count, onUpdate, onDelete }) {
     if (r !== (portal.regionas ?? 'other')) onUpdate(portal.id, { regionas: r });
   };
 
+  const searchTarget = portal.searchUrl || `https://${portal.domain}`;
+
   return (
     <div style={{ margin: '0 12px 6px', borderRadius: 12, border: '1px solid #e8eaed', background: 'white', overflow: 'hidden' }}>
-      {/* Main row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
-        <FaviconImg domain={portal.domain} logo={portal.logo} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#202124', fontFamily: 'system-ui, sans-serif' }}>
-            {portal.pavadinimas}
-          </div>
-          {portal.aprasymas && (
-            <div style={{ fontSize: 11, color: '#9aa0a6', marginTop: 1, fontFamily: 'system-ui, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {portal.aprasymas}
+      {/* Main row — click opens search */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px' }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, cursor: 'pointer' }}
+          onClick={() => openExternal(searchTarget)}
+        >
+          <FaviconImg domain={portal.domain} logo={portal.logo} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#202124', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', gap: 5 }}>
+              {portal.pavadinimas}
+              <ExternalLink size={11} color="#c4c7cc" />
             </div>
-          )}
+            {portal.aprasymas && (
+              <div style={{ fontSize: 11, color: '#9aa0a6', marginTop: 1, fontFamily: 'system-ui, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {portal.aprasymas}
+              </div>
+            )}
+          </div>
         </div>
         {count > 0 && (
           <span style={{ fontSize: 11, fontWeight: 700, color: '#1a73e8', background: '#e8f0fe', borderRadius: 20, padding: '2px 8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {count}
           </span>
         )}
-        {portal.searchUrl && !open && (
-          <a
-            href={portal.searchUrl} target="_blank" rel="noreferrer"
-            onClick={e => { e.preventDefault(); e.stopPropagation(); openExternal(portal.searchUrl); }}
-            style={{ color: '#9aa0a6', display: 'flex', flexShrink: 0, padding: 2 }}
-            title="Atidaryti paiešką"
-          >
-            <ExternalLink size={14} />
-          </a>
-        )}
-        <div style={{ color: '#c4c7cc', display: 'flex', flexShrink: 0 }}>
-          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </div>
+        <button
+          onClick={() => setOpen(o => !o)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', color: open ? '#5f6368' : '#c4c7cc', flexShrink: 0 }}
+          title="Nustatymai"
+        >
+          <Settings2 size={15} />
+        </button>
       </div>
 
       {/* Expanded edit section */}

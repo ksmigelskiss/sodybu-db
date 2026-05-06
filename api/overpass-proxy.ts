@@ -7,6 +7,7 @@ const ENDPOINTS = [
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=1800');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { s, w, n, e } = req.query as Record<string, string>;

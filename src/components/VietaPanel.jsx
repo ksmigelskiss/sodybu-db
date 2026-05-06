@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Home, Anchor, Mountain, Sun, Navigation, ChevronDown, ChevronUp, Search, Star } from 'lucide-react';
+import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Home, Anchor, Mountain, Sun, Navigation, ChevronDown, ChevronUp, Search, Star, TrendingUp, TrendingDown, Minus, Loader } from 'lucide-react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, UZSIENIS_ATTRS, vietaTheme } from '../lib/theme.js';
 import { SALYS, salisInfo } from '../lib/salis.js';
 import { geoportalUrl } from '../lib/coords.js';
@@ -32,6 +32,9 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
   const [coordEdit,   setCoordEdit]   = useState(!vieta.lat); // auto-open if no location
   const [coordInput,  setCoordInput]  = useState('');
   const [geocoding,   setGeocoding]   = useState(false);
+  const [vertinimas,  setVertinimas]  = useState(null);   // { vertinimasEur, ... }
+  const [vertLoading, setVertLoading] = useState(false);
+  const [vertError,   setVertError]   = useState(null);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -42,7 +45,43 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     setNoteOpen(!!(vieta.komentaras));
     setCoordEdit(!vieta.lat);
     setCoordInput('');
+    setVertinimas(null);
+    setVertError(null);
+    setVertLoading(false);
   }, [vieta.id]);
+
+  async function fetchVertinimas() {
+    setVertLoading(true);
+    setVertError(null);
+    setVertinimas(null);
+    try {
+      const atributai = ['upelis','tvenkinys','sodas','medziai','prie_juros','gamtoje','baseinas','kaimas'].filter(k => vieta[k]);
+      const res = await fetch('/api/value-estimate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Secret': import.meta.env.VITE_APP_SECRET ?? '',
+        },
+        body: JSON.stringify({
+          lat: vieta.lat, lng: vieta.lng,
+          kaina: vieta.kaina || undefined,
+          plotas_namas: vieta.plotas_namas || undefined,
+          plotas_sklypas: vieta.plotas_sklypas || undefined,
+          statybos_metai: vieta.statybos_metai || undefined,
+          atributai,
+          zonaPavadinimas: vieta.zonaPavadinimas || undefined,
+          salis: vieta.salis || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Klaida');
+      setVertinimas(json);
+    } catch (e) {
+      setVertError(e.message || 'Nepavyko gauti vertinimo');
+    } finally {
+      setVertLoading(false);
+    }
+  }
 
   useEffect(() => {
     const isStorageUrl = (u) => u?.includes('firebasestorage.app') || u?.includes('storage.googleapis.com');
@@ -277,6 +316,36 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
               <MapPin size={11} color="#c4c7cc" />{vieta.adresas}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Rinkos vertė ── */}
+      {vieta.lat && (
+        <div style={{ padding: '10px 16px', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
+          {!vertinimas && !vertLoading && (
+            <button
+              onClick={fetchVertinimas}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '8px', borderRadius: 8, border: '1.5px dashed #dadce0',
+                background: 'none', color: '#5f6368', fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                fontFamily: 'system-ui, sans-serif',
+              }}
+            >
+              <TrendingUp size={13} />
+              Įvertinti rinkos kainą
+            </button>
+          )}
+          {vertLoading && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9aa0a6', fontSize: 12, padding: '6px 0' }}>
+              <Loader size={13} style={{ animation: 'spin 1s linear infinite' }} />
+              Analizuojama…
+            </div>
+          )}
+          {vertError && (
+            <div style={{ fontSize: 11, color: '#c0392b', padding: '4px 0' }}>⚠ {vertError}</div>
+          )}
+          {vertinimas && <VertinimasBlock v={vertinimas} onRetry={fetchVertinimas} />}
         </div>
       )}
 
@@ -588,6 +657,127 @@ const relocateBtn = {
   border: '1px solid #e8eaed', background: 'white', color: '#5f6368', fontWeight: 500,
   fontFamily: 'system-ui, sans-serif',
 };
+
+// ── Rinkos vertės blokas ──────────────────────────────────────────────────────
+const PALYGINIMAS_CONFIG = {
+  brangu:    { color: '#b45309', bg: '#fef3c7', icon: TrendingUp,   label: 'Brangoka'  },
+  teisinga:  { color: '#166534', bg: '#dcfce7', icon: Minus,        label: 'Teisinga'  },
+  pigi:      { color: '#1d4ed8', bg: '#dbeafe', icon: TrendingDown, label: 'Pigi'      },
+  nežinoma:  { color: '#6b7280', bg: '#f3f4f6', icon: Minus,        label: 'Nežinoma'  },
+};
+
+function VertinimasBlock({ v, onRetry }) {
+  const cfg = PALYGINIMAS_CONFIG[v.palyginimas] ?? PALYGINIMAS_CONFIG['nežinoma'];
+  const Icon = cfg.icon;
+  const pct  = v.procentas != null ? Math.round(v.procentas) : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <TrendingUp size={13} color="#5f6368" />
+          <span style={{ ...T.micro, fontWeight: 600, color: '#5f6368' }}>RINKOS VERTĖ</span>
+          {(v.dataSources?.mvz || v.dataSources?.rc) && (
+            <span style={{ fontSize: 9, color: '#9aa0a6', background: '#f1f3f4', borderRadius: 3, padding: '1px 4px' }}>
+              {[v.dataSources.rc && 'RC', v.dataSources.mvz && 'MVZ'].filter(Boolean).join('+')}
+            </span>
+          )}
+        </div>
+        <button onClick={onRetry} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9aa0a6', padding: 2, lineHeight: 1, fontSize: 10 }}>↺</button>
+      </div>
+
+      {/* Main value */}
+      {v.vertinimasEur && (
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 20, fontWeight: 800, color: '#202124', letterSpacing: '-0.5px', fontFamily: 'system-ui, sans-serif' }}>
+            {Math.round(v.vertinimasEur / 1000) * 1000 === v.vertinimasEur
+              ? v.vertinimasEur.toLocaleString('lt-LT')
+              : `~${Math.round(v.vertinimasEur / 1000) * 1000 > v.vertinimasEur
+                    ? (Math.round((v.vertinimasEur + 500) / 1000) * 1000).toLocaleString('lt-LT')
+                    : Math.round(v.vertinimasEur).toLocaleString('lt-LT')}`} €
+          </span>
+          {v.diapazonasMin && v.diapazonasMax && (
+            <span style={{ ...T.micro }}>
+              {Math.round(v.diapazonasMin / 1000)}k – {Math.round(v.diapazonasMax / 1000)}k €
+            </span>
+          )}
+          {/* Palyginimas badge */}
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+            fontSize: 11, fontWeight: 600, color: cfg.color, background: cfg.bg,
+            borderRadius: 20, padding: '2px 8px', fontFamily: 'system-ui, sans-serif',
+          }}>
+            <Icon size={10} />
+            {cfg.label}
+            {pct != null && ` ${pct > 0 ? '+' : ''}${pct}%`}
+          </span>
+        </div>
+      )}
+
+      {/* Value factors */}
+      {v.veiksniai?.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {v.veiksniai.map((f, i) => {
+            const isPlus = f.startsWith('+');
+            return (
+              <span key={i} style={{
+                fontSize: 10, fontWeight: 500,
+                color: isPlus ? '#166534' : '#9a3412',
+                background: isPlus ? '#dcfce7' : '#fee2e2',
+                borderRadius: 4, padding: '1px 6px',
+                fontFamily: 'system-ui, sans-serif',
+              }}>
+                {f}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* RC sandoriai */}
+      {v.sandoriai?.length > 0 && (
+        <div style={{ background: '#f8f9fa', borderRadius: 8, padding: '8px 10px' }}>
+          <div style={{ ...T.micro, fontWeight: 600, marginBottom: 4 }}>Panašūs sandoriai (RC)</div>
+          {v.sandoriai.slice(0, 4).map((s, i) => (
+            <div key={i} style={{ ...T.micro, display: 'flex', justifyContent: 'space-between', padding: '2px 0', borderBottom: i < Math.min(v.sandoriai.length, 4) - 1 ? '1px solid #e8eaed' : 'none' }}>
+              <span style={{ flex: 1, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {s.adresas || '—'}{s.plotas ? `, ${s.plotas}` : ''}
+              </span>
+              <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {s.kaina.toLocaleString('lt-LT')} €
+                <span style={{ fontWeight: 400, marginLeft: 4 }}>{s.data?.slice(0, 7)}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* MVZ */}
+      {v.mvzEurHa && (
+        <div style={{ ...T.micro }}>
+          NŽT MVZ zona: ~{Math.round(v.mvzEurHa).toLocaleString()} €/ha
+        </div>
+      )}
+
+      {/* AI comment */}
+      {v.komentaras && (
+        <div style={{
+          ...T.micro, lineHeight: 1.5, color: '#5f6368',
+          borderLeft: '2px solid #e8eaed', paddingLeft: 8,
+        }}>
+          {v.komentaras}
+        </div>
+      )}
+
+      {/* Confidence */}
+      <div style={{ ...T.micro, color: '#c4c7cc' }}>
+        Tikslumas: {v.confidence === 'high' ? 'aukštas' : v.confidence === 'medium' ? 'vidutinis' : 'žemas'}
+        {' · '}AI vertinimas
+      </div>
+    </div>
+  );
+}
 
 // ── Coordinate parser (same logic as SkelbimosImport) ────────────────────────
 function parseCoords(raw) {

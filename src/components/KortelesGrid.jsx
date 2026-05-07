@@ -127,6 +127,11 @@ function KortelesCard({ vieta, selected, onClick, onToggleStar, foreign }) {
         {vieta.kaina && (
           <div style={{ fontSize: 12, fontWeight: 700, color: '#e37400', marginTop: 3 }}>
             {vieta.kaina.toLocaleString('lt-LT')} €
+            {vieta.vertinimas?.vertinimasEur && (
+              <span style={{ fontWeight: 400, color: '#6b7280', fontSize: 11, marginLeft: 4 }}>
+                (≈{Math.round(vieta.vertinimas.vertinimasEur / 1000)}k)
+              </span>
+            )}
           </div>
         )}
 

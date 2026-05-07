@@ -199,7 +199,7 @@ export default function SodybaMap({
     });
   }, [items]);
 
-  // Vieta markers
+  // Vieta markers — dim others to 30% opacity when one is selected
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -207,13 +207,18 @@ export default function SodybaMap({
     vietaMarkersRef.current = [];
     (vietos ?? []).forEach(v => {
       if (!v.lat || !v.lng) return;
+      const isSelected = selectedVieta && v.id === selectedVieta.id;
+      const dimmed = selectedVieta && !isSelected;
       const label = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
-      const m = L.marker([v.lat, v.lng], { icon: makeVietaIcon(v.statusas, v.saltinis), zIndexOffset: 100 })
-        .addTo(map).bindTooltip(label);
+      const m = L.marker([v.lat, v.lng], {
+        icon: makeVietaIcon(v.statusas, v.saltinis),
+        zIndexOffset: isSelected ? 500 : 100,
+        opacity: dimmed ? 0.3 : 1,
+      }).addTo(map).bindTooltip(label);
       m.on('click', (e) => { L.DomEvent.stopPropagation(e); onVietaSelect?.(v); });
       vietaMarkersRef.current.push(m);
     });
-  }, [vietos]);
+  }, [vietos, selectedVieta?.id]);
 
   // addMode cursor + click handler
   useEffect(() => {

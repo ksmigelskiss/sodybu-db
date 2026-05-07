@@ -458,20 +458,20 @@ export default function SkelbimosImport({ onSave, onCancel, onPickOnMap, mobile,
                 )}
               </div>
 
-              {/* Separator */}
-              <div style={{ height: 1, background: '#f1f3f4', margin: '0 -16px' }} />
-
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setStep('url')} style={{ ...btnSec, flex: 1 }}>← Atgal</button>
-                <button onClick={handleSave} disabled={step === 'saving'} style={{ ...btnPri, flex: 2, borderRadius: 10, padding: '10px', opacity: step === 'saving' ? 0.6 : 1 }}>
-                  {step === 'saving' ? <><Loader /> Saugoma…</> : <><Check size={14} /> Išsaugoti sodybą</>}
-                </button>
-              </div>
             </div>
           </>
         )}
       </div>
+
+      {/* Sticky save footer — always visible when on preview step */}
+      {isPreview && (
+        <div style={{ flexShrink: 0, borderTop: '1px solid #f1f3f4', padding: '12px 16px', display: 'flex', gap: 8, background: 'white' }}>
+          <button onClick={() => setStep('url')} style={{ ...btnSec, flex: 1 }}>← Atgal</button>
+          <button onClick={handleSave} disabled={step === 'saving'} style={{ ...btnPri, flex: 2, borderRadius: 10, padding: '10px', opacity: step === 'saving' ? 0.6 : 1 }}>
+            {step === 'saving' ? <><Loader /> Saugoma…</> : <><Check size={14} /> Išsaugoti sodybą</>}
+          </button>
+        </div>
+      )}
     </>
   );
 }

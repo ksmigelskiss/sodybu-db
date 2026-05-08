@@ -51,11 +51,12 @@ export function makeMarkerIcon(score, statusas) {
   return L.divIcon({ html: svg, className: '', iconSize: [32, 32], iconAnchor: [16, 16] });
 }
 
-export function makeVietaIcon(statusas, saltinis, hasInfo = true) {
+export function makeVietaIcon(statusas, saltinis, hasInfo) {
+  if (hasInfo === undefined) hasInfo = saltinis === 'skelbimas';
   const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#9aa0a6' };
   const isSkelbimas = saltinis === 'skelbimas';
   // Grey = no info/status; orange = listing but not yet investigated; colored = status set
-  const color = statusColors[statusas] ?? (isSkelbimas ? '#e37400' : '#c4c7cc');
+  const color = statusColors[statusas] ?? (hasInfo ? '#e37400' : '#c4c7cc');
   const badgeColor = statusColors[statusas] ?? '#e37400';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="38" viewBox="0 0 30 38">
     <ellipse cx="15" cy="36" rx="6" ry="2.5" fill="rgba(0,0,0,0.18)"/>

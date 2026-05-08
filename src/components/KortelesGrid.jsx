@@ -42,7 +42,8 @@ function KortelesCard({ vieta, selected, onClick, onToggleStar, foreign }) {
   const attrs = foreign ? UZSIENIS_ATTRS : VIETA_ATTRS;
   const activeAttrs = attrs.filter(a => vieta[a.key]).map(a => a.label);
   const salis = foreign ? salisInfo(vieta.salis) : null;
-  const isGrey = !vieta.statusas && vieta.saltinis !== 'skelbimas';
+  const hasInfo = vieta.saltinis === 'skelbimas' || !!vieta.tel || !!vieta.kaina;
+  const isGrey = !vieta.statusas && !hasInfo;
 
   return (
     <div

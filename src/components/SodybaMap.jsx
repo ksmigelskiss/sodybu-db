@@ -209,9 +209,10 @@ export default function SodybaMap({
       if (!v.lat || !v.lng) return;
       const isSelected = selectedVieta && v.id === selectedVieta.id;
       const dimmed = selectedVieta && !isSelected;
+      const hasInfo = v.saltinis === 'skelbimas' || !!v.tel || !!v.kaina;
       const label = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
       const m = L.marker([v.lat, v.lng], {
-        icon: makeVietaIcon(v.statusas, v.saltinis),
+        icon: makeVietaIcon(v.statusas, v.saltinis, hasInfo),
         zIndexOffset: isSelected ? 500 : 100,
         opacity: dimmed ? 0.3 : 1,
       }).addTo(map).bindTooltip(label);

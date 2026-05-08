@@ -15,6 +15,7 @@ import { isLt, isForeign, salisInfo, SALYS } from './lib/salis.js';
 import { useIsMobile } from './hooks/useIsMobile.js';
 import { getApskritis } from './lib/apskritys.js';
 import { VIETA_THEME, VIETA_KEYS } from './lib/theme.js';
+import { parseLks94 } from './lib/coords.js';
 import KortelesGrid from './components/KortelesGrid.jsx';
 import LithuaniaMiniMap from './components/LithuaniaMiniMap.jsx';
 
@@ -860,6 +861,10 @@ function SearchBox({ onSelect }) {
   }, []);
 
   const search = useCallback(async (q) => {
+    // LKS94 format: "X: 6164976 Y: 603754"
+    const lks = parseLks94(q);
+    if (lks) { onSelect(lks); setOpen(false); return; }
+
     const clean = q.replace(/[()[\]]/g, '').trim();
     const coordMatch = clean.match(/^(-?\d+[.,]\d+)[,\s]+(-?\d+[.,]\d+)$/) ||
                        clean.match(/^(-?\d+)[,\s]+(-?\d+)$/);

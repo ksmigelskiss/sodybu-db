@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, MapPin, Trash2, Phone, User, ExternalLink, Car, Eye, XCircle, Droplets, Waves, Apple, Trees, Home, Anchor, Mountain, Sun, Navigation, ChevronDown, ChevronUp, Search, Star, TrendingUp, TrendingDown, Minus, Loader } from 'lucide-react';
 import { VIETA_KEYS, VIETA_THEME, VIETA_ATTRS, UZSIENIS_ATTRS, APSAUGOS_ZONOS, vietaTheme } from '../lib/theme.js';
 import { SALYS, salisInfo } from '../lib/salis.js';
-import { geoportalUrl } from '../lib/coords.js';
+import { geoportalUrl, parseLks94 } from '../lib/coords.js';
 import { openExternal } from '../lib/openExternal.js';
 import PhotoStrip from './PhotoStrip.jsx';
 
@@ -519,6 +519,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
             <>
               <GeoLink href={geoportalUrl(vieta.lat, vieta.lng)} label="Geoportal" />
               <GeoLink href={`http://www.etomesto.com/map-europe_lithuania_topo-500/?y=${vieta.lat}&x=${vieta.lng}`} label="Etomesto" />
+              <GeoLink href={`https://www.google.com/maps?q=${vieta.lat},${vieta.lng}`} label="G.Maps" />
             </>
           )}
           {!vieta.lat && <div style={{ flex: 1 }} />}
@@ -835,6 +836,9 @@ function VertinimasBlock({ v, onRetry }) {
 // ── Coordinate parser (same logic as SkelbimosImport) ────────────────────────
 function parseCoords(raw) {
   const s = raw.trim();
+  // LKS94 format: "X: 6164976 Y: 603754"
+  const lks = parseLks94(s);
+  if (lks) return lks;
   // Google Maps URL
   let m = s.match(/@(5[3456]\.\d+),(2[0-6]\.\d+)/);
   if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };

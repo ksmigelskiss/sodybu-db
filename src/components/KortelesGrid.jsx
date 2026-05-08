@@ -42,14 +42,15 @@ function KortelesCard({ vieta, selected, onClick, onToggleStar, foreign }) {
   const attrs = foreign ? UZSIENIS_ATTRS : VIETA_ATTRS;
   const activeAttrs = attrs.filter(a => vieta[a.key]).map(a => a.label);
   const salis = foreign ? salisInfo(vieta.salis) : null;
+  const isGrey = !vieta.statusas && vieta.saltinis !== 'skelbimas';
 
   return (
     <div
       onClick={onClick}
       style={{
         borderRadius: 10,
-        border: `1.5px solid ${selected ? '#1a73e8' : '#e8eaed'}`,
-        background: selected ? '#e8f0fe' : 'white',
+        border: `1.5px solid ${selected ? '#1a73e8' : isGrey ? '#e0e0e0' : '#e8eaed'}`,
+        background: selected ? '#e8f0fe' : isGrey ? '#f5f5f5' : 'white',
         overflow: 'hidden',
         cursor: 'pointer',
         boxShadow: selected ? '0 0 0 2px #1a73e820' : '0 1px 3px rgba(0,0,0,0.08)',

@@ -51,17 +51,19 @@ export function makeMarkerIcon(score, statusas) {
   return L.divIcon({ html: svg, className: '', iconSize: [32, 32], iconAnchor: [16, 16] });
 }
 
-export function makeVietaIcon(statusas, saltinis) {
-  const colors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#5f6368' };
-  const color = colors[statusas] ?? '#e37400';
+export function makeVietaIcon(statusas, saltinis, hasInfo = true) {
+  const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#9aa0a6' };
+  // Grey until a status is set; colored once investigated
+  const color = statusColors[statusas] ?? '#c4c7cc';
   const isSkelbimas = saltinis === 'skelbimas';
-  // Google Maps-style teardrop pin with house icon
+  // Badge color matches pin — grey if no status, colored if status set
+  const badgeColor = statusColors[statusas] ?? '#b0b8c1';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="38" viewBox="0 0 30 38">
     <ellipse cx="15" cy="36" rx="6" ry="2.5" fill="rgba(0,0,0,0.18)"/>
     <path d="M15 2C8.9 2 4 6.9 4 13C4 21.5 15 35 15 35C15 35 26 21.5 26 13C26 6.9 21.1 2 15 2Z" fill="${color}" stroke="white" stroke-width="1.5"/>
     <path d="M15 8L21 13H19.5V20H10.5V13H9L15 8Z" fill="white" opacity="0.95"/>
     <rect x="13" y="15.5" width="4" height="4.5" rx="0.5" fill="${color}"/>
-    ${isSkelbimas ? `<circle cx="23" cy="6" r="5.5" fill="#e37400" stroke="white" stroke-width="1.5"/><text x="23" y="9.5" text-anchor="middle" font-size="6.5" font-weight="bold" fill="white" font-family="system-ui">€</text>` : ''}
+    ${isSkelbimas ? `<circle cx="23" cy="6" r="5.5" fill="${badgeColor}" stroke="white" stroke-width="1.5"/><text x="23" y="9.5" text-anchor="middle" font-size="6.5" font-weight="bold" fill="white" font-family="system-ui">€</text>` : ''}
   </svg>`;
   return L.divIcon({ html: svg, className: '', iconSize: [30, 38], iconAnchor: [15, 35] });
 }

@@ -53,7 +53,7 @@ export function makeMarkerIcon(score, statusas) {
 
 export function makeVietaIcon(statusas, saltinis, hasInfo) {
   if (hasInfo === undefined) hasInfo = saltinis === 'skelbimas';
-  const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#9aa0a6' };
+  const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#3c3c3c' };
   const isSkelbimas = saltinis === 'skelbimas';
   // Grey = no info/status; orange = listing but not yet investigated; colored = status set
   const color = statusColors[statusas] ?? (hasInfo ? '#e37400' : '#c4c7cc');

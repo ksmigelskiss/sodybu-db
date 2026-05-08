@@ -100,8 +100,13 @@ function KortelesCard({ vieta, selected, onClick, onToggleStar, foreign }) {
       <div style={{ padding: '7px 8px 8px' }}>
         <div style={{ fontWeight: 600, fontSize: 12, color: '#202124', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 4 }}>
           {salis && <span style={{ fontSize: 14 }}>{salis.flag}</span>}
-          {vieta.zonaPavadinimas || (foreign ? (vieta.adresas || salis?.label || '') : (label ? `${label} apskr.` : ''))}
+          {vieta.zonaPavadinimas || (foreign ? (vieta.adresas || salis?.label || '') : '—')}
         </div>
+        {!foreign && label && (
+          <div style={{ fontSize: 10, color: '#9aa0a6', marginTop: 1 }}>
+            {label} apskr.
+          </div>
+        )}
         {!hasLocation && (
           <div style={{ fontSize: 10, fontWeight: 600, color: '#e37400', marginTop: 2 }}>
             📍 Vieta nepridėta

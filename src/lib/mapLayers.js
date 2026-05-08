@@ -53,11 +53,10 @@ export function makeMarkerIcon(score, statusas) {
 
 export function makeVietaIcon(statusas, saltinis, hasInfo = true) {
   const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#9aa0a6' };
-  // Grey until a status is set; colored once investigated
-  const color = statusColors[statusas] ?? '#c4c7cc';
   const isSkelbimas = saltinis === 'skelbimas';
-  // Badge color matches pin — grey if no status, colored if status set
-  const badgeColor = statusColors[statusas] ?? '#b0b8c1';
+  // Grey = no info/status; orange = listing but not yet investigated; colored = status set
+  const color = statusColors[statusas] ?? (isSkelbimas ? '#e37400' : '#c4c7cc');
+  const badgeColor = statusColors[statusas] ?? '#e37400';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="38" viewBox="0 0 30 38">
     <ellipse cx="15" cy="36" rx="6" ry="2.5" fill="rgba(0,0,0,0.18)"/>
     <path d="M15 2C8.9 2 4 6.9 4 13C4 21.5 15 35 15 35C15 35 26 21.5 26 13C26 6.9 21.1 2 15 2Z" fill="${color}" stroke="white" stroke-width="1.5"/>

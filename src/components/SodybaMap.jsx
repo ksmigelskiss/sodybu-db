@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { Satellite, Map as MapIcon, Layers } from 'lucide-react';
 import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, makeThumbnailVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
 
-const THUMB_ZOOM = 10;
+const THUMB_ZOOM = 8;
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 import { APSKRITYS } from '../lib/apskritys.js';
 

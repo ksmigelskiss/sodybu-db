@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Satellite, Map as MapIcon, Layers } from 'lucide-react';
-import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
+import { LAYERS, getCadastreLayer, makeMarkerIcon, makeVietaIcon, makeThumbnailVietaIcon, PIN_CURSOR } from '../lib/mapLayers.js';
+
+const THUMB_ZOOM = 13;
 import { fetchPolygon, fetchOsmFeatures, polygonBbox, renderOsmFeatures } from '../lib/osmFeatures.js';
 import { APSKRITYS } from '../lib/apskritys.js';
 
@@ -66,15 +68,18 @@ export default function SodybaMap({
   const featureCacheRef      = useRef(new Map());
   const onZoomChangeRef      = useRef(onZoomChange);
   const onCenterChangeRef    = useRef(onCenterChange);
+  const mapZoomRef           = useRef(7);
+  const selectedVietaRef     = useRef(selectedVieta);
 
   const [isSatellite, setIsSatellite]           = useState(false);
   const [isCadastre, setIsCadastre]             = useState(false);
   const [featuresLoading, setFeaturesLoading]   = useState(false);
   const [featuresCount, setFeaturesCount]       = useState(null);
 
-  // Keep callbacks fresh without re-subscribing
+  // Keep callbacks / latest state fresh without re-subscribing
   useEffect(() => { onZoomChangeRef.current = onZoomChange; }, [onZoomChange]);
   useEffect(() => { onCenterChangeRef.current = onCenterChange; }, [onCenterChange]);
+  useEffect(() => { selectedVietaRef.current = selectedVieta; }, [selectedVieta]);
 
   // Init map
   useEffect(() => {
@@ -82,7 +87,23 @@ export default function SodybaMap({
     const map = L.map(containerRef.current, { zoomControl: false }).setView([55.3, 23.9], 7);
     LAYERS.map.addTo(map);
     const fireCenter = () => { const c = map.getCenter(); onCenterChangeRef.current?.({ lat: c.lat, lng: c.lng }); };
-    map.on('zoomend', () => { onZoomChangeRef.current?.(map.getZoom()); fireCenter(); });
+    map.on('zoomend', () => {
+      const zoom = map.getZoom();
+      mapZoomRef.current = zoom;
+      onZoomChangeRef.current?.(zoom);
+      fireCenter();
+      // Update vieta marker icons without recreating them
+      vietaMarkersRef.current.forEach(({ marker, vieta }) => {
+        const isSelected = selectedVietaRef.current?.id === vieta.id;
+        const hasInfo = vieta.saltinis === 'skelbimas' || !!vieta.tel || !!vieta.kaina;
+        const thumbUrl = vieta.nuotraukos?.[0];
+        marker.setIcon(
+          thumbUrl && zoom >= THUMB_ZOOM
+            ? makeThumbnailVietaIcon(thumbUrl, isSelected)
+            : makeVietaIcon(vieta.statusas, vieta.saltinis, hasInfo)
+        );
+      });
+    });
     map.on('moveend', fireCenter);
     mapRef.current = map;
   }, []);
@@ -203,21 +224,26 @@ export default function SodybaMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    vietaMarkersRef.current.forEach(m => m.remove());
+    vietaMarkersRef.current.forEach(({ marker }) => marker.remove());
     vietaMarkersRef.current = [];
+    const zoom = mapZoomRef.current;
     (vietos ?? []).forEach(v => {
       if (!v.lat || !v.lng) return;
       const isSelected = selectedVieta && v.id === selectedVieta.id;
       const dimmed = selectedVieta && !isSelected;
       const hasInfo = v.saltinis === 'skelbimas' || !!v.tel || !!v.kaina;
       const label = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
-      const m = L.marker([v.lat, v.lng], {
-        icon: makeVietaIcon(v.statusas, v.saltinis, hasInfo),
+      const thumbUrl = v.nuotraukos?.[0];
+      const icon = thumbUrl && zoom >= THUMB_ZOOM
+        ? makeThumbnailVietaIcon(thumbUrl, isSelected)
+        : makeVietaIcon(v.statusas, v.saltinis, hasInfo);
+      const marker = L.marker([v.lat, v.lng], {
+        icon,
         zIndexOffset: isSelected ? 500 : 100,
         opacity: dimmed ? 0.3 : 1,
       }).addTo(map).bindTooltip(label);
-      m.on('click', (e) => { L.DomEvent.stopPropagation(e); onVietaSelect?.(v); });
-      vietaMarkersRef.current.push(m);
+      marker.on('click', (e) => { L.DomEvent.stopPropagation(e); onVietaSelect?.(v); });
+      vietaMarkersRef.current.push({ marker, vieta: v });
     });
   }, [vietos, selectedVieta?.id]);
 

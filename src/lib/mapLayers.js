@@ -68,6 +68,21 @@ export function makeVietaIcon(statusas, saltinis, hasInfo) {
   return L.divIcon({ html: svg, className: '', iconSize: [30, 38], iconAnchor: [15, 35] });
 }
 
+export function makeThumbnailVietaIcon(url, isSelected) {
+  const size = isSelected ? 64 : 54;
+  const border = isSelected ? '#1a73e8' : 'white';
+  const bw = isSelected ? 3 : 2;
+  const safe = url.replace(/'/g, '%27');
+  const html =
+    `<div style="position:relative;width:${size}px;height:${size + 9}px">` +
+    `<div style="width:${size}px;height:${size}px;border-radius:10px;border:${bw}px solid ${border};overflow:hidden;` +
+    `box-shadow:0 3px 12px rgba(0,0,0,0.45);background:#ccc url('${safe}') center/cover no-repeat"></div>` +
+    `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;` +
+    `border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid ${border}"></div>` +
+    `</div>`;
+  return L.divIcon({ html, className: '', iconSize: [size, size + 9], iconAnchor: [size / 2, size + 9] });
+}
+
 // Fix default Leaflet icon paths
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({

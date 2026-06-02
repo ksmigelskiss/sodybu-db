@@ -175,9 +175,6 @@ export default function App() {
     return [...list].sort((a, b) => {
       if (a.zvaigzdute && !b.zvaigzdute) return -1;
       if (!a.zvaigzdute && b.zvaigzdute) return 1;
-      const aS = a.saltinis === 'skelbimas', bS = b.saltinis === 'skelbimas';
-      if (aS && !bS) return -1;
-      if (!aS && bS) return 1;
       return toMs(b.created_at) - toMs(a.created_at);
     });
   }, [vietos, activeTab, vietaStatusFilter, salisFilter]);
@@ -635,8 +632,6 @@ export default function App() {
             const sorted = [...list].sort((a, b) => {
               if (a.zvaigzdute && !b.zvaigzdute) return -1;
               if (!a.zvaigzdute && b.zvaigzdute) return 1;
-              const aS = a.saltinis === 'skelbimas', bS = b.saltinis === 'skelbimas';
-              if (aS && !bS) return -1; if (!aS && bS) return 1;
               return toMs(b.created_at) - toMs(a.created_at);
             });
             return (
@@ -857,7 +852,8 @@ function SearchBox({ onSelect }) {
   useEffect(() => {
     const handler = (e) => { if (!wrapRef.current?.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('touchstart', handler); };
   }, []);
 
   const search = useCallback(async (q) => {
@@ -926,7 +922,7 @@ function SearchBox({ onSelect }) {
           {results.map((r, i) => {
             const { name, parts } = getLabel(r);
             return (
-              <div key={r.place_id ?? i} onMouseDown={() => pick(r)}
+              <div key={r.place_id ?? i} onPointerDown={() => pick(r)}
                 onMouseEnter={e => e.currentTarget.style.background = C.surfaceVar}
                 onMouseLeave={e => e.currentTarget.style.background = 'white'}
                 style={{ padding: '9px 14px', cursor: 'pointer', borderBottom: i < results.length - 1 ? `1px solid ${C.outline}` : 'none', display: 'flex', alignItems: 'center', gap: 10 }}

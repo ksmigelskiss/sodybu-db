@@ -152,7 +152,7 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     position: 'fixed', bottom: 0, left: 0, right: 0,
     background: 'white', borderRadius: '20px 20px 0 0',
     boxShadow: '0 -4px 32px rgba(0,0,0,0.16)',
-    zIndex: 1200, maxHeight: '92dvh', overflowY: 'auto', overflowX: 'hidden',
+    zIndex: 1200, maxHeight: '92dvh',
     display: 'flex', flexDirection: 'column',
     touchAction: 'pan-y',
   } : {
@@ -160,43 +160,46 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
     background: 'white', borderRadius: 16,
     boxShadow: '0 8px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)',
     width: 360, zIndex: 1000, maxHeight: 'calc(100vh - 80px)',
-    overflowY: 'auto', display: 'flex', flexDirection: 'column',
+    display: 'flex', flexDirection: 'column',
   };
 
   return (
     <div style={wrap} className={mobile ? 'sheet-slide-up' : undefined}>
-      {mobile && <div style={{ width: 40, height: 4, background: '#dadce0', borderRadius: 2, margin: '12px auto 0', flexShrink: 0 }} />}
+
+      {/* ── Top bar — visada matomas ── */}
+      <div style={{ flexShrink: 0, borderBottom: '1px solid #f1f3f4', background: 'white' }}>
+        {mobile && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}>
+            <div style={{ width: 36, height: 4, background: '#dadce0', borderRadius: 2 }} />
+          </div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: mobile ? '4px 12px 10px' : '12px 14px' }}>
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#202124', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'system-ui, sans-serif' }}>
+            {vieta.zonaPavadinimas || (vieta.lat ? `${vieta.lat.toFixed(3)}, ${vieta.lng.toFixed(3)}` : 'Sodybos informacija')}
+          </span>
+          <button
+            onClick={() => onUpdate(vieta.id, { zvaigzdute: !vieta.zvaigzdute })}
+            title={vieta.zvaigzdute ? 'Pašalinti žvaigždutę' : 'Pažymėti žvaigždute'}
+            style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0, background: vieta.zvaigzdute ? 'rgba(251,191,36,0.15)' : '#f1f3f4', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
+          >
+            <Star size={15} color={vieta.zvaigzdute ? '#f59e0b' : '#9aa0a6'} fill={vieta.zvaigzdute ? '#f59e0b' : 'none'} />
+          </button>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0, background: '#f1f3f4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={15} color="#5f6368" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Scrollable content ── */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Hero ── */}
-      <div style={{ position: 'relative', flexShrink: 0, height: heroPhoto ? 200 : undefined }}>
-        {heroPhoto
-          ? <img src={heroPhoto} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
-          : <div style={{ height: 8 }} />
-        }
-        <button onClick={onClose} style={{
-          position: 'absolute', top: heroPhoto ? 12 : (mobile ? 6 : 12), right: 12,
-          background: heroPhoto ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.06)',
-          border: 'none', borderRadius: '50%',
-          width: 32, height: 32, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <X size={15} color={heroPhoto ? 'white' : '#5f6368'} />
-        </button>
-        <button
-          onClick={() => onUpdate(vieta.id, { zvaigzdute: !vieta.zvaigzdute })}
-          title={vieta.zvaigzdute ? 'Pašalinti žvaigždutę' : 'Pažymėti žvaigždute'}
-          style={{
-            position: 'absolute', top: heroPhoto ? 12 : (mobile ? 6 : 12), right: 52,
-            background: vieta.zvaigzdute ? 'rgba(251,191,36,0.92)' : heroPhoto ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.06)',
-            border: 'none', borderRadius: '50%',
-            width: 32, height: 32, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.15s',
-          }}
-        >
-          <Star size={15} color="white" fill={vieta.zvaigzdute ? 'white' : 'none'} />
-        </button>
-      </div>
+      {heroPhoto && (
+        <img src={heroPhoto} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block', flexShrink: 0 }} />
+      )}
+
+      {/* ── Photos ── */}
+      <PhotoStrip vieta={vieta} onUpdate={onUpdate} />
 
       {/* ── Header ── */}
       <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid #f1f3f4', flexShrink: 0 }}>
@@ -537,9 +540,8 @@ export default function VietaPanel({ vieta, onClose, onUpdate, onDelete, onLocat
           </button>
         </div>
 
-        {/* Photos */}
-        <PhotoStrip vieta={vieta} onUpdate={onUpdate} />
       </div>
+      </div>{/* end scrollable */}
     </div>
   );
 }

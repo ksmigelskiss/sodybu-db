@@ -51,7 +51,7 @@ export function makeMarkerIcon(score, statusas) {
   return L.divIcon({ html: svg, className: '', iconSize: [32, 32], iconAnchor: [16, 16] });
 }
 
-export function makeVietaIcon(statusas, saltinis, hasInfo) {
+export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
   if (hasInfo === undefined) hasInfo = saltinis === 'skelbimas';
   const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#3c3c3c' };
   const isSkelbimas = saltinis === 'skelbimas';
@@ -64,21 +64,28 @@ export function makeVietaIcon(statusas, saltinis, hasInfo) {
     <path d="M15 8L21 13H19.5V20H10.5V13H9L15 8Z" fill="white" opacity="0.95"/>
     <rect x="13" y="15.5" width="4" height="4.5" rx="0.5" fill="${color}"/>
     ${isSkelbimas ? `<circle cx="23" cy="6" r="5.5" fill="${badgeColor}" stroke="white" stroke-width="1.5"/><text x="23" y="9.5" text-anchor="middle" font-size="6.5" font-weight="bold" fill="white" font-family="system-ui">€</text>` : ''}
+    ${zvaigzdute ? `<circle cx="7" cy="7" r="6" fill="#fbbf24" stroke="white" stroke-width="1.5"/><text x="7" y="10.5" text-anchor="middle" font-size="7.5" font-family="system-ui" fill="white">★</text>` : ''}
   </svg>`;
   return L.divIcon({ html: svg, className: '', iconSize: [30, 38], iconAnchor: [15, 35] });
 }
 
-export function makeThumbnailVietaIcon(url, isSelected) {
+export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute) {
   const size = isSelected ? 64 : 54;
   const border = isSelected ? '#1a73e8' : 'white';
   const bw = isSelected ? 3 : 2;
   const safe = url.replace(/'/g, '%27');
+  const starBadge = zvaigzdute
+    ? `<div style="position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;` +
+      `background:#fbbf24;border:2px solid white;text-align:center;line-height:16px;font-size:11px;` +
+      `box-shadow:0 1px 4px rgba(0,0,0,0.35)">★</div>`
+    : '';
   const html =
     `<div style="position:relative;width:${size}px;height:${size + 9}px">` +
     `<div style="width:${size}px;height:${size}px;border-radius:10px;border:${bw}px solid ${border};overflow:hidden;` +
     `box-shadow:0 3px 12px rgba(0,0,0,0.45);background:#ccc url('${safe}') center/cover no-repeat"></div>` +
     `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;` +
     `border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid ${border}"></div>` +
+    starBadge +
     `</div>`;
   return L.divIcon({ html, className: '', iconSize: [size, size + 9], iconAnchor: [size / 2, size + 9] });
 }

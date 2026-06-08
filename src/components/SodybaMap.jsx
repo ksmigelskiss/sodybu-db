@@ -231,6 +231,8 @@ export default function SodybaMap({
       if (!v.lat || !v.lng) return;
       const isSelected = selectedVieta && v.id === selectedVieta.id;
       const dimmed = selectedVieta && !isSelected;
+      const STATUS_OPACITY = { aplankyta: 0.6, atmesta: 0.4 };
+      const baseOpacity = STATUS_OPACITY[v.statusas] ?? 1;
       const hasInfo = v.saltinis === 'skelbimas' || !!v.tel || !!v.kaina;
       const name = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
       const STATUS_LABELS = { nuvaziuoti: 'Nuvažiuoti', aplankyta: 'Aplankyta', atmesta: 'Atmesta' };
@@ -243,7 +245,7 @@ export default function SodybaMap({
       const marker = L.marker([v.lat, v.lng], {
         icon,
         zIndexOffset: isSelected ? 500 : 100,
-        opacity: dimmed ? 0.3 : 1,
+        opacity: dimmed ? 0.3 : baseOpacity,
       }).addTo(map).bindTooltip(label);
       marker.on('click', (e) => { L.DomEvent.stopPropagation(e); onVietaSelect?.(v); });
       vietaMarkersRef.current.push({ marker, vieta: v });

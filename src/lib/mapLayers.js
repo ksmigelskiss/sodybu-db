@@ -71,26 +71,36 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
 
 export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute, statusas, saltinis, hasInfo) {
   const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
-  const statusColor = statusColors[statusas] ?? ((hasInfo || saltinis === 'skelbimas') ? '#e37400' : '#c4c7cc');
+  const statusColor = isSelected
+    ? '#1a73e8'
+    : (statusColors[statusas] ?? ((hasInfo || saltinis === 'skelbimas') ? '#e37400' : '#c4c7cc'));
   const size = isSelected ? 64 : 54;
-  // Selected → blue border; otherwise → status colour
-  const border = isSelected ? '#1a73e8' : statusColor;
-  const bw = isSelected ? 3 : 2;
+  const totalH = size + 14; // 5px strip + 9px triangle
   const safe = url.replace(/'/g, '%27');
+  const shadow = isSelected
+    ? '0 0 0 2px #1a73e8, 0 4px 16px rgba(0,0,0,0.5)'
+    : '0 3px 16px rgba(0,0,0,0.45)';
   const starBadge = zvaigzdute
     ? `<div style="position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;` +
       `background:#fbbf24;border:2px solid white;text-align:center;line-height:16px;font-size:11px;color:white;` +
       `box-shadow:0 1px 4px rgba(0,0,0,0.35)">★</div>`
     : '';
   const html =
-    `<div style="position:relative;width:${size}px;height:${size + 9}px">` +
-    `<div style="width:${size}px;height:${size}px;border-radius:10px;border:${bw}px solid ${border};overflow:hidden;` +
-    `box-shadow:0 3px 12px rgba(0,0,0,0.45);background:#ccc url('${safe}') center/cover no-repeat"></div>` +
+    `<div style="position:relative;width:${size}px;height:${totalH}px">` +
+    // Photo card — white border top/left/right, open bottom
+    `<div style="width:${size}px;height:${size}px;border-radius:10px 10px 0 0;overflow:hidden;` +
+    `box-sizing:border-box;border:2px solid white;border-bottom:none;` +
+    `box-shadow:${shadow};background:#ccc url('${safe}') center/cover no-repeat"></div>` +
+    // Coloured status strip
+    `<div style="height:5px;background:${statusColor};` +
+    `border-left:2px solid white;border-right:2px solid white"></div>` +
+    // Triangle pointer
     `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;` +
-    `border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid ${border}"></div>` +
+    `border-left:7px solid transparent;border-right:7px solid transparent;` +
+    `border-top:9px solid ${statusColor}"></div>` +
     starBadge +
     `</div>`;
-  return L.divIcon({ html, className: '', iconSize: [size, size + 9], iconAnchor: [size / 2, size + 9] });
+  return L.divIcon({ html, className: '', iconSize: [size, totalH], iconAnchor: [size / 2, totalH] });
 }
 
 // Fix default Leaflet icon paths

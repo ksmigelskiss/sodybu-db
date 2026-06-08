@@ -79,7 +79,7 @@ export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute, statusas, sa
   const safe = url.replace(/'/g, '%27');
   const starBadge = zvaigzdute
     ? `<div style="position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;` +
-      `background:#fbbf24;border:2px solid white;text-align:center;line-height:16px;font-size:11px;` +
+      `background:#fbbf24;border:2px solid white;text-align:center;line-height:16px;font-size:11px;color:white;` +
       `box-shadow:0 1px 4px rgba(0,0,0,0.35)">★</div>`
     : '';
   const html =

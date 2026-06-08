@@ -54,7 +54,6 @@ export function makeMarkerIcon(score, statusas) {
 export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
   if (hasInfo === undefined) hasInfo = saltinis === 'skelbimas';
   const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
-  const isSkelbimas = saltinis === 'skelbimas';
   const color = statusColors[statusas] ?? (hasInfo ? '#e37400' : '#c4c7cc');
   const W = 22, H = 22, totalH = H + 3 + 7; // card + strip + triangle = 32
 
@@ -64,11 +63,6 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
     `<rect x="6.5" y="10.5" width="5" height="5.5" rx="0.5" fill="${color}"/>` +
     `</svg>`;
 
-  const eurBadge = isSkelbimas
-    ? `<div style="position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;` +
-      `background:${color};border:1.5px solid white;text-align:center;line-height:11px;font-size:8px;` +
-      `color:white;font-weight:bold;font-family:system-ui;box-shadow:0 1px 3px rgba(0,0,0,0.3)">€</div>`
-    : '';
   const starBadge = zvaigzdute
     ? `<div style="position:absolute;top:-5px;left:-5px;width:14px;height:14px;border-radius:50%;` +
       `background:#fbbf24;border:1.5px solid white;text-align:center;line-height:11px;font-size:8px;` +
@@ -85,7 +79,7 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
     `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;` +
     `border-left:5px solid transparent;border-right:5px solid transparent;` +
     `border-top:7px solid ${color}"></div>` +
-    eurBadge + starBadge +
+    starBadge +
     `</div>`;
 
   return L.divIcon({ html, className: '', iconSize: [W, totalH], iconAnchor: [W / 2, totalH] });

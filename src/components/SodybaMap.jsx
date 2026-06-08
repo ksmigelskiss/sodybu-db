@@ -232,7 +232,10 @@ export default function SodybaMap({
       const isSelected = selectedVieta && v.id === selectedVieta.id;
       const dimmed = selectedVieta && !isSelected;
       const hasInfo = v.saltinis === 'skelbimas' || !!v.tel || !!v.kaina;
-      const label = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
+      const name = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
+      const STATUS_LABELS = { nuvaziuoti: 'Nuvažiuoti', aplankyta: 'Aplankyta', atmesta: 'Atmesta' };
+      const statusLabel = STATUS_LABELS[v.statusas] ?? (v.saltinis === 'skelbimas' ? 'Skelbimas' : null);
+      const label = statusLabel ? `${name} · ${statusLabel}` : name;
       const thumbUrl = v.nuotraukos?.[0];
       const icon = thumbUrl && zoom >= THUMB_ZOOM
         ? makeThumbnailVietaIcon(thumbUrl, isSelected, v.zvaigzdute, v.statusas, v.saltinis, hasInfo)

@@ -53,7 +53,7 @@ export function makeMarkerIcon(score, statusas) {
 
 export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
   if (hasInfo === undefined) hasInfo = saltinis === 'skelbimas';
-  const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#3c3c3c' };
+  const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
   const isSkelbimas = saltinis === 'skelbimas';
   // Grey = no info/status; orange = listing but not yet investigated; colored = status set
   const color = statusColors[statusas] ?? (hasInfo ? '#e37400' : '#c4c7cc');
@@ -70,7 +70,7 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
 }
 
 export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute, statusas, saltinis, hasInfo) {
-  const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#3c3c3c' };
+  const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
   const statusColor = statusColors[statusas] ?? ((hasInfo || saltinis === 'skelbimas') ? '#e37400' : '#c4c7cc');
   const size = isSelected ? 64 : 54;
   // Selected → blue border; otherwise → status colour

@@ -12,9 +12,9 @@ export const STATUS_THEME = {
 };
 
 export const VIETA_THEME = {
-  nuvaziuoti: { label: 'Nuvažiuoti', color: '#137333', bg: '#e6f4ea' },
-  aplankyta:  { label: 'Aplankyta',  color: '#1a73e8', bg: '#e8f0fe' },
-  atmesta:    { label: 'Atmesta',    color: '#202124', bg: '#e8eaed' },
+  nuvaziuoti: { label: 'Nuvažiuoti', color: '#1a73e8', bg: '#e8f0fe' },
+  aplankyta:  { label: 'Aplankyta',  color: '#137333', bg: '#e6f4ea' },
+  atmesta:    { label: 'Atmesta',    color: '#c5221f', bg: '#fce8e6' },
 };
 export const VIETA_DEFAULT_THEME = { label: 'Rasta', color: '#e37400', bg: '#fef3c7' };
 export const VIETA_KEYS = ['nuvaziuoti', 'aplankyta', 'atmesta'];

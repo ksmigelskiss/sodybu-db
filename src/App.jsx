@@ -64,7 +64,7 @@ export default function App() {
   const [importPickingMap, setImportPickingMap]   = useState(false);
   const importPickResolve = useRef(null);
   const [locateVieta, setLocateVieta]     = useState(null);
-  const [vietaStatusFilter, setVietaStatusFilter] = useState('aktyvios');
+  const [vietaStatusFilter, setVietaStatusFilter] = useState(null);
   const swipeStartY = useRef(null);
   const swipeStartX = useRef(null);
   const [refreshing, setRefreshing] = useState(false);

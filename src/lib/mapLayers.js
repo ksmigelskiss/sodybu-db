@@ -53,7 +53,7 @@ export function makeMarkerIcon(score, statusas) {
 
 export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
   if (hasInfo === undefined) hasInfo = saltinis === 'skelbimas';
-  const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
+  const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#1a1a1a' };
   const color = statusColors[statusas] ?? (hasInfo ? '#e37400' : '#c4c7cc');
   const W = 22, H = 22, totalH = H + 3 + 7; // card + strip + triangle = 32
 
@@ -86,7 +86,7 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
 }
 
 export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute, statusas, saltinis, hasInfo) {
-  const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
+  const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#1a1a1a' };
   const statusColor = statusColors[statusas] ?? ((hasInfo || saltinis === 'skelbimas') ? '#e37400' : '#c4c7cc');
   const size = isSelected ? 64 : 54;
   const totalH = size + 14; // 5px strip + 9px triangle

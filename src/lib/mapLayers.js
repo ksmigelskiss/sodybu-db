@@ -55,18 +55,40 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
   if (hasInfo === undefined) hasInfo = saltinis === 'skelbimas';
   const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
   const isSkelbimas = saltinis === 'skelbimas';
-  // Grey = no info/status; orange = listing but not yet investigated; colored = status set
   const color = statusColors[statusas] ?? (hasInfo ? '#e37400' : '#c4c7cc');
-  const badgeColor = statusColors[statusas] ?? '#e37400';
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="38" viewBox="0 0 30 38">
-    <ellipse cx="15" cy="36" rx="6" ry="2.5" fill="rgba(0,0,0,0.18)"/>
-    <path d="M15 2C8.9 2 4 6.9 4 13C4 21.5 15 35 15 35C15 35 26 21.5 26 13C26 6.9 21.1 2 15 2Z" fill="${color}" stroke="white" stroke-width="1.5"/>
-    <path d="M15 8L21 13H19.5V20H10.5V13H9L15 8Z" fill="white" opacity="0.95"/>
-    <rect x="13" y="15.5" width="4" height="4.5" rx="0.5" fill="${color}"/>
-    ${isSkelbimas ? `<circle cx="23" cy="6" r="5.5" fill="${badgeColor}" stroke="white" stroke-width="1.5"/><text x="23" y="9.5" text-anchor="middle" font-size="6.5" font-weight="bold" fill="white" font-family="system-ui">€</text>` : ''}
-    ${zvaigzdute ? `<circle cx="7" cy="7" r="6" fill="#fbbf24" stroke="white" stroke-width="1.5"/><text x="7" y="10.5" text-anchor="middle" font-size="7.5" font-family="system-ui" fill="white">★</text>` : ''}
-  </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [30, 38], iconAnchor: [15, 35] });
+  const W = 30, H = 30, totalH = H + 4 + 8; // card + strip + triangle = 42
+
+  const houseSvg =
+    `<svg width="17" height="17" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">` +
+    `<path d="M9 2L16 8H14.5V16H3.5V8H2L9 2Z" fill="white" opacity="0.9"/>` +
+    `<rect x="6.5" y="10.5" width="5" height="5.5" rx="0.5" fill="${color}"/>` +
+    `</svg>`;
+
+  const eurBadge = isSkelbimas
+    ? `<div style="position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;` +
+      `background:${color};border:1.5px solid white;text-align:center;line-height:11px;font-size:8px;` +
+      `color:white;font-weight:bold;font-family:system-ui;box-shadow:0 1px 3px rgba(0,0,0,0.3)">€</div>`
+    : '';
+  const starBadge = zvaigzdute
+    ? `<div style="position:absolute;top:-5px;left:-5px;width:14px;height:14px;border-radius:50%;` +
+      `background:#fbbf24;border:1.5px solid white;text-align:center;line-height:11px;font-size:8px;` +
+      `color:white;box-shadow:0 1px 3px rgba(0,0,0,0.3)">★</div>`
+    : '';
+
+  const html =
+    `<div style="position:relative;width:${W}px;height:${totalH}px">` +
+    `<div style="width:${W}px;height:${H}px;border-radius:7px 7px 0 0;` +
+    `box-sizing:border-box;border:2px solid white;border-bottom:none;overflow:hidden;` +
+    `box-shadow:0 2px 8px rgba(0,0,0,0.35);background:${color};` +
+    `display:flex;align-items:center;justify-content:center">${houseSvg}</div>` +
+    `<div style="height:4px;background:${color};border-left:2px solid white;border-right:2px solid white"></div>` +
+    `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;` +
+    `border-left:6px solid transparent;border-right:6px solid transparent;` +
+    `border-top:8px solid ${color}"></div>` +
+    eurBadge + starBadge +
+    `</div>`;
+
+  return L.divIcon({ html, className: '', iconSize: [W, totalH], iconAnchor: [W / 2, totalH] });
 }
 
 export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute, statusas, saltinis, hasInfo) {

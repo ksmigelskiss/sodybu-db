@@ -56,10 +56,10 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
   const statusColors = { nuvaziuoti: '#1a73e8', aplankyta: '#137333', atmesta: '#c5221f' };
   const isSkelbimas = saltinis === 'skelbimas';
   const color = statusColors[statusas] ?? (hasInfo ? '#e37400' : '#c4c7cc');
-  const W = 30, H = 30, totalH = H + 4 + 8; // card + strip + triangle = 42
+  const W = 22, H = 22, totalH = H + 3 + 7; // card + strip + triangle = 32
 
   const houseSvg =
-    `<svg width="17" height="17" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">` +
+    `<svg width="13" height="13" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">` +
     `<path d="M9 2L16 8H14.5V16H3.5V8H2L9 2Z" fill="white" opacity="0.9"/>` +
     `<rect x="6.5" y="10.5" width="5" height="5.5" rx="0.5" fill="${color}"/>` +
     `</svg>`;
@@ -81,10 +81,10 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
     `box-sizing:border-box;border:2px solid white;border-bottom:none;overflow:hidden;` +
     `box-shadow:0 2px 8px rgba(0,0,0,0.35);background:${color};` +
     `display:flex;align-items:center;justify-content:center">${houseSvg}</div>` +
-    `<div style="height:4px;background:${color};border-left:2px solid white;border-right:2px solid white"></div>` +
+    `<div style="height:3px;background:${color};border-left:2px solid white;border-right:2px solid white"></div>` +
     `<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;` +
-    `border-left:6px solid transparent;border-right:6px solid transparent;` +
-    `border-top:8px solid ${color}"></div>` +
+    `border-left:5px solid transparent;border-right:5px solid transparent;` +
+    `border-top:7px solid ${color}"></div>` +
     eurBadge + starBadge +
     `</div>`;
 

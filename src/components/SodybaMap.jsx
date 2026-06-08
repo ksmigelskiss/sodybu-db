@@ -99,7 +99,7 @@ export default function SodybaMap({
         const thumbUrl = vieta.nuotraukos?.[0];
         marker.setIcon(
           thumbUrl && zoom >= THUMB_ZOOM
-            ? makeThumbnailVietaIcon(thumbUrl, isSelected, vieta.zvaigzdute)
+            ? makeThumbnailVietaIcon(thumbUrl, isSelected, vieta.zvaigzdute, vieta.statusas, vieta.saltinis, hasInfo)
             : makeVietaIcon(vieta.statusas, vieta.saltinis, hasInfo, vieta.zvaigzdute)
         );
       });
@@ -235,7 +235,7 @@ export default function SodybaMap({
       const label = v.zonaPavadinimas || `${v.lat.toFixed(3)}, ${v.lng.toFixed(3)}`;
       const thumbUrl = v.nuotraukos?.[0];
       const icon = thumbUrl && zoom >= THUMB_ZOOM
-        ? makeThumbnailVietaIcon(thumbUrl, isSelected, v.zvaigzdute)
+        ? makeThumbnailVietaIcon(thumbUrl, isSelected, v.zvaigzdute, v.statusas, v.saltinis, hasInfo)
         : makeVietaIcon(v.statusas, v.saltinis, hasInfo, v.zvaigzdute);
       const marker = L.marker([v.lat, v.lng], {
         icon,

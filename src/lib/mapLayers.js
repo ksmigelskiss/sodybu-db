@@ -69,9 +69,12 @@ export function makeVietaIcon(statusas, saltinis, hasInfo, zvaigzdute) {
   return L.divIcon({ html: svg, className: '', iconSize: [30, 38], iconAnchor: [15, 35] });
 }
 
-export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute) {
+export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute, statusas, saltinis, hasInfo) {
+  const statusColors = { nuvaziuoti: '#137333', aplankyta: '#1a73e8', atmesta: '#3c3c3c' };
+  const statusColor = statusColors[statusas] ?? ((hasInfo || saltinis === 'skelbimas') ? '#e37400' : '#c4c7cc');
   const size = isSelected ? 64 : 54;
-  const border = isSelected ? '#1a73e8' : 'white';
+  // Selected → blue border; otherwise → status colour
+  const border = isSelected ? '#1a73e8' : statusColor;
   const bw = isSelected ? 3 : 2;
   const safe = url.replace(/'/g, '%27');
   const starBadge = zvaigzdute

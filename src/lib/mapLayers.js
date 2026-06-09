@@ -104,8 +104,8 @@ export function makeThumbnailVietaIcon(url, isSelected, zvaigzdute, statusas, sa
     `<div style="position:relative;width:${size}px;height:${totalH}px">` +
     // Photo card — white border top/left/right, open bottom
     `<div style="width:${size}px;height:${size}px;border-radius:10px 10px 0 0;overflow:hidden;` +
-    `box-sizing:border-box;border:2px solid white;border-bottom:none;` +
-    `box-shadow:${shadow};background:#ccc url('${safe}') center/cover no-repeat"></div>` +
+    `box-sizing:border-box;border:2px solid white;border-bottom:none;box-shadow:${shadow}">` +
+    `<img src="${safe}" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy" /></div>` +
     // Coloured status strip
     `<div style="height:5px;background:${statusColor};` +
     `border-left:2px solid white;border-right:2px solid white"></div>` +

@@ -89,10 +89,13 @@ export default function SodybaMap({
     const fireCenter = () => { const c = map.getCenter(); onCenterChangeRef.current?.({ lat: c.lat, lng: c.lng }); };
     map.on('zoomend', () => {
       const zoom = map.getZoom();
+      const prevZoom = mapZoomRef.current;
       mapZoomRef.current = zoom;
       onZoomChangeRef.current?.(zoom);
       fireCenter();
-      // Update vieta marker icons without recreating them
+      // Only swap icons when crossing the thumbnail zoom threshold — avoids flash on every zoom
+      const crossed = (prevZoom < THUMB_ZOOM) !== (zoom < THUMB_ZOOM);
+      if (!crossed) return;
       vietaMarkersRef.current.forEach(({ marker, vieta }) => {
         const isSelected = selectedVietaRef.current?.id === vieta.id;
         const hasInfo = vieta.saltinis === 'skelbimas' || !!vieta.tel || !!vieta.kaina;
